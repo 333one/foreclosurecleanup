@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login To Your Account On Foreclosure Cleanup Account</title>
+    <%- include('includes/header_boilerplate.ejs') %>
+
+</head>
+<body class="darkWaveBackground">
+
+    <main class="-rightLeftPadding">
+
+        <div class="mainBlock__externalBorder whiteBackground -reducedWidth -topBottomMarginLarge">
+        
+            <%- include('includes/small_screen_header.ejs') %>
+        
+            <div class="mainBlock__internalBorder -topBottomPadding -rightLeftPadding">
+
+                <p class="message__text">If you would like to delete your account fill in your password below and click "Delete Account"</p>
+
+                <form action="/delete_your_account" method="POST">
+
+                    <div class="input__unit -bottomMargin"> 
+                        <label for="password" class="input__label
+                            <% if (typeof deleteAccountError != "undefined") { %>
+                                -errorColor
+                            <% } %>               
+                            ">Password:</label>
+                        <div class="password__container 
+                        <% if (typeof deleteAccountError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        ">
+                            <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %>>
+                            <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                        </div>
+                        <% if (typeof deleteAccountError != "undefined") { %>
+                        <div class="input__errorMessage"><%= deleteAccountError %></div>
+                        <% } %> 
+                    </div>
+
+                    <div class="-alignRight -rightLeftMargin">
+                        <div class="cancel"><a href="/dashboard">Cancel</a></div>
+                        <button class="input__button">Delete Account</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

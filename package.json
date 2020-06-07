@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "test": "nodemon app.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,14 +17,14 @@
     "connect-redis": "^4.0.4",
     "crypto-random-string": "^3.2.0",
     "dotenv": "^8.2.0",
-    "ejs": "^3.0.2",
+    "ejs": "^3.1.2",
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
-    "express-session": "^1.17.0",
-    "mongoose": "^5.9.7",
+    "express-session": "^1.17.1",
+    "mongoose": "^5.9.13",
     "nodemailer": "^6.4.6",
     "object-hash": "^2.0.3",
-    "phone": "^2.4.8",
+    "phone": "^2.4.10",
     "redis": "^3.0.2",
     "winston": "^3.2.1",
     "zxcvbn": "^4.4.2"

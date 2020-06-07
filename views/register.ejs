@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Register Your Property Preservation Company On The National Vendor List</title>
+    <%- include('includes/header_boilerplate.ejs') %>
+    <script defer src="js/zxcvbn.js"></script>
+    <script defer src="js/password_strength_match.js"></script>
+    <script defer src="js/password_toggle.js"></script>
+    <script defer src="js/register-button-check.js"></script>
+    <script defer src="js/screen-width.js"></script>
+</head>
+<body>
+
+    <main class="-topBottomMarginLargeVanish -rightLeftPaddingVanish">
+
+        <div class="narrowScreen__externalBorder -thirtyWidthVanish">
+
+            <div class="narrowScreen__header -topBottomPadding -bottomMargin">
+                    <div class="narrowScreen__logo"><a href="/"><img src="images/foreclosure-cleanup-logo.svg" alt="Foreclosure Cleanup logo"></a></div>
+            </div> 
+
+            <div class="-thirtyWidth -rightLeftPaddingStatic">
+                
+                <h3 class="narrowScreen__headline -bottomMargin">Create Your Account</h3>
+
+                <p class="-centerText -bottomMargin">Already have an account? Sign in <a href="/login" class="tertiaryLink">here</a>.</p>
+
+                <form action="/register" method="POST">
+
+                    <div class="input__unit -bottomMargin"> 
+                        <label for="email" class="input__label
+                            <% if (typeof emailError != "undefined") { %>
+                                -errorColor
+                            <% } %>   
+                            ">Email:</label>
+                        <input id="email" class="input__field
+                            <% if (typeof emailError != "undefined") { %>
+                                -errorBorder
+                            <% } %>
+                            " name="email" <%= emailAttributes %> value="<%= userInput.email %>" autofocus>
+                        <% if (typeof emailError != "undefined") { %>
+                        <div id="targetEmailErrorMessage" class="input__errorMessage"><%= emailError %></div>
+                        <% } %> 
+                    </div>
+
+                    <div class="input__unit -bottomMargin"> 
+                        <label for="password" id="targetPasswordLabel" class="input__label
+                            <% if (typeof passwordErrorMessage != "undefined") { %>
+                                -errorColor
+                            <% } %> 
+                            ">Password:</label>
+                        <div id="targetPasswordContainer" class="password__container 
+                            <% if (typeof passwordErrorMessage != "undefined") { %>
+                                -errorBorder
+                            <% } %>
+                            ">
+                            <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %> value="<%= userInput.password %>">
+                            <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                        </div>
+                        
+                        <div id="passwordMeterContainer">
+                            <div id="passwordMeterBox1" class="passwordMeterBox"></div>
+                            <div id="passwordMeterBox2" class="passwordMeterBox"></div>
+                            <div id="passwordMeterBox3" class="passwordMeterBox"></div>
+                            <div id="passwordMeterBox4" class="passwordMeterBox"></div>
+                            <div id="passwordMeterBox5" class="passwordMeterBox"></div>
+                            <div id="passwordMeterLabel"></div>
+                        </div>
+
+                        <% if (typeof passwordErrorMessage != "undefined") { %>
+                        <div id="targetPasswordErrorMessage" class="input__errorMessage"><%= passwordErrorMessage %></div>
+                        <% } %> 
+                    </div>
+
+                    <div class="input__unit -bottomMarginLarge"> 
+                        <label for="passwordConfirm" id="targetPasswordConfirmLabel" class="input__label
+                            <% if (typeof passwordConfirmErrorMessage != "undefined") { %>
+                                -errorColor
+                            <% } %> 
+                            ">Confirm Password:</label>
+                        <div id="targetPasswordConfirmContainer" class="password__container 
+                            <% if (typeof passwordConfirmErrorMessage != "undefined") { %>
+                                -errorBorder
+                            <% } %>
+                            ">
+                            <input id="passwordConfirm" class="input__passwordField" name="passwordConfirm" <%= passwordConfirmAttributes %> value="<%= userInput.passwordConfirm %>">
+                            <div class="password__toggle"><img id="password__eyeConfirm" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                        </div>
+
+                        <div id="passwordMatchLabel"></div>
+                        <% if (typeof passwordConfirmErrorMessage != "undefined") { %>
+                        <div id="targetPasswordConfirmErrorMessage" class="input__errorMessage"><%= passwordConfirmErrorMessage %></div>
+                        <% } %> 
+
+                    </div>
+
+                    <div class="-bottomMarginLarge">
+                        <button id="narrowScreen__button">Register</button>
+                    </div>  
+
+                </form> 
+
+                <p class="-centerText -bottomMarginLarge">By creating an account you are agreeing to our <a href="/privacy_policy_terms_service" class="tertiaryLink">Privacy Policy</a> and <a href="/privacy_policy_terms_service" class="tertiaryLink">Terms Of Service</a>.</p>
+
+                <p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

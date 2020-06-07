@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Registration Sent</title>
+    <%- include('includes/header_boilerplate.ejs') %>
+
+</head>
+<body>
+
+    <main class="-topBottomMarginLargeVanish -rightLeftPaddingVanish">
+
+        <div class="narrowScreen__externalBorder -thirtyWidthVanish">
+
+            <div class="narrowScreen__header -topBottomPadding -bottomMargin">
+                    <div class="narrowScreen__logo"><a href="/"><img src="images/foreclosure-cleanup-logo.svg" alt="Foreclosure Cleanup logo"></a></div>
+            </div> 
+
+            <div class="-thirtyWidth -rightLeftPaddingStatic">
+
+                <h3 class="narrowScreen__headline -bottomMargin">Thanks for registering.</h3>
+
+                <p class="narrowScreen__text -bottomMargin">A confirmation email has been sent to <span class="highlightEffect"><%= email %></span> and should arrive within a few minutes. Please watch for an email titled: <span class="highlightEffect"><%= emailSubject %>.</span></p>
+                <p class="narrowScreen__text -bottomMarginLarge">If you don't see it in your main inbox please check your Promotions, Social or Junk folders.</p>
+                
+                <p class="-centerText -bottomMarginLarge"><a href="confirmation_resent?email=<%= email %>" class="tertiaryLink">Resend confirmation email</a>.</p>
+                
+                <p class="-centerText -bottomMargin"><a href="/privacy_policy_terms_service" class="tertiaryLink">Privacy Policy</a> | <a href="/privacy_policy_terms_service" class="tertiaryLink">Terms Of Service</a></p>
+
+                <div class="-reducedWidth"><p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p></div> 
+
+            </div>
+            
+        </div>
+
+    </main>
+
+</body>
+</html>
