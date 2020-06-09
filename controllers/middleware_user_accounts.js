@@ -213,14 +213,13 @@ exports.confirmationLimitReached = wrapAsync(async function(req, res, next) {
     // For rendering.
     let emailSubject = emailVerificationEmailSubject(process.env.ORGANIZATION);
     let body = confirmationLimitReachedBody(email, emailSubject);
-    let headline = 'Confirmation Limit Reached';
 
     let activeLink = null;
     let loggedIn = req.session.userValues ? true : false;
 
     let expirationTime = logic.getExpirationTime(defaultAppValues.unverifiedUserExpiration);
 
-    res.render('confirmation_limit_reached', { body, headline, email, activeLink, loggedIn, emailSubject, expirationTime });
+    res.render('confirmation_limit_reached', { body, email, activeLink, loggedIn, emailSubject, expirationTime });
 });
 
 exports.confirmationResent = wrapAsync(async function(req, res, next) {
@@ -264,9 +263,8 @@ exports.confirmationResent = wrapAsync(async function(req, res, next) {
     let loggedIn = req.session.userValues ? true : false;
 
     let body = confirmationResentBody(email, emailSubject);
-    let headline = 'Confirmation Resent.';
 
-    res.render('confirmation_resent', { email, emailSubject, activeLink, loggedIn, body, headline });
+    res.render('confirmation_resent', { email, emailSubject, activeLink, loggedIn, body });
 });
 
 exports.dashboard = wrapAsync(async function(req, res, next) {
@@ -938,7 +936,7 @@ exports.postRegister = wrapAsync(async function(req, res, next) {
 
     // Sanitize and process input.
     let cleanedFields = logic.cleanFields(registerFields, req.body);
-    let { email, password, passwordConfirm } = cleanedFields;
+    let { email, password, passwordConfirm, termsOfUse } = cleanedFields;
     
     let areAllFieldsFilled = logic.checkAllFieldsFilled(registerFields, cleanedFields);
     let isEmailValid = validator.validate(email);
@@ -951,6 +949,8 @@ exports.postRegister = wrapAsync(async function(req, res, next) {
     let doPasswordsMatch = password === passwordConfirm ? true : false;
     let isPasswordTooLong = logic.checkIfInputTooLong(password, defaultAppValues.passwordField.maxLength);
 
+    let isTermsOfUseChecked = termsOfUse ? true : false;
+
     if (
         areAllFieldsFilled === true &&
         isEmailValid === true &&
@@ -958,7 +958,8 @@ exports.postRegister = wrapAsync(async function(req, res, next) {
         doesUserAlreadyExist === false &&
         doesPasswordMeetRequirements === true &&
         doPasswordsMatch === true &&
-        isPasswordTooLong === false
+        isPasswordTooLong === false &&
+        isTermsOfUseChecked
     ) {
 
         // If an unverified user already exists save over it with new values but update the confirmation counter so that a hacker can't blast the server with same email an unlimited number of times.
@@ -1001,6 +1002,7 @@ exports.postRegister = wrapAsync(async function(req, res, next) {
         let whyPasswordUsed = 'register';
         let passwordError = logic.getNewPasswordError(whyPasswordUsed, password, isPasswordTooLong, doesPasswordMeetRequirements);
         let passwordConfirmError = logic.getPasswordConfirmError(whyPasswordUsed, passwordError, passwordConfirm, doPasswordsMatch);
+        let termsOfUseError = termsOfUse ? '' : 'Please agree to the terms of use and read the privacy policy.';
 
         // If there is a password error change the password and confirmation to an empty string for rendering at register.
         if(passwordError) {
@@ -1013,6 +1015,7 @@ exports.postRegister = wrapAsync(async function(req, res, next) {
         req.session.transfer.emailError = emailError;
         req.session.transfer.passwordError = passwordError;
         req.session.transfer.passwordConfirmError = passwordConfirmError;
+        req.session.transfer.termsOfUseError = termsOfUseError;
 
         return res.redirect('/register');
     }
@@ -1242,7 +1245,7 @@ exports.register = wrapAsync(async function(req, res, next) {
     // If there is data available from previous postRegister gather it from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, emailError, passwordError, passwordConfirmError } = req.session.transfer;
+        var { cleanedFields, emailError, passwordError, passwordConfirmError, termsOfUseError } = req.session.transfer;
 
         if(passwordError) {
             var passwordErrorMessage = passwordError.message;
@@ -1271,7 +1274,7 @@ exports.register = wrapAsync(async function(req, res, next) {
     let passwordAttributes = defaultAppValues.passwordField.attributes(passwordErrorType);
     let passwordConfirmAttributes = defaultAppValues.passwordField.attributes(passwordConfirmErrorType);
 
-    res.render('register', { userInput: inputFields, activeLink, loggedIn, emailAttributes, passwordAttributes, passwordConfirmAttributes, emailError, passwordErrorMessage, passwordConfirmErrorMessage });
+    res.render('register', { userInput: inputFields, activeLink, loggedIn, emailAttributes, passwordAttributes, passwordConfirmAttributes, emailError, passwordErrorMessage, passwordConfirmErrorMessage, termsOfUseError });
 });
 
 exports.registrationSent = wrapAsync(async function(req, res, next) {

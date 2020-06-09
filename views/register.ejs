@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <title>Register Your Property Preservation Company On The National Vendor List</title>
-    <%- include('includes/header_boilerplate.ejs') %>
+    <%- include('includes/head_boilerplate.ejs') %>
     <script defer src="js/zxcvbn.js"></script>
+    <script defer src="js/email_error_message_check.js"></script>
     <script defer src="js/password_strength_match.js"></script>
     <script defer src="js/password_toggle.js"></script>
     <script defer src="js/register-button-check.js"></script>
@@ -11,24 +12,16 @@
 </head>
 <body>
 
-    <main class="-topBottomMarginLargeVanish -rightLeftPaddingVanish">
-
-        <div class="narrowScreen__externalBorder -thirtyWidthVanish">
-
-            <div class="narrowScreen__header -topBottomPadding -bottomMargin">
-                    <div class="narrowScreen__logo"><a href="/"><img src="images/foreclosure-cleanup-logo.svg" alt="Foreclosure Cleanup logo"></a></div>
-            </div> 
-
-            <div class="-thirtyWidth -rightLeftPaddingStatic">
+    <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
                 
-                <h3 class="narrowScreen__headline -bottomMargin">Create Your Account</h3>
+                <h3 class="headlineLarge -centerText -bottomMarginMedium">Create Your Account</h3>
 
-                <p class="-centerText -bottomMargin">Already have an account? Sign in <a href="/login" class="tertiaryLink">here</a>.</p>
+                <p class="textSmall -centerText -bottomMarginMedium">Already have an account? Sign in <a href="/login">here</a>.</p>
 
                 <form action="/register" method="POST">
 
-                    <div class="input__unit -bottomMargin"> 
-                        <label for="email" class="input__label
+                    <div class="input__unit -bottomMarginMedium"> 
+                        <label for="email" id="targetEmailLabel" class="input__label
                             <% if (typeof emailError != "undefined") { %>
                                 -errorColor
                             <% } %>   
@@ -43,7 +36,7 @@
                         <% } %> 
                     </div>
 
-                    <div class="input__unit -bottomMargin"> 
+                    <div class="input__unit -bottomMarginMedium"> 
                         <label for="password" id="targetPasswordLabel" class="input__label
                             <% if (typeof passwordErrorMessage != "undefined") { %>
                                 -errorColor
@@ -95,12 +88,24 @@
                     </div>
 
                     <div class="-bottomMarginLarge">
+                        <div id="termsOfUseUnit" class="checkBox__unit
+                            <% if (typeof termsOfUseError != "undefined") { %>
+                                    -errorBorderCheckbox
+                            <% } %> 
+                            ">
+                            <input type="checkbox" id="termsOfUse" name="termsOfUse" value="agreed">
+                            <label class="textSmall" for="termsOfUse">By creating an account I agree to the <a href="/terms_use_privacy_policy">Terms Of Use</a> and acknowledge that I have read the <a href="/terms_use_privacy_policy">Privacy Policy</a>.</label>
+                        </div>
+                        <% if (typeof termsOfUseError != "undefined") { %>
+                            <div id="targetTermsOfUseErrorMessage" class="input__errorMessage"><%= termsOfUseError %></div>
+                        <% } %> 
+                    </div>
+                    
+                    <div class="-bottomMarginLarge">
                         <button id="narrowScreen__button">Register</button>
                     </div>  
 
                 </form> 
-
-                <p class="-centerText -bottomMarginLarge">By creating an account you are agreeing to our <a href="/privacy_policy_terms_service" class="tertiaryLink">Privacy Policy</a> and <a href="/privacy_policy_terms_service" class="tertiaryLink">Terms Of Service</a>.</p>
 
                 <p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p>
 

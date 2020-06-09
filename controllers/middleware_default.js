@@ -1,7 +1,14 @@
 "use strict";
 
 const { wrapAsync } = require('./logic_user_accounts');
+const winston = require('winston');
 
+const logger = winston.createLogger({
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.File({ filename: 'logs/error.log' })
+    ]
+});
 
 exports.error500 = wrapAsync( async function(req, res, next) {
 

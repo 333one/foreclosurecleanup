@@ -9,11 +9,11 @@ exports.changeSuccessful = 'Change successful.';
 
 exports.confirmationLimitReachedBody = function(email, emailSubject) {
 
-    return `<p class="narrowScreen__text -bottomMarginLarge">We are sorry but the maximum number of confirmation emails that can be sent to <span class="highlightEffect">${ email }</span> has been reached.  Please check your inbox for emails titled: <span class="highlightEffect">${ emailSubject }</span>.</p>`;
+    return `<p class="textLarge -bottomMarginMedium">We are sorry but the maximum number of confirmation emails that can be sent to <span class="highlightEffect">${ email }</span> has been reached.  Please check your inbox for emails titled: <span class="highlightEffect">${ emailSubject }</span>.</p>`;
 }
 
 exports.confirmationResentBody = function(email, emailSubject) {
-    return `<p class="message__text">An additional confirmation email has been requested for <span class="highlightEffect">${ email }</span> and should arrive within the next few minutes. Please watch for an email titled: <span class="highlightEffect">${ emailSubject }</span>.</p>`;
+    return `<p class="textLarge -bottomMarginMedium">An additional confirmation email has been requested for <span class="highlightEffect">${ email }</span> and should arrive within the next few minutes. Please watch for an email titled: <span class="highlightEffect">${ emailSubject }</span>.</p>`;
 }
 
 exports.emailAlreadyInUse = 'We\'re sorry but the email you entered is already associated with a different account.  Please try a different email address.';
@@ -60,8 +60,8 @@ exports.unverifiedPasswordResetAttemptBody = function(email, emailSubject) {
 
 exports.unverifiedConfirmationLimitReachedBody = function (email, emailSubject){
 
-    return `<p class="narrowScreen__text -bottomMarginLarge">We are sorry but you must verify your email before you can reset your password.</p>
-    <p class="narrowScreen__text -bottomMarginLarge">An additional confirmation email has been sent to <i>${ email }</i> and should arrive within the next few minutes. Please watch for an email titled: <i>${ emailSubject }</i></p>`;
+    return `<p class="textLarge -bottomMarginMedium">We are sorry but you must verify your email before you can reset your password.</p>
+    <p class="textLarge -bottomMarginLarge">An additional confirmation email has been sent to <i>${ email }</i> and should arrive within the next few minutes. Please watch for an email titled: <i>${ emailSubject }</i></p>`;
 }
 
 exports.unverifiedPasswordResetAttemptHeadline = 'Please Verify First';

@@ -2,24 +2,18 @@
 <html lang="en">
 <head>
     <title>Login To Your Account On Foreclosure Cleanup Account</title>
-    <%- include('includes/header_boilerplate.ejs') %>
+    <%- include('includes/head_boilerplate.ejs') %>
 
 </head>
-<body class="darkWaveBackground">
+<body>
 
-    <main class="-rightLeftPadding">
+    <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-        <div class="mainBlock__externalBorder whiteBackground -reducedWidth -topBottomMarginLarge">
-        
-            <%- include('includes/small_screen_header.ejs') %>
-        
-            <div class="mainBlock__internalBorder -topBottomPadding -rightLeftPadding">
-
-                <p class="message__text">If you would like to delete your account fill in your password below and click "Delete Account"</p>
+                <h3 class="headlineLarge -centerText -bottomMarginMedium">If you would like to delete your account fill in your password below and click "Delete Account"</h3>
 
                 <form action="/delete_your_account" method="POST">
 
-                    <div class="input__unit -bottomMargin"> 
+                    <div class="input__unit -bottomMarginLarge"> 
                         <label for="password" class="input__label
                             <% if (typeof deleteAccountError != "undefined") { %>
                                 -errorColor
@@ -38,18 +32,13 @@
                         <% } %> 
                     </div>
 
-                    <div class="-alignRight -rightLeftMargin">
-                        <div class="cancel"><a href="/dashboard">Cancel</a></div>
-                        <button class="input__button">Delete Account</button>
-                    </div>
+                    <div class="-bottomMarginLarge">
+                        <button id="narrowScreen__button">Request Reset</button>
+                    </div> 
 
                 </form>
 
-            </div>
-
-        </div>
-
-    </main>
+    <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 
 </body>
 </html>

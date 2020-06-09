@@ -2,80 +2,64 @@
 <html lang="en">
 <head>
     <title>Log In To Your Account On Foreclosure Cleanup Account</title>
-    <%- include('includes/header_boilerplate.ejs') %>
+    <%- include('includes/head_boilerplate.ejs') %>
     <script defer src="js/password_toggle.js"></script>
     <script defer src="js/screen-width.js"></script>
 </head>
 <body>
 
-    <main class="-topBottomMarginLargeVanish -rightLeftPaddingVanish">
+    <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-        <div class="narrowScreen__externalBorder -thirtyWidthVanish">
+                <h3 class="headlineLarge -centerText -bottomMarginMedium">Log In To Your Account</h3>
 
-            <div class="narrowScreen__header -topBottomPadding -bottomMargin">
-                    <div class="narrowScreen__logo"><a href="/"><img src="images/foreclosure-cleanup-logo.svg" alt="Foreclosure Cleanup logo"></a></div>
-            </div> 
-
-            <div class="-thirtyWidth -rightLeftPaddingStatic">
-
-                <h3 class="narrowScreen__headline -bottomMargin">Log In To Your Account</h3>
-
-                <p class="-centerText -bottomMargin">Need to register an account? Click <a href="/register" class="tertiaryLink">here</a>.</p>
+                <p class="textSmall -centerText -bottomMarginMedium">Need to register an account? Click <a href="/register" class="tertiaryLink">here</a>.</p>
 
                     <form action="/login" method="POST">
 
-                    <div class="input__unit -bottomMargin"> 
-                        <label for="email" class="input__label
+                        <div class="input__unit -bottomMarginMedium"> 
+                            <label for="email" class="input__label
+                                <% if (typeof emailError != "undefined") { %>
+                                    -errorColor
+                                <% } %>               
+                                ">Email Address:</label>
+                            <input id="email" class="input__field
+                                <% if (typeof emailError != "undefined") { %>
+                                    -errorBorder
+                                <% } %>
+                                    " name="email" <%= emailAttributes %> value="<%= userInput.email %>" autofocus>
                             <% if (typeof emailError != "undefined") { %>
-                                -errorColor
-                            <% } %>               
-                            ">Email Address:</label>
-                        <input id="email" class="input__field
-                            <% if (typeof emailError != "undefined") { %>
+                            <div class="input__errorMessage"><%= emailError %></div>
+                            <% } %> 
+                        </div>
+
+                        <div class="input__unit -bottomMarginLarge"> 
+                            <label for="password" class="input__label
+                                <% if (typeof passwordError != "undefined") { %>
+                                    -errorColor
+                                <% } %>               
+                                ">Password:</label>
+                            <div class="password__container 
+                            <% if (typeof passwordError != "undefined") { %>
                                 -errorBorder
                             <% } %>
-                                " name="email" <%= emailAttributes %> value="<%= userInput.email %>" autofocus>
-                        <% if (typeof emailError != "undefined") { %>
-                        <div class="input__errorMessage"><%= emailError %></div>
-                        <% } %> 
-                    </div>
-
-                    <div class="input__unit -bottomMarginLarge"> 
-                        <label for="password" class="input__label
+                            ">
+                                <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %>>
+                                <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                            </div>
                             <% if (typeof passwordError != "undefined") { %>
-                                -errorColor
-                            <% } %>               
-                            ">Password:</label>
-                        <div class="password__container 
-                        <% if (typeof passwordError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        ">
-                            <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %>>
-                            <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                            <div class="input__errorMessage"><%= passwordError %></div>
+                            <% } %> 
                         </div>
-                        <% if (typeof passwordError != "undefined") { %>
-                        <div class="input__errorMessage"><%= passwordError %></div>
-                        <% } %> 
-                    </div>
 
-                    <div class="-bottomMarginLarge">
-                        <button id="narrowScreen__button">Log In</button>
-                    </div>  
+                        <div class="-bottomMarginLarge">
+                            <button id="narrowScreen__button">Log In</button>
+                        </div>  
 
-                </form> 
+                    </form> 
 
-                <p class="-centerText -bottomMarginLarge"><a href="/password_reset_request" class="tertiaryLink">I forgot my password</a>.</p>
+                <p class="textMedium -centerText -bottomMarginLarge"><a href="/password_reset_request">I forgot my password</a>.</p>
 
-                <p class="-centerText -bottomMargin"><a href="/privacy_policy_terms_service" class="tertiaryLink">Privacy Policy</a> | <a href="/privacy_policy_terms_service" class="tertiaryLink">Terms Of Service</a></p>
-
-                <div class="-reducedWidth"><p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p></div>
-            
-            </div>
-
-        </div>
-
-    </main>
+    <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 
 </body>
 </html>

@@ -17,7 +17,8 @@ exports.passwordResetRequestFields = ['email'];
 exports.registerFields = [
     'email',
     'password',
-    'passwordConfirm'
+    'passwordConfirm',
+    'termsOfUse'
 ];
 
 exports.requestAnotherConfirmationFields = ['email'];

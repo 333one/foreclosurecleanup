@@ -2,35 +2,19 @@
 <html lang="en">
 <head>
     <title>Login To Your Account On Foreclosure Cleanup Account</title>
-    <%- include('includes/header_boilerplate.ejs') %>
+    <%- include('includes/head_boilerplate.ejs') %>
 
 </head>
 <body>
 
-    <main class="-topBottomMarginLargeVanish -rightLeftPaddingVanish">
+    <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-        <div class="narrowScreen__externalBorder -thirtyWidthVanish">
-
-            <div class="narrowScreen__header -topBottomPadding -bottomMargin">
-                    <div class="narrowScreen__logo"><a href="/"><img src="images/foreclosure-cleanup-logo.svg" alt="Foreclosure Cleanup logo"></a></div>
-            </div> 
-
-            <div class="-thirtyWidth -rightLeftPaddingStatic">
-
-                <h3 class="narrowScreen__headline -bottomMargin"><%= headline %></h3>
+                <h3 class="headlineLarge -centerText -bottomMarginMedium">Confirmation Resent</h3>
                 <%- body %>
-                <p class="narrowScreen__text -bottomMarginLarge">If you don't see it in your inbox please check your Promotions, Social or Junk folders.</p>
-                <p class="-centerText -bottomMarginLarge"><a href="confirmation_resent?email=<%= email %>" class="tertiaryLink">Resend confirmation email</a>.</p>
+                <p class="textLarge -bottomMarginLarge">If you don't see it in your inbox please check your Promotions, Social or Junk folders.</p>
+                <p class="textMedium -centerText -bottomMarginLarge"><a href="confirmation_resent?email=<%= email %>">Resend confirmation email</a>.</p>
 
-                <p class="-centerText -bottomMargin"><a href="/privacy_policy_terms_service" class="tertiaryLink">Privacy Policy</a> | <a href="/privacy_policy_terms_service" class="tertiaryLink">Terms Of Service</a></p>
-
-                <div class="-reducedWidth"><p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p></div> 
-
-            </div>
-
-        </div>
-
-    </main>
+    <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 
 </body>
 </html>
