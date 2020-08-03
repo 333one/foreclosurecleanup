@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Business Phone</title>
+    <%- include('includes/head_boilerplate.ejs') %>
+    <%- include('includes/log_in_out_rollover.ejs') %>
+    <script defer src="js/cleave.min.js"></script>
+    <script defer src="js/cleave_phone.us.js"></script>
+    <script defer src="js/cleave_connection.js"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard_header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Business Phone</p>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Current Business Phone:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessPhone %></p>
+                </div>
+            </div>
+            <% } %>
+
+            <form action="/add_change_business_phone" method="POST">
+
+                <input type="hidden" name="deleteProperty" value="false">
+
+                <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
+                    <label for="businessPhone" class="input__label
+                        <% if (typeof businessPhoneError != "undefined") { %>
+                            -errorColor
+                        <% } %>   
+                        "><% if (addOrChangeProperty === "change") { %>Updated <% } %>Business Phone:</label>
+                    <input id="businessPhone" class="input__field
+                        <% if (typeof businessPhoneError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="businessPhone" <%= businessPhoneAttributes %> value="<%= userInput.businessPhone %>" autofocus>
+                    <% if (typeof businessPhoneError != "undefined") { %>
+                    <div class="input__errorMessage"><%= businessPhoneError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                </div>  
+
+            </form>
+
+            <div class="-rightAlign -rightLeftMarginMedium -bottomMarginLarge"><a href="/dashboard"><div class="dashboard__fauxButton">< Back</div></a></div>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add_change_business_phone" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's phone number.</button>
+                </div>
+                <input type="hidden" name="businessPhone" value="">
+                <input type="hidden" name="deleteProperty" value="true">
+            </form>
+            <% } %>  
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard_screen_footer.ejs') %>
+
+</body>
+</html>

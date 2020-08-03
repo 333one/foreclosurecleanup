@@ -4,15 +4,15 @@
     <title>Log In To Your Account On Foreclosure Cleanup Account</title>
     <%- include('includes/head_boilerplate.ejs') %>
     <script defer src="js/password_toggle.js"></script>
-    <script defer src="js/screen-width.js"></script>
+    <script defer src="js/screen_width.js"></script>
 </head>
 <body>
 
     <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-                <h3 class="headlineLarge -centerText -bottomMarginMedium">Log In To Your Account</h3>
+                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Log In To Your Account</h3>
 
-                <p class="textSmall -centerText -bottomMarginMedium">Need to register an account? Click <a href="/register" class="tertiaryLink">here</a>.</p>
+                <p class="textSmall -centerAlign -bottomMarginMedium">Need to register an account? Click <a href="/register" class="tertiaryLink">here</a>.</p>
 
                     <form action="/login" method="POST">
 
@@ -57,7 +57,7 @@
 
                     </form> 
 
-                <p class="textMedium -centerText -bottomMarginLarge"><a href="/password_reset_request">I forgot my password</a>.</p>
+                <p class="textMedium -centerAlign -bottomMarginLarge"><a href="/password_reset_request">I forgot my password</a>.</p>
 
     <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 

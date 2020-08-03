@@ -1,24 +1,38 @@
-exports.changeEmailFields = ['newEmail', 'emailConfirm', 'password'];
+exports.changeAboutMyBusiness = ['aboutMyBusiness'];
 
-exports.changeYourNameFields = ['firstName', 'lastName'];
+exports.addChangeBusinessAddress = ['businessCity', 'businessState', 'businessStreet', 'businessStreetTwo', 'businessZip', 'overrideUsps', 'deleteProperty'];
 
-exports.changePasswordFields = ['passwordCurrent', 'password', 'passwordConfirm'];
+exports.addChangeBusinessName = ['businessName', 'deleteProperty'];
 
-exports.changePhoneFields = ['phone'];
-
-exports.deleteYourAccountFields = ['password'];
-
-exports.loginFields = ['email', 'password'];
-
-exports.passwordResetFields = ['password', 'passwordConfirm'];
-
-exports.passwordResetRequestFields = ['email'];
-
-exports.registerFields = [
-    'email',
-    'password',
-    'passwordConfirm',
-    'termsOfUse'
+exports.addChangeBusinessServices = [
+    'serviceBoardingSecuring',
+    'serviceDebrisRemovalTrashout',
+    'serviceEvictionManagement',
+    'serviceFieldInspection',
+    'serviceHandymanGeneralMaintenance',
+    'serviceLandscapeMaintenance',
+    'serviceLockChanges',
+    'serviceOverseePropertyRehabilitation',
+    'servicePoolMaintenance',
+    'servicePropertyCleaning',
+    'serviceWinterizations',
+    'deleteProperty'
 ];
 
-exports.requestAnotherConfirmationFields = ['email'];
+exports.addChangeBusinessPhone = ['businessPhone', 'deleteProperty'];
+
+exports.changeEmail = ['newEmail', 'emailConfirmation', 'password'];
+
+exports.changePassword = ['passwordCurrent', 'password', 'passwordConfirm'];
+
+exports.deleteYourAccount = ['password'];
+
+exports.login = ['email', 'password'];
+
+exports.passwordReset = ['password', 'passwordConfirm'];
+
+exports.passwordResetRequest = ['email'];
+
+exports.register = ['email', 'password', 'passwordConfirm', 'termsOfUse'];
+
+exports.requestAnotherConfirmation = ['email'];

@@ -1,26 +1,44 @@
 "use strict"
 
+exports.recentRequestExpiration = 5 * 60;
+
 exports.businessAboutUsField = {
     maxLength: 100,
     rows: 5,
     get attributes() {
-        return `rows=${this.rows} maxLength=${this.maxLength}`
+        return `rows=${this.rows} maxLength=${this.maxLength}`;
     }
 }
 
-exports.businessAddressField = {
+exports.businessCityField = {
+    minLength: 3,
+    maxLength: 35,
+    get attributes() {
+        return `type=text maxLength=${this.maxLength}`;
+    }
+}
+
+exports.businessNameField = {
+    minLength: 2,
+    maxLength: 35,
+    get attributes() {
+        return `type=text maxLength=${this.maxLength}`;
+    }
+}
+
+exports.businessPhoneField = {
+    minLength: 10,
+    maxLength: 20,
+    get attributes() {
+        return `type=tel maxLength=${this.maxLength}`;
+    }
+}
+
+exports.businessStreetField = {
     minLength: 5,
-    maxLength: 50,
+    maxLength: 60,
     get attributes() {
-        return `type=text minLength=${this.minLength} maxLength=${this.maxLength}`
-    }
-}
-
-exports.businessUnitField = {
-    size: 8,
-    maxLength: 8,
-    get attributes() {
-        return `type=text size=${this.size} maxLength=${this.maxLength}`
+        return `type=text maxLength=${this.maxLength}`;
     }
 }
 
@@ -28,22 +46,15 @@ exports.businessWebsiteField = {
     minLength: 5,
     maxLength: 50,
     get attributes() {
-        return `type=text minLength=${this.minLength} maxLength=${this.maxLength}`
+        return `type=text minLength=${this.minLength} maxLength=${this.maxLength}`;
     }
 }
 
-exports.businessZipCodeField = {
+exports.businessZipField = {
     minLength: 5,
     maxLength: 5,
     get attributes() {
-        return `type=text minLength=${this.minLength} maxLength=${this.maxLength}`
-    }
-}
-
-exports.companyDescriptionField = {
-    maxLength: 250,
-    get attributes() {
-        return `type=text maxLength=${this.maxLength}`
+        return `type=text maxLength=${this.maxLength}`;
     }
 }
 
@@ -51,7 +62,7 @@ exports.emailField = {
     minLength: 5,
     maxLength: 50,
     get attributes() {
-        return `type=email minLength=${this.minLength} maxLength=${this.maxLength}`
+        return `type=email maxLength=${this.maxLength}`;
     }
 }
 
@@ -75,19 +86,4 @@ exports.passwordField = {
 
 exports.passwordResetRequestExpiration = 1 * 60 * 60;
 
-exports.phoneField = {
-    minLength: 10,
-    maxLength: 20,
-    get attributes() {
-        return `type=tel minLength=${this.minLength} maxLength=${this.maxLength}`
-    }
-}
-
 exports.unverifiedUserExpiration = 2 * 60 * 60;
-
-exports.yourNameField = {
-    maxLength: 25,
-    get attributes() {
-        return `type=text maxLength=${this.maxLength}`
-    }
-}

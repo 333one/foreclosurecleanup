@@ -1,29 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Login To Your Account On Foreclosure Cleanup Account</title>
-    <%- include('includes/header_boilerplate.ejs') %>
-
+    <title>500 - Internal Server Error</title>
+    <%- include('includes/head_boilerplate.ejs') %>
 </head>
-<body class="darkWaveBackground">
+<body>
 
-    <main class="-rightLeftPadding">
+    <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-        <div class="mainBlock__externalBorder whiteBackground -reducedWidth -topBottomMarginLarge">
-        
-            <%- include('includes/small_screen_header.ejs') %>
-        
-            <div class="mainBlock__internalBorder -topBottomPadding -rightLeftPadding">
+                <p class="headlineLarge -centerAlign -bottomMarginMedium">500 - Internal Server Error</p>
+                <p class="textLarge -bottomMarginMedium">Oops, something went wrong.</p>
+                <p class="textLarge -bottomMarginLarge">The server encountered an internal error and was unable to complete your request.  Please try again.</p>
 
-                <p class="message__headline">500 - Internal Server Error</p>
-                <p class="message__text">Oops, something went wrong.</p>
-                <p class="message__text">The server encountered an internal error and may have been unable to complete your request.  Please try again.</p>
-
-            </div>
-
-        </div>
-
-    </main>
+    <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 
 </body>
 </html>

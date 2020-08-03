@@ -1,82 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>dashboard</title>
-    <%- include('includes/header_boilerplate.ejs') %>
+    <title>Dashboard</title>
+    <%- include('includes/head_boilerplate.ejs') %>
+    <%- include('includes/log_in_out_rollover.ejs') %>
 </head>
 <body>
 
-    <header>
-        <div class="rowTwo -standardWidth -rightLeftPadding">
-            <%- include('includes/logo_top.ejs') %>
-            <div class="rowTwo__text">
-                <p class="rowTwo__headline">Dashboard</p>
-                <p class="rowTwo__description">User dashboard for test account.</p>
-                <p class="rowTwo__description"><a href="/logout">Logout.</a></p>
+    <%- include('includes/dashboard_header.ejs') %>
+
+    <main>
+
+        <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline">Business Information</p>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Business Name:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessNameDashboardValue %></p>
+                </div>
+                <div>
+                    <a href="/add_change_business_name">
+                    <% if (isBusinessNameAdded === true) { %>
+                        <div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div>
+                    <% } else { %>
+                        <div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div>
+                    <% } %>
+                    </a>
+                </div>
             </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Business Phone:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessPhoneDashboardValue %></p>
+                </div>
+                <div>
+                    <a href="/add_change_business_phone">
+                        <% if (isBusinessPhoneAdded === true) { %>
+                            <div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div>
+                        <% } else { %>
+                            <div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div>
+                        <% } %>
+                    </a>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Business Address:</p>
+                    <% if (isBusinessAddressAdded) { %>
+                        <p class="dashboard__value -rightLeftMarginMedium"><%= businessStreetDashboardValue %></p>
+                        <p class="dashboard__value -rightLeftMarginMedium"><%= businessRegionDashboardValue %></p>
+                    <% } else { %>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessStreetDashboardValue %></p>
+                    <% } %>
+                </div>
+                <div>
+                    <a href="/add_change_business_address">
+                    <% if (isBusinessAddressAdded) { %>
+                        <div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div>
+                    <% } else { %>
+                        <div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div>
+                    <% } %>
+                    </a>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Services Offered:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessServicesDashboardValue %></p>
+                </div>
+                <div>
+                    <% if (isBusinessServicesAdded === true) { %>
+                        <a href="/add_change_business_services"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add_change_business_services"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">About My Business:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessAboutDashboardValue %></p>
+                </div>
+                <div>
+                    <% if (isBusinessAboutAdded === true) { %>
+                        <a href="/change_about_my_business"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/change_about_my_business"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <p class="dashboard__headline -topMarginHuge">Account Information</p>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Email Address:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= email %></p>
+                </div>
+                <div>
+                    <a href="/change_email"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Password:</p>
+                    <p class="dashboard__valueSmall -rightLeftMarginMedium">[Password not displayed for your security.]</p>
+                </div>
+                <div>
+                    <a href="/change_password"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                </div>
+            </div>
+
+            <div class="textSmall -topBottomPaddingLarge -rightLeftMarginMedium -rightAlign"><a href="/delete_your_account">Delete your account.</a></div>
+
         </div>
-        <%- include('includes/navigation_top.ejs') %>
-    </header>
-
-    <main class="mainBlock -rightLeftPadding">
-
-        <div class="mainBlock__externalBorder -standardWidth"><div class="mainBlock__internalBorder">
-
-        <% if(accountChangeMessage) { %>
-            <div class="
-            <% if(accountChangeMessage === 'Change successful.') { %>
-                dashboard__success
-            <% } else if(accountChangeMessage === 'No change made.') { %>
-                dashboard__noChange
-            <% } %>
-            "><%= accountChangeMessage %></div>
-        <% } %>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__name -rightLeftMargin">Email Address:</p>
-                    <p class="dashboard__value -rightLeftMargin"><%= email %></p>
-                </div>
-                <div>
-                    <a href="/change_email"><div class="dashboard__fauxButton -rightLeftMargin">Change</div></a>
-                </div>
-            </div>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__name -rightLeftMargin">Name:</p>
-                    <p class="dashboard__value -rightLeftMargin"><%= firstName %> <%= lastName %></p>
-                </div>
-                <div>
-                    <a href="/change_your_name"><div class="dashboard__fauxButton -rightLeftMargin">Change</div></a>
-                </div>
-            </div>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__name -rightLeftMargin">Phone:</p>
-                    <p class="dashboard__value -rightLeftMargin"><%= phone %></p>
-                </div>
-                <div>
-                    <a href="/change_phone"><div class="dashboard__fauxButton -rightLeftMargin">Change</div></a>
-                </div>
-            </div>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__name -rightLeftMargin">Password:</p>
-                    <p class="dashboard__valueSmall -rightLeftMargin">[Password not displayed for your security.]</p>
-                </div>
-                <div>
-                    <a href="/change_password"><div class="dashboard__fauxButton -rightLeftMargin">Change</div></a>
-                </div>
-            </div>
-
-            <div class="-topBottomPadding -rightLeftMargin -alignRight "><a href="/delete_your_account">Delete your account.</a></div>
-
-        </div></div>
 
     </main>
+
+    <%- include('includes/standard_screen_footer.ejs') %>
 
 </body>
 </html>

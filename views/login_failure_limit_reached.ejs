@@ -2,36 +2,17 @@
 <html lang="en">
 <head>
     <title>Log In Temporarily Suspended</title>
-    <%- include('includes/header_boilerplate.ejs') %>
-
+    <%- include('includes/head_boilerplate.ejs') %>
 </head>
 <body>
 
-    <main class="-topBottomMarginLargeVanish -rightLeftPaddingVanish">
+    <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-        <div class="narrowScreen__externalBorder -fortyWidthVanish">
+                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Log in Failure Limit Reached.</h3>
+                <p class="textLarge -bottomMarginMedium">We are sorry but you have reached the maximum number of log in failures.  For your protection access to your account has been temporarily suspended.</p>
+                <p class="textLarge -bottomMarginLarge">Please try again in <%= expirationTime %>.</p>
 
-            <div class="narrowScreen__header -topBottomPadding -bottomMargin">
-                    <div class="narrowScreen__logo"><a href="/"><img src="images/foreclosure-cleanup-logo.svg" alt="Foreclosure Cleanup logo"></a></div>
-            </div> 
-
-            <div class="-fortyWidth -rightLeftPaddingStatic">
-
-                <h3 class="narrowScreen__headline -bottomMargin">Log in Failure Limit Reached.</h3>
-                <p class="narrowScreen__text -bottomMarginLarge">We are sorry but you have reached the maximum number of log in failures.  For your protection access to your account has been temporarily suspended.</p>
-                <p class="narrowScreen__text -bottomMarginLarge">Please try again in <%= expirationTime %>.</p>
-
-                <p class="-centerText -bottomMargin"><a href="/privacy_policy_terms_service" class="tertiaryLink">Privacy Policy</a> | <a href="/privacy_policy_terms_service" class="tertiaryLink">Terms Of Service</a></p>
-
-                <div class="-reducedWidth"><p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p></div> 
-
-            </div>
-            
-        </div>
-
-    </main>
-
-
+    <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 
 </body>
 </html>

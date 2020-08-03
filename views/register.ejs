@@ -3,20 +3,19 @@
 <head>
     <title>Register Your Property Preservation Company On The National Vendor List</title>
     <%- include('includes/head_boilerplate.ejs') %>
-    <script defer src="js/zxcvbn.js"></script>
-    <script defer src="js/email_error_message_check.js"></script>
+    <script defer src="js/form_button_errors_check.js"></script>
     <script defer src="js/password_strength_match.js"></script>
     <script defer src="js/password_toggle.js"></script>
-    <script defer src="js/register-button-check.js"></script>
-    <script defer src="js/screen-width.js"></script>
+    <script defer src="js/screen_width.js"></script>
+    <script defer src="js/zxcvbn.js"></script>
 </head>
 <body>
 
     <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
                 
-                <h3 class="headlineLarge -centerText -bottomMarginMedium">Create Your Account</h3>
+                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Create Your Account</h3>
 
-                <p class="textSmall -centerText -bottomMarginMedium">Already have an account? Sign in <a href="/login">here</a>.</p>
+                <p class="textSmall -centerAlign -bottomMarginMedium">Already have an account? Sign in <a href="/login">here</a>.</p>
 
                 <form action="/register" method="POST">
 

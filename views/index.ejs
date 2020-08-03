@@ -3,33 +3,25 @@
 <head>
     <title>Foreclosure Cleanup.org</title>
     <%- include('includes/head_boilerplate.ejs') %>
-    <script defer src="js/screen-width.js"></script>
+    <%- include('includes/log_in_out_rollover.ejs') %>
+    <script defer src="js/screen_width.js"></script>
 </head>
 
 <body>
 
-    <header>
-        <div class="rowOne -rightLeftPadding">
-            <div class="rowOne__internal -standardWidth">
-                <h1 class="rowOne__left --font125">Foreclosure Cleanup.org</h1>
-                <%- include('includes/row_one_right.ejs') %>
-            </div>
-        </div>
-        <%- include('includes/logo_top.ejs') %>
-        <%- include('includes/navigation_top.ejs') %>
-    </header>
+    <%- include('includes/standard_screen_header_boilerplate.ejs') %>
 
     <main class="-topBottomPaddingLarge">
 
-        <div class="panel__container -standardWidth">
+        <div class="panel__container standardWidth">
         
-            <div class="panel -topBottomMargin -rightLeftMargin">
+            <div class="panel -topBottomMarginMedium -rightLeftMarginMedium">
                 <p class="panel__headline"><a href="/foreclosure_cleanup_vendor_list">FIND A SERVICE PROVIDER</a></p>
                 <a href="/foreclosure_cleanup_vendor_list"><div class="panel__image -panelSearch"></div></a>
                 <p class="panel__text"><a href="/foreclosure_cleanup_vendor_list">Property Preservation service providers include trash-out, locksmith, pool, landscaping, handyman, painting, flooring, contractor, carpenter, electrical, HVAC & plumbing services.</a></p>
             </div>
             
-            <div class="panel -topBottomMargin -rightLeftMargin">
+            <div class="panel -topBottomMarginMedium -rightLeftMarginMedium">
                 <p class="panel__headline"><a href="/register">REGISTER YOUR COMPANY</a></p>
                 <a href="/register"><div class="panel__image -panelRegister"></div></a>
                 <p class="panel__text"><a href="/register">Register your Property Preservation or Foreclosure Service Provider Company on the National Vendor List.</a></p>
@@ -39,7 +31,7 @@
 
     </main>
 
-    <%- include('includes/footer.ejs') %>
+    <%- include('includes/standard_screen_footer.ejs') %>
 
 </body>
 </html>

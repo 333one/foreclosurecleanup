@@ -3,18 +3,17 @@
 <head>
     <title>Registration Sent</title>
     <%- include('includes/head_boilerplate.ejs') %>
-
 </head>
 <body>
 
     <%- include('includes/narrowScreen_top_boilerplate.ejs') %>
 
-                <h3 class="headlineLarge -centerText -bottomMarginMedium">Thanks For Registering</h3>
+                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Thanks For Registering</h3>
 
                 <p class="textLarge -bottomMarginMedium">A confirmation email has been sent to <span class="highlightEffect"><%= email %></span> and should arrive within a few minutes. Please watch for an email titled: <span class="highlightEffect"><%= emailSubject %>.</span></p>
                 <p class="textLarge -bottomMarginLarge">If you don't see it in your main inbox please check your Promotions, Social or Junk folders.</p>
                 
-                <p class="textMedium -centerText -bottomMarginLarge"><a href="confirmation_resent?email=<%= email %>">Resend confirmation email</a>.</p>
+                <p class="textMedium -centerAlign -bottomMarginLarge"><a href="confirmation_resent?email=<%= email %>">Resend confirmation email</a>.</p>
                 
     <%- include('includes/narrowScreen_bottom_boilerplate.ejs') %>
 

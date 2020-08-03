@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Business Address</title>
+    <%- include('includes/head_boilerplate.ejs') %>
+    <%- include('includes/log_in_out_rollover.ejs') %>
+</head>
+<body>
+
+    <%- include('includes/dashboard_header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Services Offered</p>
+
+            <form action="/add_change_business_services" method="POST">
+
+                <div class="checkBox__largeContainer
+                    <% if (typeof businessServicesError != "undefined") { %>
+                        -errorColor
+                    <% } %>   
+                ">
+                    <div class="-rightLeftMarginMedium -topMarginLarge -bottomMarginSmall">
+                        <input type="checkbox" id="serviceBoardingSecuring" name="serviceBoardingSecuring" value="true">
+                        <label for="serviceBoardingSecuring" class="checkBox__label">Boarding &amp; Securing</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceDebrisRemovalTrashout" name="serviceDebrisRemovalTrashout" value="true">
+                        <label for="serviceDebrisRemovalTrashout" class="checkBox__label">Debris Removal / Trashout</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceEvictionManagement" name="serviceEvictionManagement" value="true">
+                        <label for="serviceEvictionManagement" class="checkBox__label">Eviction Management</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceFieldInspection" name="serviceFieldInspection" value="true">
+                        <label for="serviceFieldInspection" class="checkBox__label">Field Inspection</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceHandymanGeneralMaintenance" name="serviceHandymanGeneralMaintenance" value="true">
+                        <label for="serviceHandymanGeneralMaintenance" class="checkBox__label">Handyman &amp; General Maintenance</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceLandscapeMaintenance" name="serviceLandscapeMaintenance" value="true">
+                        <label for="serviceLandscapeMaintenance" class="checkBox__label">Landscape Maintenance</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceLockChanges" name="serviceLockChanges" value="true">
+                        <label for="serviceLockChanges" class="checkBox__label">Lock Changes</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="serviceOverseePropertyRehabilitation" name="serviceOverseePropertyRehabilitation" value="true">
+                        <label for="serviceOverseePropertyRehabilitation" class="checkBox__label">Oversee Property Rehabilitation</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="servicePoolMaintenance" name="servicePoolMaintenance" value="true">
+                        <label for="servicePoolMaintenance" class="checkBox__label">Pool Maintenance</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginSmall">
+                        <input type="checkbox" id="servicePropertyCleaning" name="servicePropertyCleaning" value="true">
+                        <label for="servicePropertyCleaning" class="checkBox__label">Property Cleaning</label>
+                    </div>
+
+                    <div class="-rightLeftMarginMedium -bottomMarginLarge">
+                        <input type="checkbox" id="serviceWinterizations" name="serviceWinterizations" value="true">
+                        <label for="serviceWinterizations" class="checkBox__label">Winterizations</label>
+                    </div>
+
+                    <input type="hidden" name="deleteProperty" value="false">
+
+                    <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                        <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                    </div>
+                </div>  
+
+            </form>
+
+            <div class="-rightAlign -rightLeftMarginMedium -bottomMarginLarge"><a href="/dashboard"><div class="dashboard__fauxButton">< Back</div></a></div>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add_change_business_services_offered" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's services.</button>
+                </div>
+                <input type="hidden" name="serviceBoardingSecuring" value="false">
+                <input type="hidden" name="serviceDebrisRemovalTrashout" value="false">
+                <input type="hidden" name="serviceEvictionManagement" value="false">
+                <input type="hidden" name="serviceFieldInspection" value="false">
+                <input type="hidden" name="serviceHandymanGeneralMaintenance" value="false">
+                <input type="hidden" name="serviceLandscapeMaintenance" value="false">
+                <input type="hidden" name="serviceLockChanges" value="false">
+                <input type="hidden" name="serviceOverseePropertyRehabilitation" value="false">
+                <input type="hidden" name="servicePoolMaintenance" value="false">
+                <input type="hidden" name="servicePropertyCleaning" value="false">
+                <input type="hidden" name="serviceWinterizations" value="false">
+                <input type="hidden" name="deleteProperty" value="true">
+            </form>
+            <% } %>  
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard_screen_footer.ejs') %>
+
+</body>
+</html>

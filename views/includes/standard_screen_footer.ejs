@@ -1,9 +1,9 @@
-    <footer class="-rightLeftPadding">
+    <footer class="-rightLeftPaddingMediumStatic">
         
-        <div class="-standardWidth">
+        <div class="standardWidth">
             <div class="footer__container -topBottomPaddingLarge">
-                <div>
 
+                <div>
                 <% if (activeLink === 'home') { %> 
                     <p class="footerNavigation__activeUnit">
                 <% } else { %>
@@ -18,9 +18,7 @@
                 <% } %>
                     <a href="/foreclosure_cleanup_vendor_list">VENDOR LIST</a></p>
 
-                <% if (loggedIn === true) { %> 
-                    <p class="footerNavigation__unit"><a href="/dashboard">DASHBOARD</a></p>
-                <% } else { %>
+                <% if (loggedIn != true) { %> 
                     <% if (activeLink === 'register') { %> 
                     <p class="footerNavigation__activeUnit">
                     <% } else { %>
@@ -29,22 +27,12 @@
                     <a href="/register">REGISTER</a></p>
                 <% } %>
 
-                <% if (loggedIn === true) { %> 
-                    <p class="footerNavigation__unit">
-                    <a href="/logout">LOGOUT</a></p>
-                <% } else { %>
-                    <% if (activeLink === 'login') { %> 
-                    <p class="footerNavigation__activeUnit">
-                    <% } else { %>
-                    <p class="footerNavigation__unit">
-                    <% } %>
-                    <a href="/login">LOG IN</a></p>
-                <% } %>
-
                 </div>
+
                 <div class="footer__logo"><a href="/"><img src="images/foreclosure-cleanup-logo-bw.svg" alt="Foreclosure Cleanup logo"></a></div>
             </div>
-            <p class="footerLink"><a href="/privacy_policy_terms_service">Privacy Policy | Terms Of Service</a></p>
+
+            <p class="footerLink -bottomMarginLarge"><a href="/privacy_policy_terms_service">Privacy Policy</a> | <a href="/privacy_policy_terms_service">Terms Of Service</a></p>
             <p id="copyright">© Foreclosure Cleanup.org - All Rights Reserved</p>
         </div>
         

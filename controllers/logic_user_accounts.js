@@ -1,61 +1,30 @@
 "use strict";
 
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+const cryptoRandomString = require('crypto-random-string');
+const objectHash = require('object-hash');
 const path = require('path');
 const phoneNormalizer = require('phone');
-const zxcvbn = require('zxcvbn');
 
+const communication = require('./communication');
 const defaultAppValues = require('../models/default_app_values.js');
-const messages = require('../models/default_messages');
+const defaultMessages = require('../models/default_messages');
+const logicMessages = require('./logic_messages');
+const mongooseInstance = require('./mongoose_create_instances');
+
 const { 
     FalseEmailConfirmationRequest,
     LoginFailure,
     PasswordResetRequest,
-    User,
-    UnverifiedUser
+    RecentDeletedAccount,
+    RecentPasswordResetLimitReached,
+    RecentPasswordResetRequest,
+    UnverifiedUser,
+    User
 } = require('../models/mongoose_schema');
 
 // Custom path to .env file.
 require('dotenv').config({ path: path.join(__dirname, '../models/.env') });
-
-exports.checkAllFieldsFilled = function(defaultFields, userInputFields) {
-
-    for(let element of defaultFields) {
-        if (userInputFields[element] === '' || userInputFields[element] === undefined) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-exports.checkForPreviousErrors = function(emailError, firstNameError, lastNameError, phoneError) {
-
-    if(emailError || firstNameError || lastNameError || phoneError) {
-        return true;
-    }
-    return false;
-}
-
-exports.checkIfInputTooLong = function(field, maxLength) {
-
-    return field.length > maxLength ? true : false;
-}
-
-exports.checkPasswordMeetsRequirements = function(password) {
-
-    return zxcvbn(password).score >= 2 ? true : false;
-}
-
-exports.checkPhoneValid = function(phone) {
-
-    if (phoneNormalizer(phone, '', true).length === 0) {
-        return false;
-    }
-
-    return true;
-};
 
 exports.cleanFields = function(defaultFields, reqBody) {
 
@@ -96,68 +65,21 @@ exports.cleanFields = function(defaultFields, reqBody) {
         for(let property in reqBody) {
             reqBody[property] = '';
         }
+
+        //TODO: If the user is logged in log them out and send them to the home page.
+        
     }
 
     // Trim white space from each property.
     for(let property in reqBody) {
         reqBody[property] = reqBody[property].trim();
-        // reqBody[property] = reqBody[property].replace(/\s+/g, '');
     }
 
     return reqBody;
 }
 
-exports.createFalseEmailConfirmationRequest = function(email) {
-
-    const fakeEmailRequest = new FalseEmailConfirmationRequest({
-        email: email
-    });
-
-    return fakeEmailRequest;
-}
-
-exports.createLoginFailure = function(email) {
-
-    const loginFailure = new LoginFailure({
-        email: email
-    });
-
-    return loginFailure;
-}
-
-exports.createPasswordResetRequest = function(email, firstName, confirmationHash) {
-
-    const passwordResetRequest = new PasswordResetRequest({
-        email: email,
-        firstName: firstName,
-        confirmationHash: confirmationHash
-    });
-
-    return passwordResetRequest;
-}
-
-exports.createUnverifiedUser = function(email) {
-
-    const unverifiedUser = new UnverifiedUser({
-        email: email,
-        password: undefined,
-        confirmationHash: undefined
-    });
-
-    return unverifiedUser;
-}
-
-exports.createUser = function(unverifiedUser) {
-
-    const user = new User({
-        email: unverifiedUser.email,
-        password: unverifiedUser.password
-    });
-
-    return user;
-}
-
 function filterOnlyOneAllowed(string, character) {
+
     let first = true;
 
     return string.replace(new RegExp(character, 'g'), function(value) {
@@ -183,286 +105,27 @@ exports.formatName = function(name) {
     return formattedArray.join('');
 }
 
-exports.formatPhone = function(phone) {
+exports.formatBusinessPhone = function(businessPhone) {
 
-    let cleanedPhone = phone.replace(/\D/g,'');
+    let cleanedPhone = businessPhone.replace(/\D/g,'');
 
-    let normalizedPhone = phoneNormalizer(phone, '', true).length === 0 ? ('+1' + cleanedPhone) : phoneNormalizer(phone, '', true).join('').slice(0, 12);
+    let phonePrefixRemoved;
 
-    if (normalizedPhone.length < 6) {
-        return normalizedPhone.slice(2, 5);
+    if(cleanedPhone.charAt(0) == 0 || cleanedPhone.charAt(0) == 1) {
+        phonePrefixRemoved = cleanedPhone.slice(1);
+    } else {
+        phonePrefixRemoved = cleanedPhone;
     }
 
-    if (normalizedPhone.length < 9) {
-        return normalizedPhone.slice(2, 5) + '-' + normalizedPhone.slice(5);
+    if (phonePrefixRemoved.length < 4) {
+        return phonePrefixRemoved.slice(0, 3);
     }
 
-    if (normalizedPhone.length < 13) {
-        return normalizedPhone.slice(2, 5) + '-' + normalizedPhone.slice(5, 8) + '-' + normalizedPhone.slice(8, 12);
+    if (phonePrefixRemoved.length < 7) {
+        return phonePrefixRemoved.slice(0, 3) + '-' + phonePrefixRemoved.slice(3);
     }
 
-    return '';
-}
-
-exports.getDeleteAccountError = function(password, isPasswordCorrect) {
-
-    if (password === '') {
-        return messages.existingPasswordEmpty;
-    } 
-
-    if (isPasswordCorrect === false) {
-        return 'The password you entered was incorrect.  Please try again.';
-    } 
-}
-
-exports.getEmailError = function(email, isEmailValid, isEmailTooLong, doesUserAlreadyExist, doesUnverifiedUserAlreadyExist) {
-    
-    if (email === '') {
-        return 'Please enter your email address.';
-    } 
-
-    if (isEmailTooLong === true) {
-        return messages.fieldTooLong('email address', defaultAppValues.emailField.maxLength);
-    } 
-
-    if (isEmailValid === false) {
-        return messages.emailNotValid;
-    }
-
-    if (doesUnverifiedUserAlreadyExist === true ||  doesUserAlreadyExist === true) {
-        return messages.emailAlreadyInUse;
-    }
-}
-
-exports.getEmailConfirmationError = function(emailReenter, doEmailsMatch) {
-
-    if (emailReenter === '') {
-        return 'Please confirm your new your email.';
-    }
-
-    if (doEmailsMatch === false) {
-        return 'Email confirmation did not match.  Please re-enter your new email address.';
-    }
-}
-
-exports.getExpirationTime = function(expiration) {
-
-    let minutes = expiration / 60;
-    let hours = minutes / 60;
-    let days = hours / 24;
-
-    if(minutes === 1) return `${ minutes } minute`;
-    if(minutes < 60) return `${ minutes } minutes`;
-    if(minutes === 60) return `${ hours } hour`;
-    if(minutes < 1440) return `${ hours } hours`;
-    if(minutes === 1440) return `${ days } day`;
-}
-
-exports.getLoginEmailError = function(email, isEmailValid) {
-
-    if (email === '') {
-        return messages.emailExistingEmpty;
-    } 
-
-    if (isEmailValid === false) {
-        return messages.emailNotValid;
-    }
-}
-
-exports.getLoginPasswordError = function(password, passwordCorrect, emailError) {
-
-    if (password === '' && emailError === undefined) {
-        return messages.existingPasswordEmpty;
-    } 
-
-    if (passwordCorrect === false && emailError === undefined) {
-        return messages.existingPasswordIncorrect;
-    } 
-}
-
-exports.getNewEmailError = function(email, whyEmailUsed, isEmailTooLong, isEmailValid, doesUserAlreadyExist, doesUnverifiedUserAlreadyExist) {
-    
-    if (email === '') {
-        if (whyEmailUsed === 'change') return 'Please enter your new email.';
-        if (whyEmailUsed === 'register') return 'Please enter your email.';
-    } 
-
-    if (isEmailTooLong === true) {
-        return messages.fieldTooLong('email address', defaultAppValues.emailField.maxLength);
-    } 
-
-    if (isEmailValid === false) {
-        return messages.emailNotValid;
-    }
-
-    if (doesUnverifiedUserAlreadyExist === true || doesUserAlreadyExist === true) {
-        return messages.emailAlreadyInUse;
-    }
-}
-
-exports.getNewPasswordError = function(whyPasswordUsed, password, isPasswordTooLong, doesPasswordMeetRequirements) {
-
-    let returnObject = {};
-
-    if (password === '') {
-        returnObject.errorType = 'empty';
-        if(whyPasswordUsed === 'register') {
-            returnObject.message = 'please enter your password.';
-        } else {
-            returnObject.message = 'please enter your new password.';
-        }
-        
-        return returnObject;
-    }
-
-    if (isPasswordTooLong === true) {
-        returnObject.errorType = 'tooLong';
-        returnObject.message = messages.fieldTooLong('Password', defaultAppValues.passwordField.maxLength);
-        return returnObject;
-    } 
-
-    if (doesPasswordMeetRequirements === false) {
-        returnObject.errorType = 'weak';
-        returnObject.message = 'Password was not strong enough, please try again.';
-        return returnObject;
-    }
-}
-
-exports.getPasswordConfirmError = function(whyPasswordUsed, passwordError, passwordConfirm, doPasswordsMatch) {
-
-    let returnObject = {};
-
-    if (passwordConfirm === '' || passwordError) {
-        returnObject.errorType = 'empty';
-        returnObject.message = whyPasswordUsed === 'changePassword' ? 'Please confirm your new password.' : 'Please confirm your password.';
-        return returnObject;
-    }
-
-    if (doPasswordsMatch === false) {
-        returnObject.errorType = 'didNotMatch';
-        returnObject.message = 'Password confirmation did not match.  Please try again.';
-        return returnObject;
-    }
-}
-
-exports.getPasswordError = function(whyPasswordUsed, password, isPasswordCorrect) {
-
-    if (password === '') {
-        if(whyPasswordUsed === 'changePassword') return 'Please enter your current password.';
-        return 'Please enter your password.';
-    }
-
-    if(!isPasswordCorrect) {
-        if(whyPasswordUsed === 'login') return 'That password/username combination was incorrect.';
-        if(whyPasswordUsed === 'changePassword') return 'That did not match your current password.';
-        if(whyPasswordUsed === 'deleteAccount') return 'Password incorrect.'
-    }
-}
-
-exports.getPasswordErrors = function(password, isPasswordTooLong, passwordConfirm, doesPasswordMeetRequirements, doPasswordsMatch, nonPasswordError) {
-
-    if (password === '') {
-        return 'Please enter and confirm your password.';
-    }
-
-    if (isPasswordTooLong === true) {
-        return messages.fieldTooLong('password', defaultAppValues.passwordField.maxLength);
-    } 
-
-    if (doesPasswordMeetRequirements === false) {
-        return 'Password was not strong enough, please try again.';
-    }
-
-    if (passwordConfirm === '') {
-        return 'Please enter and confirm your password.';
-    }
-
-    if (doPasswordsMatch === false) {
-        return 'Password confirmation did not match.  Please try again.';
-    }
-
-    if (nonPasswordError === true) {
-        return 'Please re-enter and confirm your password.';
-    }
-}
-
-exports.getPhoneError = function(phone, isPhoneValid) {
-
-    if (phone === '') {
-        return 'Please enter your phone number.'
-    }
-    
-    if (isPhoneValid === false) {
-        return messages.phoneNotValid;
-    } 
-}
-
-exports.getRegistrationNameError = function(nameType, name, isNameTooLong, isValidCharacters, isProfane) {
-
-    if (name === '') {
-        return `Please enter your ${nameType} name.`
-    }
-
-    if (isNameTooLong === true) {
-        let capitalizedNameType = nameType.charAt(0).toUpperCase() + nameType.slice(1) || '';
-        return messages.fieldTooLong(`${ capitalizedNameType } name`, defaultAppValues.yourNameField.maxLength);
-    } 
-
-    if (isValidCharacters === false) {
-        return 'Invalid character entered.  Please use only letters.';
-    }
-
-    if (isProfane === true) {
-        return `Please enter a valid ${nameType} name.`;
-    } 
-}
-
-exports.getSaveEmailPasswordError = function(passwordCurrent, isPasswordCorrect) {
-
-    if (passwordCurrent === '') {
-        return messages.existingPasswordEmpty;
-    }
-
-    if (isPasswordCorrect === false) {
-        return 'The password you used was incorrect.  Please try again.';
-    }
-}
-
-exports.getSaveNameError = function(isNameTooLong, isNameValidCharacters, isNameProfane) {
-
-    if (isNameTooLong === true) {
-        return messages.fieldTooLong('first name', defaultAppValues.yourNameField.maxLength);
-    }
-
-    if (isNameProfane === true) {
-        return 'Please enter a valid name.';
-    }
-
-    if (isNameValidCharacters === false) {
-        return 'Please only use letters for your name.';
-    }
-}
-
-exports.getSavePasswordError = function(passwordCurrent, isCurrentPasswordCorrect) {
-
-    if (passwordCurrent === '') {
-        return messages.existingPasswordEmpty;
-    }
-
-    if (isCurrentPasswordCorrect === false) {
-        return messages.existingPasswordIncorrect;
-    }
-}
-
-exports.getSavePhoneError = function(phone, isPhoneValid) {
-
-    if (phone === '') {
-        return 'Please enter your new phone number.';
-    }
-    
-    if (isPhoneValid === false) {
-        return messages.phoneNotValid;
-    } 
+    return phonePrefixRemoved.slice(0, 3) + '-' + phonePrefixRemoved.slice(3, 6) + '-' + phonePrefixRemoved.slice(6);
 }
 
 exports.hashPassword = function(password) {
@@ -479,9 +142,85 @@ exports.hashPassword = function(password) {
     });
 }
 
+exports.getBusinessRegionFull = function(businessCity, businessState, businessZip) {
+    
+    if(businessCity, businessState, businessZip) {
+        return `${ businessCity }, ${ businessState } ${ businessZip }`;
+    } else {
+        return null;
+    }
+}
+
+exports.getBusinessStreetFull = function(businessStreet, businessStreetTwo) {
+
+    if(businessStreetTwo) {
+        return `${ businessStreet }, ${ businessStreetTwo }`;
+    } else if(businessStreet) {
+        return `${ businessStreet }`;
+    } else {
+        return null;
+    }
+}
+
+exports.getOrCreateConfirmationHash = async function(email) {
+
+    // Determine if a password reset request already exists.
+    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email: email });
+
+    if (retrievedPasswordResetRequest) {
+        return retrievedPasswordResetRequest.confirmationHash;
+    }
+
+    let salt = cryptoRandomString({ length: 16 });
+    let confirmationHash = objectHash(email + salt);
+    return confirmationHash;
+}
+
+exports.incrementExistingPasswordResetOrCreateNew = async function(email, confirmationHash, forward) {
+
+    // Determine if a password reset request already exists.
+    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email: email });
+
+    // If a request exists increment numberOfRequests.
+    // Create the request whether a real user exists or not.  The upper limit on requests will stop spammers from repeatedly requesting a reset for a non user.
+    if(retrievedPasswordResetRequest) {
+
+        // If you've surpassed the maximum number of requests forward to password_reset_limit_reached.
+        if(retrievedPasswordResetRequest.numberOfRequests >= defaultAppValues.numberOfPasswordResetRequestsAllowed) {
+
+            return true;
+        } else {
+
+            if(forward != "true") await PasswordResetRequest.updateOne({ email: email }, { numberOfRequests: retrievedPasswordResetRequest.numberOfRequests += 1 });
+        } 
+
+    // Because the request didn't exist create a new one.
+    } else {
+
+        let passwordResetRequest = await mongooseInstance.createPasswordResetRequest(email, confirmationHash);
+        await passwordResetRequest.save();
+    }
+    
+    return false;
+}
+
+exports.sendEmailIfNecessary = async function(email, confirmationHash, emailSubject, expirationTime, forward) {
+
+    // If User exists create and send the email
+    let retrievedUser = await User.findOne({ email: email });
+    
+    if(retrievedUser && forward != 'true') {
+
+        let emailBody = defaultMessages.passwordResetRequestEmailBody(process.env.WEBSITE, process.env.ORGANIZATION, process.env.HOST, confirmationHash, expirationTime);
+
+        communication.sendEmail(email, emailSubject, emailBody);
+    }  
+}
+
 exports.makeFieldsEmpty = function(defaultFields) {
 
     let emptyFields = {};
+
     defaultFields.forEach(function(element) {
         emptyFields[element] = '';
     });
@@ -496,30 +235,6 @@ exports.removeLoginFailures = async function(email) {
     if(doesLoginFailureExist) {
         await LoginFailure.findOneAndRemove({ email: email });
     }
-}
-
-exports.sendEmail = async function(emailRecipient, emailSubject, htmlMessage) {
-
-    // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-        host: process.env.ADMIN_EMAIL_SERVER,
-        port: 587,
-        secure: false, // true for 465, most likely false for other ports like 587 or 25
-        auth: {
-            user: process.env.ADMIN_EMAIL_SENDER, 
-            pass: process.env.ADMIN_EMAIL_PASSWORD 
-        }
-    });
-
-    // send mail with defined transport object
-    await transporter.sendMail({
-        from: `"${ process.env.ADMIN_EMAIL_SENDER_NAME }" ${ process.env.ADMIN_EMAIL_SENDER }`,
-        // from: process.env.ADMIN_EMAIL_SENDER, 
-        to: emailRecipient, 
-        subject: emailSubject, 
-        text: ``, 
-        html: htmlMessage
-    });
 }
 
 exports.wrapAsync = function(fn) {

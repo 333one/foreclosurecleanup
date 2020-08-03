@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Business Name</title>
+    <%- include('includes/head_boilerplate.ejs') %>
+    <%- include('includes/log_in_out_rollover.ejs') %>
+</head>
+<body>
+
+    <%- include('includes/dashboard_header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Business Name</p>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__name -rightLeftMarginMedium">Current Business Name:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessName %></p>
+                </div>
+            </div>
+            <% } %>
+
+            <form action="/add_change_business_name" method="POST">
+
+                <input type="hidden" name="deleteProperty" value="false">
+
+                <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
+                    <label for="businessName" class="input__label
+                        <% if (typeof businessNameError != "undefined") { %>
+                            -errorColor
+                        <% } %>   
+                        "><% if (addOrChangeProperty === "change") { %>Updated <% } %>Business Name:</label>
+                    <input id="businessName" class="input__field
+                        <% if (typeof businessNameError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="businessName" <%= businessNameAttributes %> value="<%= userInput.businessName %>" autofocus>
+                    <% if (typeof businessNameError != "undefined") { %>
+                    <div class="input__errorMessage"><%= businessNameError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                </div>  
+
+            </form>
+
+            <div class="-rightAlign -rightLeftMarginMedium -bottomMarginLarge"><a href="/dashboard"><div class="dashboard__fauxButton">< Back</div></a></div>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add_change_business_name" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's name.</button>
+                </div>
+                <input type="hidden" name="businessName" value="">
+                <input type="hidden" name="deleteProperty" value="true">
+            </form>
+            <% } %>  
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard_screen_footer.ejs') %>
+
+</body>
+</html>

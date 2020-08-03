@@ -2,8 +2,8 @@
 
 const express = require('express');
 const mongoose = require('mongoose'); 
-const session = require('express-session');
 const path = require('path');
+const session = require('express-session');
 
 // Use default store when testing on Windows.  On Linux remove the comments below and turn on Redis.  Also turn on Redis in the session.
 //const redis = require('redis');

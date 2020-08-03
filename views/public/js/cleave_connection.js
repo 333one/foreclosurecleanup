@@ -1,6 +1,6 @@
 "use strict";
 
-new Cleave('#phone', {
+new Cleave('#businessPhone', {
     phone: true,
     delimiter: ['-'],
     phoneRegionCode: 'US'

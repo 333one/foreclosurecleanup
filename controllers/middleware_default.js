@@ -10,14 +10,6 @@ const logger = winston.createLogger({
     ]
 });
 
-exports.error500 = wrapAsync( async function(req, res, next) {
-
-    let activeLink = null;
-    let loggedIn = req.session.userValues ? true : false;
-
-    res.render('error', { activeLink, loggedIn });
-});
-
 exports.errorHandler = function(error, req, res, next) {
 
     logger.log({
@@ -26,7 +18,11 @@ exports.errorHandler = function(error, req, res, next) {
         message: error.message
     });
 
-    res.redirect('/error500');
+    // For rendering.
+    let activeLink = null;
+    let loggedIn = req.session.userValues ? true : false;
+
+    res.render('error500', { activeLink, loggedIn });
 };
 
 exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res, next) {
