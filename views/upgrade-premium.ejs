@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline">Upgrade Your Account</p>
+            <div class="dashboard__unit -bottomBorder -bottomMarginLarge">
+                <div>
+                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium">Include a link to your company's website or social media page plus add a company description for just $20 per year.</p>
+                    <div class="-bottomMarginMedium" style="text-align: center"><img src="images/junk-graphic.jpg"></div>
+                </div>
+            </div>
+
+            <div class="narrowWidthVanish -bottomMarginLarge">
+                <form id="payment-form">
+                    <div id="card-element"><!--Stripe.js injects the Card Element--></div>
+                    <button class="stripe__button" id="submit">
+                        <div class="spinner hidden" id="spinner"></div>
+                        <span id="button-text">Upgrade</span>
+                    </button>
+                    <p id="card-error" role="alert"></p>
+                    <p class="result-message hidden">
+                        Payment succeeded, see the result in your
+                        <a href="" target="_blank">Stripe dashboard.</a> Refresh the page to pay again.
+                    </p>
+                    </form>
+            </div>
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

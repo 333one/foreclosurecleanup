@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Business Address</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Services Offered</p>
+
+            <form action="/add-change-business-services" method="POST">
+
+                <div class="checkBox__largeContainer -rightLeftMarginMedium -topMarginMedium -topBottomPaddingSmall
+                    <% if (typeof businessServicesError != "undefined") { %>
+                        -errorBorder
+                    <% } else { %> 
+                        -bottomMarginMedium
+                    <% } %>  
+                ">
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceBoardingSecuring" name="serviceBoardingSecuring" value="yes"
+                            <% if (userInput.serviceBoardingSecuring === "yes") { %> checked<% } %>>
+                        <label for="serviceBoardingSecuring" class="checkBox__label"><%- labelBoardingSecuring %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceDebrisRemovalTrashout" name="serviceDebrisRemovalTrashout" value="yes"
+                            <% if (userInput.serviceDebrisRemovalTrashout === "yes") { %> checked<% } %>>
+                        <label for="serviceDebrisRemovalTrashout" class="checkBox__label"><%- labelDebrisRemovalTrashout %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceEvictionManagement" name="serviceEvictionManagement" value="yes"
+                            <% if (userInput.serviceEvictionManagement === "yes") { %> checked<% } %>>
+                        <label for="serviceEvictionManagement" class="checkBox__label"><%- labelEvictionManagement %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceFieldInspection" name="serviceFieldInspection" value="yes"
+                            <% if (userInput.serviceFieldInspection === "yes") { %> checked<% } %>>
+                        <label for="serviceFieldInspection" class="checkBox__label"><%- labelFieldInspection %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceHandymanGeneralMaintenance" name="serviceHandymanGeneralMaintenance" value="yes"
+                            <% if (userInput.serviceHandymanGeneralMaintenance === "yes") { %> checked<% } %>>
+                        <label for="serviceHandymanGeneralMaintenance" class="checkBox__label"><%- labelHandymanGeneralMaintenance %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceLandscapeMaintenance" name="serviceLandscapeMaintenance" value="yes"
+                            <% if (userInput.serviceLandscapeMaintenance === "yes") { %> checked<% } %>>
+                        <label for="serviceLandscapeMaintenance" class="checkBox__label"><%- labelLandscapeMaintenance %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceLockChanges" name="serviceLockChanges" value="yes"
+                            <% if (userInput.serviceLockChanges === "yes") { %> checked<% } %>>
+                        <label for="serviceLockChanges" class="checkBox__label"><%- labelLockChanges %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="serviceOverseePropertyRehabilitation" name="serviceOverseePropertyRehabilitation" value="yes"
+                            <% if (userInput.serviceOverseePropertyRehabilitation === "yes") { %> checked<% } %>>
+                        <label for="serviceOverseePropertyRehabilitation" class="checkBox__label"><%- labelOverseePropertyRehabilitation %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="servicePoolMaintenance" name="servicePoolMaintenance" value="yes"
+                            <% if (userInput.servicePoolMaintenance === "yes") { %> checked<% } %>>
+                        <label for="servicePoolMaintenance" class="checkBox__label"><%- labelPoolMaintenance %></label>
+                    </div>
+
+                    <div class="-bottomMarginSmall">
+                        <input type="checkbox" id="servicePropertyCleaning" name="servicePropertyCleaning" value="yes"
+                            <% if (userInput.servicePropertyCleaning === "yes") { %> checked<% } %>>
+                        <label for="servicePropertyCleaning" class="checkBox__label"><%- labelPropertyCleaning %></label>
+                    </div>
+
+                    <div>
+                        <input type="checkbox" id="serviceWinterizations" name="serviceWinterizations" value="yes"
+                            <% if (userInput.serviceWinterizations === "yes") { %> checked<% } %>>
+                        <label for="serviceWinterizations" class="checkBox__label"><%- labelWinterizations %></label>
+                    </div>
+
+                </div>  
+
+                <% if (typeof businessServicesError != "undefined") { %>
+                    <div class="input__errorMessage -rightLeftMarginMedium -bottomMarginLarge"><%= businessServicesError %></div>
+                <% } %> 
+
+                <input type="hidden" name="deleteProperty" value="no">
+
+                <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                </div>
+
+            </form>
+
+            <%- include('includes/back-to-my-account.ejs') %>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add-change-business-services" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's services.</button>
+                </div>
+                <input type="hidden" name="serviceBoardingSecuring" value="no">
+                <input type="hidden" name="serviceDebrisRemovalTrashout" value="no">
+                <input type="hidden" name="serviceEvictionManagement" value="no">
+                <input type="hidden" name="serviceFieldInspection" value="no">
+                <input type="hidden" name="serviceHandymanGeneralMaintenance" value="no">
+                <input type="hidden" name="serviceLandscapeMaintenance" value="no">
+                <input type="hidden" name="serviceLockChanges" value="no">
+                <input type="hidden" name="serviceOverseePropertyRehabilitation" value="no">
+                <input type="hidden" name="servicePoolMaintenance" value="no">
+                <input type="hidden" name="servicePropertyCleaning" value="no">
+                <input type="hidden" name="serviceWinterizations" value="no">
+                <input type="hidden" name="deleteProperty" value="yes">
+            </form>
+            <% } %>  
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

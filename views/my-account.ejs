@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+    <script>var stripePublicKey = '<%- stripePublicKey %>';</script>
+    <script defer src="https://js.stripe.com/v3/"></script>
+    <script defer src="js/checkout.js"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline">My Account</p>
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Business Profile Type:</p>
+                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium">Free</p>
+                    <p class="textSmall -rightLeftMarginMedium"><button id="underlinedCheckoutButton" class="button_fauxLink" href="upgrade-premium">Upgrade Your Account</button>: Include a link to your company's website or social media page plus add a company description for just $20 per year.</p>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder -bottomMarginHuge">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Vendor List Status:</p>
+                    <% if (isAccountLive === true) { %>
+                        <p class="textLarge -rightLeftMarginMedium -liveText">Your Business Profile Is Live.</p>
+                    <% } else { %>
+                        <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall -inactiveText">Your Business Profile Is Not Live.</p>
+                        <p class="textSmall -rightLeftMarginMedium">Please add your company's <%- businessPropertiesUnfilled %> to make your business profile live.</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <p class="dashboard__headline">Business Information</p>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Business Name:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= businessNameMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isBusinessNameAdded === true) { %>
+                        <a href="/add-change-business-name"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-business-name"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Business Phone:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= businessPhoneMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isBusinessPhoneAdded === true) { %>
+                        <a href="/add-change-business-phone"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-business-phone"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Business Address:</p>
+                    <% if (isBusinessAddressAdded) { %>
+                        <p class="textLarge -rightLeftMarginMedium"><%= businessStreetMyAccountValue %></p>
+                        <p class="textLarge -rightLeftMarginMedium"><%= businessRegionMyAccountValue %></p>
+                    <% } else { %>
+                    <p class="textLarge -rightLeftMarginMedium"><%= businessStreetMyAccountValue %></p>
+                    <% } %>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isBusinessAddressAdded === true) { %>
+                        <a href="/add-change-business-address"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-business-address"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Services Offered:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%- businessServicesMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isBusinessServicesAdded === true) { %>
+                        <a href="/add-change-business-services"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-business-services"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="dashboard__unitCovered -bottomBorder">
+                <button href="upgrade-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium -opacity50">Website Or Social Media Page:</p>
+                    <p class="textSmall -rightLeftMarginMedium -opacity50">Upgrade to add.</p>
+                </button>
+            </div>
+
+            <div class="dashboard__unitCovered -bottomBorder -bottomMarginHuge">
+                <button href="upgrade-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium -opacity50">Company Description:</p>
+                    <p class="textSmall -rightLeftMarginMedium -opacity50">Upgrade to add.</p>
+                </button>
+            </div>
+
+            <p class="dashboard__headline">Account Information</p>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Email Address:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= email %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <a href="/change-email"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Password:</p>
+                    <p class="textSmall -rightLeftMarginMedium">[Password not displayed for your security.]</p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <a href="/change-password"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                </div>
+            </div>
+
+            <div class="textSmall -topBottomPaddingLarge -rightLeftMarginMedium -rightAlign"><a href="/delete-your-account">Delete your account.</a></div>
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

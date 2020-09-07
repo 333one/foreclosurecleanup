@@ -10,11 +10,11 @@ const session = require('express-session');
 //let RedisStore = require('connect-redis')(session);
 //let redisClient = redis.createClient();
 
-const endpointsDefault = require('./controllers/endpoints_default');
-const endpointsUserAccounts = require('./controllers/endpoints_user_accounts');
+const endpointsDefault = require('./controllers/endpoints-default');
+const endpointsUserAccounts = require('./controllers/endpoints-user-accounts');
 
 // Custom path to .env file.
-require('dotenv').config({ path: path.join(__dirname, '/models/.env') });
+require('dotenv').config({ path: path.join(__dirname, '/models/.env')});
 
 const app = express();
 

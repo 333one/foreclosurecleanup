@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Confirmation Resent</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+</head>
+<body>
+
+    <%- include('includes/narrowScreen-top-boilerplate.ejs') %>
+
+                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Confirmation Resent</h3>
+                <%- body %>
+                <p class="textLarge -bottomMarginLarge">If you don't see it in your inbox please check your Promotions, Social or Junk folders.</p>
+                <p class="textMedium -centerAlign -bottomMarginLarge"><a href="confirmation-resent?email=<%= email %>">Resend confirmation email</a>.</p>
+
+    <%- include('includes/narrowScreen-bottom-boilerplate.ejs') %>
+
+</body>
+</html>
