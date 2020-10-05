@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Business Name</title>
+    <title>Company Name</title>
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
+    <script>let patternCompanyName = "<%- patternCompanyName %>"</script>
+    <script defer src="js/character-format.js"></script>
 </head>
 <body>
 
@@ -13,34 +15,31 @@
 
         <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
-            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Business Name</p>
+            <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Name</p>
 
             <% if (addOrChangeProperty === "change") { %>
             <div class="dashboard__unit -bottomBorder">
                 <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Current Business Name:</p>
-                    <p class="dashboard__value -rightLeftMarginMedium"><%= businessName %></p>
+                    <p class="dashboard__key -rightLeftMarginMedium">Current Company Name:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= companyName %></p>
                 </div>
             </div>
             <% } %>
 
-            <form action="/add-change-business-name" method="POST">
+            <form action="/add-change-company-name" method="POST">
 
                 <input type="hidden" name="deleteProperty" value="false">
 
                 <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="businessName" class="input__label
-                        <% if (typeof businessNameError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        "><% if (addOrChangeProperty === "change") { %>Updated <% } %>Business Name:</label>
-                    <input id="businessName" class="input__field
-                        <% if (typeof businessNameError != "undefined") { %>
+                    <label for="companyName" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Name:</label>
+                        <p class="textSmall -bottomMarginSmall">Include your legal company name.</p>
+                    <input id="companyName" class="input__field
+                        <% if (typeof companyNameError != "undefined") { %>
                             -errorBorder
                         <% } %>
-                        " name="businessName" <%= businessNameAttributes %> value="<%= userInput.businessName %>" autofocus>
-                    <% if (typeof businessNameError != "undefined") { %>
-                    <div class="input__errorMessage"><%= businessNameError %></div>
+                        " name="companyName" <%= companyNameAttributes %> value="<%= userInput.companyName %>" autofocus>
+                    <% if (typeof companyNameError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyNameError %></div>
                     <% } %> 
                 </div>
 
@@ -50,17 +49,17 @@
 
             </form>
 
-            <%- include('includes/back-to-my-account.ejs') %>
-
             <% if (addOrChangeProperty === "change") { %>
-            <form action="/add-change-business-name" method="POST">
+            <form action="/add-change-company-name" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
                     <button class="button_fauxLink">Delete your company's name.</button>
                 </div>
-                <input type="hidden" name="businessName" value="">
+                <input type="hidden" name="companyName" value="">
                 <input type="hidden" name="deleteProperty" value="true">
             </form>
             <% } %>  
+
+            <%- include('includes/back-to-my-account.ejs') %>
 
         </div>
 

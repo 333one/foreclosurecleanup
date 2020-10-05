@@ -1,8 +1,9 @@
 "use strict";
 
-const zxcvbn = require('zxcvbn');
 const phoneNormalizer = require('phone');
+const zxcvbn = require('zxcvbn');
 
+const defaultAppValues = require('../models/default-app-values');
 const defaultFields = require('../models/default-fields.js');
 
 exports.checkAllFieldsFilled = function(defaultFields, userInputFields) {
@@ -19,20 +20,20 @@ exports.checkAllFieldsFilled = function(defaultFields, userInputFields) {
 exports.checkAllUserValuesFilled = function(sessionUserValues) {
 
     let userProperties = JSON.parse(JSON.stringify(sessionUserValues));
-    // businessStreetTwo is allowed to be empty so delete that.
-    delete userProperties.businessStreetTwo;
+    // companyStreetTwo is allowed to be empty so delete that.
+    delete userProperties.companyStreetTwo;
 
-    let businessServiceProperties = [...defaultFields.addChangeBusinessServices];
+    let companyServiceProperties = [...defaultFields.addChangeCompanyServices];
     // Remove deleteProperty because it isn't needed for this test.
-    businessServiceProperties.pop();
+    companyServiceProperties.pop();
 
-    // If any businessService property is 'no' return false.
+    // If any companyService property is 'no' return false.
     let isAServicePropertyYes = false;
-    businessServiceProperties.forEach(function(element) {
+    companyServiceProperties.forEach(function(element) {
         if (userProperties[element] === 'yes') isAServicePropertyYes = true;
     })
 
-    if(isAServicePropertyYes === false) return false;
+    if (isAServicePropertyYes === false) return false;
 
     // If any property is empty return false.
     for (var key in userProperties) {
@@ -43,22 +44,46 @@ exports.checkAllUserValuesFilled = function(sessionUserValues) {
     return true;
 }
 
-exports.checkBusinessAddressNormalized = function(businessStreet, businessStreetTwo, businessCity, businessState, businessZip, normalizedBusinessAddress) {
+exports.checkArePremiumAccountExtendsAvailable = function(expirationDate, isUpgradeExpirationSoon) {
+
+    let oneDay = 24 * 60 * 60 * 1000;
+    let today = new Date();
+
+    let numberOfDays = Math.floor((Date.UTC(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate())) - (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))) / oneDay;
+
+    let maxDays = defaultAppValues.premiumAccountExtendsCutoff;
+
+    if (numberOfDays < maxDays) {
+
+        return true;
+    } else {
+
+        return false;
+    }
+}
+
+exports.checkCompanyAddressNormalized = function(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, normalizedCompanyAddress) {
 
     if (
-        normalizedBusinessAddress.street1 === businessStreet &&
-        normalizedBusinessAddress.street2 === businessStreetTwo &&
-        normalizedBusinessAddress.city === businessCity &&
-        normalizedBusinessAddress.state === businessState &&
-        normalizedBusinessAddress.Zip5 === businessZip
+        normalizedCompanyAddress.street1 === companyStreet &&
+        normalizedCompanyAddress.street2 === companyStreetTwo &&
+        normalizedCompanyAddress.city === companyCity &&
+        normalizedCompanyAddress.state === companyState &&
+        normalizedCompanyAddress.Zip5 === companyZip
     ) return true;
 
     return false;
 }
 
+exports.checkIfRouteBeatWebhook = function(expirationDateSessionValue, expirationDateDBValue) {
+
+    if (expirationDateSessionValue === expirationDateDBValue) return true;
+    return false;
+}
+
 exports.checkForPreviousErrors = function(emailError, firstNameError, lastNameError, phoneError) {
 
-    if(emailError || firstNameError || lastNameError || phoneError) {
+    if (emailError || firstNameError || lastNameError || phoneError) {
         return true;
     }
     return false;
@@ -69,20 +94,32 @@ exports.checkIfInputTooLong = function(field, maxLength) {
     return field.length > maxLength ? true : false;
 }
 
+exports.checkIsUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
+
+    // A negative number indicates this is a free account.
+    if (numberOfDaysUntilExpiration < 0) {
+        return false;
+    } else if (numberOfDaysUntilExpiration >= defaultAppValues.upgradeExpirationAlarmTime) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 exports.checkPasswordMeetsRequirements = function(password) {
 
     return zxcvbn(password).score >= 2 ? true : false;
 }
 
-exports.checkBusinessPhoneValid = function(businessPhone) {
+exports.checkCompanyPhoneValid = function(companyPhone) {
 
     // If phoneNormalizer returns an empty array it indicates that the phone number is not complete or valid.
-    if (phoneNormalizer(businessPhone, '', true).length === 0) return false;
-    if (businessPhone.charAt(0) == 0 || businessPhone.charAt(0) == 1) return false;
+    if (phoneNormalizer(companyPhone, '', true).length === 0) return false;
+    if (companyPhone.charAt(0) == 0 || companyPhone.charAt(0) == 1) return false;
     return true;
 }
 
-exports.checkBusinessStateValid = function(businessState) {
+exports.checkCompanyStateValid = function(companyState) {
 
     let states = [
         'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
@@ -92,11 +129,11 @@ exports.checkBusinessStateValid = function(businessState) {
         'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
         'DC', ''];
 
-    if (states.includes(businessState)) return true;
+    if (states.includes(companyState)) return true;
     return false;
 }
 
-exports.checkBusinessServicesHaveValue = function (
+exports.checkCompanyServicesHaveValue = function (
     serviceBoardingSecuring,
     serviceDebrisRemovalTrashout,
     serviceEvictionManagement,

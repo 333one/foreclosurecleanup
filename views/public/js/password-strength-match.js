@@ -29,7 +29,7 @@ function passwordErrorRemove() {
 
     document.getElementById('targetPasswordLabel').classList.remove('-errorColor');
     document.getElementById('targetPasswordContainer').classList.remove('-errorBorder');
-    if(document.getElementById('targetPasswordErrorMessage')) {
+    if (document.getElementById('targetPasswordErrorMessage')) {
         document.getElementById('targetPasswordErrorMessage').innerText = '';
     }
 };
@@ -38,7 +38,7 @@ function passwordConfirmErrorRemove() {
     
     document.getElementById('targetPasswordConfirmLabel').classList.remove('-errorColor');
     document.getElementById('targetPasswordConfirmContainer').classList.remove('-errorBorder');
-    if(document.getElementById('targetPasswordConfirmErrorMessage')) {
+    if (document.getElementById('targetPasswordConfirmErrorMessage')) {
         document.getElementById('targetPasswordConfirmErrorMessage').innerText = '';
     }
 };
@@ -56,12 +56,12 @@ function passwordError() {
         passwordErrorRemove();
     }
 
-    if(errorType === 'weak' && score >= 2) {
+    if (errorType === 'weak' && score >= 2) {
 
         passwordErrorRemove();
     }
 
-    if(score >= 2 && passwordValue === passwordConfirmValue) {
+    if (score >= 2 && passwordValue === passwordConfirmValue) {
 
         passwordConfirmErrorRemove();
     }
@@ -80,7 +80,7 @@ function passwordConfirmError() {
         passwordConfirmErrorRemove();
     }
 
-    if(passwordValue === passwordConfirmValue && score >= 2) {
+    if (passwordValue === passwordConfirmValue && score >= 2) {
 
         passwordConfirmErrorRemove();
     }

@@ -5,6 +5,8 @@
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
     <script defer src="js/password-toggle.js"></script>
+    <script>let patternEmail = "<%- patternEmail %>"</script>
+    <script defer src="js/character-format.js"></script>
 </head>
 <body>
 
@@ -58,17 +60,13 @@
                 </div>
 
                 <div class="input__unit -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="password" id="targetPasswordLabel" class="input__label
-                        <% if (typeof passwordError != "undefined") { %>
-                            -errorColor
-                        <% } %> 
-                        ">Password:</label>
+                    <label for="passwordCheck" id="targetPasswordLabel" class="input__label">Password:</label>
                     <div id="targetPasswordContainer" class="password__container 
                         <% if (typeof passwordError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         ">
-                        <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %> value="<%= userInput.password %>" autocomplete="new-password">
+                        <input id="passwordCheck" class="input__passwordField" name="passwordCheck" <%= passwordAttributes %> value="<%= userInput.passwordCheck %>" autocomplete="new-password">
                         <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
                     </div>
 

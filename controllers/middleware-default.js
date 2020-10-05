@@ -1,59 +1,43 @@
 "use strict";
 
-const { wrapAsync } = require('./logic-user-accounts');
-const winston = require('winston');
+const { logErrorMessage, wrapAsync } = require('./error-handling');
 
-const logger = winston.createLogger({
-    format: winston.format.json(),
-    transports: [
-        new winston.transports.File({ filename: 'logs/error.log' })
-    ]
+exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res) {
+    
+    // For rendering.
+    let activeLink = 'foreclosure-cleanup-vendor-list';
+    let contactEmail = process.env.CONTACT_EMAIL;
+    let loggedIn = req.session.userValues ? true : false;
+
+    res.render('foreclosure-cleanup-vendor-list', { activeLink, contactEmail, loggedIn });
 });
 
-exports.errorHandler = function(error, req, res, next) {
+exports.homePage = wrapAsync(async function(req, res) {
+    
+    // For rendering.
+    let activeLink = 'index';
+    let contactEmail = process.env.CONTACT_EMAIL;
+    let loggedIn = req.session.userValues ? true : false;
 
-    logger.log({
-        time: new Date().toLocaleString("en-US", { timeZone: "America/Phoenix" }),
-        level: 'error',
-        message: error.message
-    });
+    res.render('index', { activeLink, contactEmail, loggedIn });
+});
+
+exports.pageNotFound = wrapAsync(async function(req, res) {
 
     // For rendering.
-    let activeLink = null;
+    let activeLink = 'page-not-found';
+    let contactEmail = process.env.CONTACT_EMAIL;
     let loggedIn = req.session.userValues ? true : false;
-
-    res.render('error500', { activeLink, loggedIn });
-};
-
-exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res, next) {
     
-    let loggedIn = req.session.userValues ? true : false;
-    let activeLink = 'vendorList';
-
-    res.render('foreclosure-cleanup-vendor-list', { loggedIn, activeLink });
+    res.status(404).render('page-not-found', { activeLink, contactEmail, loggedIn });
 });
 
-exports.homePage = wrapAsync(async function(req, res, next) {
+exports.privacyPolicyTermsService = wrapAsync(async function(req, res) {
     
-    let loggedIn = req.session.userValues ? true : false;
-    let activeLink = 'home';
-
-    res.render('index', { loggedIn, activeLink });
-});
-
-exports.pageNotFound = wrapAsync(async function(req, res, next) {
-
     // For rendering.
-    let activeLink = null;
+    let activeLink = 'privacy-policy-terms-service';
+    let contactEmail = process.env.CONTACT_EMAIL;
     let loggedIn = req.session.userValues ? true : false;
-    
-    res.status(404).render('page-not-found', { activeLink, loggedIn });
-});
 
-exports.privacyPolicyTermsService = wrapAsync(async function(req, res, next) {
-    
-    let loggedIn = req.session.userValues ? true : false;
-    let activeLink = null;
-
-    res.render('privacy-policy-terms-service', { loggedIn, activeLink });
+    res.render('privacy-policy-terms-service', { activeLink, contactEmail, loggedIn });
 });

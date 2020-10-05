@@ -12,6 +12,4 @@ router.get('/privacy-policy-terms-service', middlewareDefault.privacyPolicyTerms
 
 router.get(['page-not-found', '*'], middlewareDefault.pageNotFound);
 
-router.use(middlewareDefault.errorHandler);
-
 module.exports = router;

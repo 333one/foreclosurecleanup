@@ -13,7 +13,7 @@ document.getElementById('termsOfUse').addEventListener('change', checkForSuccess
 
 function checkForSuccess() {
 
-    if(
+    if (
         document.getElementById('email').value.length > 4 &&
         document.getElementById('email').value.includes('@') &&
         document.getElementById('email').value.includes('.') &&

@@ -6,16 +6,16 @@ document.getElementById('narrowScreen__button').style.cursor = 'default';
 
 addEventListener('load', checkForSuccess);
 
-if(document.getElementById('email')) document.getElementById('email').addEventListener('keyup', checkForEmailSuccess);
+if (document.getElementById('email')) document.getElementById('email').addEventListener('keyup', checkForEmailSuccess);
 
 
-if(document.getElementById('password')) document.getElementById('password').addEventListener('keyup', checkForSuccess);
-if(document.getElementById('passwordConfirm')) document.getElementById('passwordConfirm').addEventListener('keyup', checkForSuccess);
-if(document.getElementById('termsOfUse')) document.getElementById('termsOfUse').addEventListener('change', checkForSuccess); 
+if (document.getElementById('password')) document.getElementById('password').addEventListener('keyup', checkForSuccess);
+if (document.getElementById('passwordConfirm')) document.getElementById('passwordConfirm').addEventListener('keyup', checkForSuccess);
+if (document.getElementById('termsOfUse')) document.getElementById('termsOfUse').addEventListener('change', checkForSuccess); 
 
 function checkForEmailSuccess() {
 
-    if(
+    if (
         document.getElementById('email').value.length > 4 &&
         document.getElementById('email').value.includes('@') &&
         document.getElementById('email').value.includes('.')
@@ -28,7 +28,7 @@ function checkForEmailSuccess() {
 
 // function checkForSuccess() {
 
-//     if(
+//     if (
 //         document.getElementById('email').value.length > 4 &&
 //         document.getElementById('email').value.includes('@') &&
 //         document.getElementById('email').value.includes('.') &&

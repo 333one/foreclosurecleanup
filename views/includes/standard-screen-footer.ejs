@@ -4,14 +4,14 @@
             <div class="footer__container -topBottomPaddingLarge">
 
                 <div>
-                <% if (activeLink === 'home') { %> 
+                <% if (activeLink === 'index') { %> 
                     <p class="footerNavigation__activeUnit">
                 <% } else { %>
                     <p class="footerNavigation__unit">
                 <% } %>
                     <a href="/">HOME</a></p>
 
-                <% if (activeLink === 'vendorList') { %> 
+                <% if (activeLink === 'foreclosure-cleanup-vendor-list') { %> 
                     <p class="footerNavigation__activeUnit">
                 <% } else { %>
                     <p class="footerNavigation__unit">
@@ -26,6 +26,13 @@
                     <% } %>
                     <a href="/register">REGISTER</a></p>
                 <% } %>
+
+                <% if (activeLink === 'contact') { %> 
+                    <p class="footerNavigation__activeUnit">
+                <% } else { %>
+                    <p class="footerNavigation__unit">
+                <% } %>
+                    <a href="mailto:<%= contactEmail %>">CONTACT</a></p>
 
                 </div>
 

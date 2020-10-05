@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Company Website</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+    <script>let patternCompanyWebsite= "<%- patternCompanyWebsite %>"</script>
+    <script defer src="js/character-format.js"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Website Or Social Media Page</p>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Current Company Website:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= companyWebsite %></p>
+                </div>
+            </div>
+            <% } %>
+
+            <form action="/add-change-company-website" method="POST">
+
+                <input type="hidden" name="deleteProperty" value="false">
+
+                <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
+                    <label for="companyWebsite" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Website:</label>
+                    <p class="textSmall -bottomMarginSmall">Add your company's main website or social media page that customers can find you at.</p>
+                    <input id="companyWebsite" class="input__field
+                        <% if (typeof companyWebsiteError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyWebsite" <%= companyWebsiteAttributes %> value="<%= userInput.companyWebsite %>" autofocus>
+                    <% if (typeof companyWebsiteError != "undefined") { %>
+                    <div class="input__errorMessage"><%- companyWebsiteError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                </div>  
+
+            </form>
+            
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add-change-company-website" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's website.</button>
+                </div>
+                <input type="hidden" name="companyWebsite" value="">
+                <input type="hidden" name="deleteProperty" value="true">
+            </form>
+            <% } %>  
+
+            <%- include('includes/back-to-my-account.ejs') %>
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

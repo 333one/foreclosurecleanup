@@ -3,54 +3,53 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 
-const middleware = require('./middleware-user-accounts');
+const middlewareUserAccounts = require('./middleware-user-accounts');
 const {
     redirectLogin,
     redirectMyAccount
     } = require('./middleware-user-accounts'); 
 
-const defaultAppValues = require('../models/default-app-values.js');
-
 const router = express.Router();
 
 const urlEncoded = bodyParser.urlencoded({ extended: true });
-const bodyParserRaw = bodyParser.raw({ type: 'application/json' });
 
-router.get('/account-deleted', middleware.accountDeleted);
-router.get(defaultAppValues.linkAddChangeBusinessAddress, redirectLogin, middleware.addChangeBusinessAddress);
-router.get(defaultAppValues.linkAddChangeBusinessDescription, redirectLogin, middleware.addChangeBusinessDescription);
-router.get(defaultAppValues.linkAddChangeBusinessName, redirectLogin, middleware.addChangeBusinessName);
-router.get(defaultAppValues.linkAddChangeBusinessPhone, redirectLogin, middleware.addChangeBusinessPhone);
-router.get(defaultAppValues.linkAddChangeBusinessServices, redirectLogin, middleware.addChangeBusinessServices);
-router.get('/change-email', redirectLogin, middleware.changeEmail);
-router.get('/change-password', redirectLogin, middleware.changePassword);
-router.get('/confirmation-limit-reached', middleware.confirmationLimitReached);
-router.get('/confirmation-resent', middleware.confirmationResent);
-router.get('/my-account', redirectLogin, middleware.myAccount);
-router.get('/delete-your-account', redirectLogin, middleware.deleteYourAccount);
-router.get('/login', redirectMyAccount, middleware.login);
-router.get('/login-failure-limit-reached', middleware.loginFailureLimitReached);
-router.get('/logout', redirectLogin, middleware.logout);
-router.get('/password-reset', middleware.passwordReset);
-router.get('/password-reset-limit-reached', middleware.passwordResetLimitReached);
-router.get('/password-reset-request', middleware.passwordResetRequest); 
-router.get('/password-reset-request-sent', middleware.passwordResetRequestSent); 
-router.get('/password-reset-success', middleware.passwordResetSuccess);
-router.get('/register', middleware.register);
-router.get('/registration-sent', middleware.registrationSent);
-router.get('/verified', redirectMyAccount, middleware.verified);
+router.get('/account-deleted', middlewareUserAccounts.accountDeleted);
+router.get('/add-change-company-address', redirectLogin, middlewareUserAccounts.addChangeCompanyAddress);
+router.get('/add-change-company-description', redirectLogin, middlewareUserAccounts.addChangeCompanyDescription);
+router.get('/add-change-company-name', redirectLogin, middlewareUserAccounts.addChangeCompanyName);
+router.get('/add-change-company-phone', redirectLogin, middlewareUserAccounts.addChangeCompanyPhone);
+router.get('/add-change-company-services', redirectLogin, middlewareUserAccounts.addChangeCompanyServices);
+router.get('/add-change-company-website', redirectLogin, middlewareUserAccounts.addChangeCompanyWebsite);
+router.get('/change-email', redirectLogin, middlewareUserAccounts.changeEmail);
+router.get('/change-password', redirectLogin, middlewareUserAccounts.changePassword);
+router.get('/confirmation-limit-reached', middlewareUserAccounts.confirmationLimitReached);
+router.get('/confirmation-resent', middlewareUserAccounts.confirmationResent);
+router.get('/delete-your-account', redirectLogin, middlewareUserAccounts.deleteYourAccount);
+router.get('/login', redirectMyAccount, middlewareUserAccounts.login);
+router.get('/login-failure-limit-reached', redirectMyAccount, middlewareUserAccounts.loginFailureLimitReached);
+router.get('/logout', redirectLogin, middlewareUserAccounts.logout);
+router.get('/my-account', redirectLogin, middlewareUserAccounts.myAccount);
+router.get('/password-reset', middlewareUserAccounts.passwordReset);
+router.get('/password-reset-limit-reached', middlewareUserAccounts.passwordResetLimitReached);
+router.get('/password-reset-request', middlewareUserAccounts.passwordResetRequest); 
+router.get('/password-reset-request-sent', middlewareUserAccounts.passwordResetRequestSent); 
+router.get('/password-reset-success', middlewareUserAccounts.passwordResetSuccess);
+router.get('/register', middlewareUserAccounts.register);
+router.get('/registration-sent', middlewareUserAccounts.registrationSent);
+router.get('/verified', redirectMyAccount, middlewareUserAccounts.verified);
 
-router.post('/add-change-business-address', urlEncoded, redirectLogin, middleware.postAddChangeBusinessAddress);
-router.post('/add-change-business-name', urlEncoded, redirectLogin, middleware.postAddChangeBusinessName);
-router.post('/add-change-business-phone', urlEncoded, redirectLogin, middleware.postAddChangeBusinessPhone);
-router.post('/add-change-business-services', urlEncoded, redirectLogin, middleware.postAddChangeBusinessServices);
-router.post('/change-email', urlEncoded, redirectLogin, middleware.postChangeEmail);
-router.post('/change-password', urlEncoded, redirectLogin, middleware.postChangePassword);
-router.post('/create-checkout-session', bodyParserRaw, redirectLogin, middleware.postCreateCheckoutSession);
-router.post('/delete-your-account', urlEncoded, redirectLogin, middleware.postDeleteYourAccount);
-router.post('/login', urlEncoded, redirectMyAccount, middleware.postLogin);
-router.post('/password-reset', urlEncoded, middleware.postPasswordReset);
-router.post('/password-reset-request', urlEncoded, middleware.postPasswordResetRequest); 
-router.post('/register', urlEncoded, redirectMyAccount, middleware.postRegister);
+router.post('/add-change-company-address', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyAddress);
+router.post('/add-change-company-description', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyDescription);
+router.post('/add-change-company-name', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyName);
+router.post('/add-change-company-phone', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyPhone);
+router.post('/add-change-company-services', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyServices);
+router.post('/add-change-company-website', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyWebsite);
+router.post('/change-email', urlEncoded, redirectLogin, middlewareUserAccounts.postChangeEmail);
+router.post('/change-password', urlEncoded, redirectLogin, middlewareUserAccounts.postChangePassword);
+router.post('/delete-your-account', urlEncoded, redirectLogin, middlewareUserAccounts.postDeleteYourAccount);
+router.post('/login', urlEncoded, redirectMyAccount, middlewareUserAccounts.postLogin);
+router.post('/password-reset', urlEncoded, middlewareUserAccounts.postPasswordReset);
+router.post('/password-reset-request', urlEncoded, middlewareUserAccounts.postPasswordResetRequest); 
+router.post('/register', urlEncoded, redirectMyAccount, middlewareUserAccounts.postRegister);
 
 module.exports = router;

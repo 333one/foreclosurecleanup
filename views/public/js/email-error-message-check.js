@@ -3,7 +3,7 @@
 document.getElementById('email').addEventListener('keyup', removeErrorMessage);
 
 function removeErrorMessage() {
-    if(
+    if (
         document.getElementById('email').value.length > 4 &&
         document.getElementById('email').value.includes('@') &&
         document.getElementById('email').value.includes('.')

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Business Address</title>
+    <title>Company Services</title>
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
 </head>
@@ -13,12 +13,14 @@
 
         <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
-            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %>Services Offered</p>
+            <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Services Offered</p>
 
-            <form action="/add-change-business-services" method="POST">
+            <form action="/add-change-company-services" method="POST">
 
-                <div class="checkBox__largeContainer -rightLeftMarginMedium -topMarginMedium -topBottomPaddingSmall
-                    <% if (typeof businessServicesError != "undefined") { %>
+                <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Services:</p>
+                <p class="textSmall  -rightLeftPaddingMedium">Select the services that you'd like customers to know about.  If you offer additional services add those on <a href="/upgrade-premium">your company's description page</a>.</p>
+                <div class="checkBox__largeContainer -rightLeftMarginMedium -topMarginSmall -topBottomPaddingSmall
+                    <% if (typeof companyServicesError != "undefined") { %>
                         -errorBorder
                     <% } else { %> 
                         -bottomMarginMedium
@@ -92,8 +94,8 @@
 
                 </div>  
 
-                <% if (typeof businessServicesError != "undefined") { %>
-                    <div class="input__errorMessage -rightLeftMarginMedium -bottomMarginLarge"><%= businessServicesError %></div>
+                <% if (typeof companyServicesError != "undefined") { %>
+                    <div class="input__errorMessage -rightLeftMarginMedium -bottomMarginLarge"><%= companyServicesError %></div>
                 <% } %> 
 
                 <input type="hidden" name="deleteProperty" value="no">
@@ -104,10 +106,8 @@
 
             </form>
 
-            <%- include('includes/back-to-my-account.ejs') %>
-
             <% if (addOrChangeProperty === "change") { %>
-            <form action="/add-change-business-services" method="POST">
+            <form action="/add-change-company-services" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
                     <button class="button_fauxLink">Delete your company's services.</button>
                 </div>
@@ -125,6 +125,8 @@
                 <input type="hidden" name="deleteProperty" value="yes">
             </form>
             <% } %>  
+
+            <%- include('includes/back-to-my-account.ejs') %>
 
         </div>
 

@@ -59,28 +59,6 @@ const PasswordResetRequestSchema = new mongoose.Schema({
     }
 });
 
-const PremiumUserSchema = new mongoose.Schema({
-    businessAbout: {
-        type: String,
-        default: '',
-        required: false
-    },
-    businessWeb: {
-        type: String,
-        default: '',
-        required: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: defaultAppValues.premiumUserExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    }
-});
-
 const RecentDeletedAccountSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
@@ -100,6 +78,58 @@ const RecentPasswordResetSuccessSchema = new mongoose.Schema({
         expires: defaultAppValues.recentRequestExpiration
     },
     email: {
+        type: String,
+        required: true
+    }
+});
+
+const StripeCancelKeySchema = new mongoose.Schema({
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: defaultAppValues.stripeCancelSuccessKeyExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    entryKey: {
+        type: String,
+        required: true
+    }
+});
+
+const StripeCheckoutSessionSchema = new mongoose.Schema({
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: defaultAppValues.stripeCheckoutSessionExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    paymentIntent: {
+        type: String,
+        required: true
+    }
+});
+
+const StripeSuccessKeySchema = new mongoose.Schema({
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: defaultAppValues.stripeCancelSuccessKeyExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    entryKey: {
+        type: String,
+        required: true
+    },
+    paymentIntent: {
         type: String,
         required: true
     }
@@ -131,44 +161,76 @@ const UnverifiedUserSchema = new mongoose.Schema({
 });
 
 const UserSchema = new mongoose.Schema({
-    businessCity: {
+    companyCity: {
         type: String,
         default: '',
         required: false
     },
-    businessName: {
+    companyDescription: {
         type: String,
         default: '',
         required: false
     },
-    businessPhone: {
+    companyName: {
         type: String,
         default: '',
         required: false
     },
-    businessState: {
+    companyPhone: {
         type: String,
         default: '',
         required: false
     },
-    businessStreet: {
+    companyProfileType: {
+        type: String,
+        default: defaultAppValues.accountDefault,
+        required: true
+    },
+    companyState: {
         type: String,
         default: '',
         required: false
     },
-    businessStreetTwo: {
+    companyStreet: {
         type: String,
         default: '',
         required: false
     },
-    businessZip: {
+    companyStreetTwo: {
         type: String,
         default: '',
         required: false
+    },
+    companyWebsite: {
+        type: String,
+        default: '',
+        required: false
+    },
+    companyZip: {
+        type: String,
+        default: '',
+        required: false
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    expirationDate: {
+        type: Date,
+        default: defaultAppValues.freeAccountExpiration,
+        required: true
     },
     live: {
         type: Boolean,
         default: false,
+        required: true
+    },                                    
+    password: {
+        type: String,
         required: true
     },
     serviceBoardingSecuring: {
@@ -225,17 +287,13 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: 'no',
         required: true
-    },                                             
-    createdAt: {
-        type: Date,
-        default: Date.now,
     },
-    email: {
-        type: String,
-        required: true
+    upgradeRenewalDates: {
+        type: Array
     },
-    password: {
-        type: String,
+    URLNotActiveError: {
+        type: Boolean,
+        default: false,
         required: true
     }
 });
@@ -245,7 +303,10 @@ const LoginFailure = mongoose.model('loginFailure', LoginFailureSchema);
 const PasswordResetRequest = mongoose.model('passwordResetRequest', PasswordResetRequestSchema);
 const RecentDeletedAccount = mongoose.model('recentDeletedAccount', RecentDeletedAccountSchema);
 const RecentPasswordResetSuccess = mongoose.model('recentPasswordResetSuccess', RecentPasswordResetSuccessSchema);
+const StripeCancelKey = mongoose.model('stripeCancelKey', StripeCancelKeySchema);
+const StripeCheckoutSession = mongoose.model('stripeCheckoutSession', StripeCheckoutSessionSchema);
+const StripeSuccessKey = mongoose.model('stripeSuccessKey', StripeSuccessKeySchema);
 const UnverifiedUser = mongoose.model('unverifiedUser', UnverifiedUserSchema);
 const User = mongoose.model('user', UserSchema);
 
-module.exports = { FalseEmailConfirmationRequest, LoginFailure, PasswordResetRequest, RecentDeletedAccount, RecentPasswordResetSuccess, UnverifiedUser, User };
+module.exports = { FalseEmailConfirmationRequest, LoginFailure, PasswordResetRequest, RecentDeletedAccount, RecentPasswordResetSuccess, StripeCancelKey, StripeCheckoutSession, StripeSuccessKey, UnverifiedUser, User };

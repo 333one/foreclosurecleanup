@@ -6,6 +6,9 @@ const {
     PasswordResetRequest,
     RecentDeletedAccount,
     RecentPasswordResetSuccess,
+    StripeCancelKey,
+    StripeCheckoutSession,
+    StripeSuccessKey,
     UnverifiedUser,
     User
 } = require('../models/mongoose-schema');
@@ -13,7 +16,7 @@ const {
 exports.createFalseEmailConfirmationRequest = function(email) {
 
     const fakeEmailRequest = new FalseEmailConfirmationRequest({
-        email: email
+        email
     });
 
     return fakeEmailRequest;
@@ -22,7 +25,7 @@ exports.createFalseEmailConfirmationRequest = function(email) {
 exports.createLoginFailure = function(email) {
 
     const loginFailure = new LoginFailure({
-        email: email
+        email
     });
 
     return loginFailure;
@@ -31,7 +34,7 @@ exports.createLoginFailure = function(email) {
 exports.createRecentDeletedAccount = function(email) {
 
     const recentDeletedAccount = new RecentDeletedAccount({
-        email: email
+        email
     });
 
     return recentDeletedAccount;
@@ -39,26 +42,47 @@ exports.createRecentDeletedAccount = function(email) {
 
 exports.createRecentPasswordResetSuccess = function(email) {
     const recentPasswordResetSuccess = new RecentPasswordResetSuccess({
-        email: email
+        email
     });
 
     return recentPasswordResetSuccess;
 }
 
-exports.createPasswordResetRequest = function(email, confirmationHash) {
+exports.createPasswordResetRequest = function(confirmationHash, email) {
 
     const passwordResetRequest = new PasswordResetRequest({
-        email: email,
-        confirmationHash: confirmationHash
+        confirmationHash,
+        email        
     });
 
     return passwordResetRequest;
 }
 
+exports.createStripeCheckoutSession = function(email, paymentIntent) {
+
+    const stripeCheckoutSession = new StripeCheckoutSession({
+        email,
+        paymentIntent
+    });
+
+    return stripeCheckoutSession;
+}
+
+exports.createStripeCancelSuccessKey = function(email, entryKey, paymentIntent, StripeEntryKeyConstructor) {
+
+    const stripeCancelSuccessKey = new StripeEntryKeyConstructor({
+        email,
+        entryKey,
+        paymentIntent
+    });
+
+    return stripeCancelSuccessKey;
+}
+
 exports.createUnverifiedUser = function(email) {
 
     const unverifiedUser = new UnverifiedUser({
-        email: email,
+        email,
         password: undefined,
         confirmationHash: undefined
     });

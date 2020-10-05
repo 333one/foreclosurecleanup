@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Company Description</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+    <script>let patternCompanyDescription = "<%- patternCompanyDescription %>"</script>
+    <script defer src="js/character-format.js"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Description</p>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Current Company Description:</p>
+                    <p class="dashboard__value -rightLeftMarginMedium"><%= companyDescription %></p>
+                </div>
+            </div>
+            <% } %>
+
+            <form action="/add-change-company-description" method="POST">
+
+                <input type="hidden" name="deleteProperty" value="false">
+
+                <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
+                    <label for="companyDescription" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Description:</label>
+                    <p class="textSmall -bottomMarginSmall">Include information about your company's history, services or other selling points that customers would be interested in.</p>
+                    <textarea id="companyDescription" class="input__field -setFontFamilyDefault
+                        <% if (typeof companyDescriptionError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyDescription" <%= companyDescriptionAttributes %> value="<%= userInput.companyDescription %>" autofocus></textarea>
+                    <% if (typeof companyDescriptionError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyDescriptionError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                </div>  
+
+            </form>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add-change-company-description" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's description.</button>
+                </div>
+                <input type="hidden" name="companyDescription" value="">
+                <input type="hidden" name="deleteProperty" value="true">
+            </form>
+            <% } %>  
+
+            <%- include('includes/back-to-my-account.ejs') %>
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

@@ -620,7 +620,7 @@ select:-webkit-autofill:active
     width: 30px;
 }
 
-.dashboard__fauxButton, .dashboard__fauxButtonAdd {
+.dashboard__fauxButton, .dashboard__fauxButtonAdd, .dashboard__fauxButtonPremium, .dashboard__fauxButtonPremiumAdd {
     display: inline-block;
     margin-top: .5rem;
     margin-bottom: .5rem;
@@ -628,24 +628,31 @@ select:-webkit-autofill:active
     width: 4.5rem;
     text-align: center;
     font-size: var(--font1125);
+}
+
+.dashboard__fauxButton, .dashboard__fauxButtonAdd {
     background-color: var(--grey64);
 }
 
-.dashboard__fauxButtonAdd {
+.dashboard__fauxButtonPremium, .dashboard__fauxButtonPremiumAdd {
+    background-color: var(--darkBlue);
+}
+
+.dashboard__fauxButtonAdd, .dashboard__fauxButtonPremiumAdd {
     color: var(--gold);
 }
 
-.dashboard__fauxButton {
+.dashboard__fauxButton, .dashboard__fauxButtonPremium {
     color: var(--white);
 }
 
-.dashboard__fauxButton:hover, .dashboard__fauxButtonAdd:hover {
-    background-color: var(--grey48);
+.dashboard__fauxButton:hover, .dashboard__fauxButtonAdd:hover, .dashboard__fauxButtonPremiumAdd:hover {
+    background-color: var(--grey32);
     color: var(--gold);
 }
 
-.dashboard__fauxButton:active, .dashboard__fauxButtonAdd:active {
-    background-color: var(--grey48);
+.dashboard__fauxButton:active, .dashboard__fauxButtonAdd:active, .dashboard__fauxButtonPremiumAdd:active {
+    background-color: var(--grey32);
     color: var(--gold);
 }
 
@@ -690,7 +697,7 @@ select:-webkit-autofill:active
     }
 }
 
-.dashboard__unit, .dashboard__unitCovered {
+.dashboard__unit, .dashboard__unitCovered, .dashboard__errorFeatureUnit {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -698,6 +705,14 @@ select:-webkit-autofill:active
 
 .dashboard__unit {
     padding: 1.5rem 0;
+}
+
+.dashboard__errorFeatureUnit {
+    padding-top: calc(1.5rem - 3px);
+    padding-bottom: calc(1.5rem - 3px);
+    padding-right: calc(0 - 3px);
+    padding-left: calc(0 - 3px);
+    border: 3px solid var(--white);
 }
 
 .dashboard__unitCoveredLink {
@@ -715,7 +730,7 @@ select:-webkit-autofill:active
 
 .dashboard__headline {
     margin: 0;
-    padding: 1rem 0;
+    padding: var(--px32) 0;
     text-align: center;
     font-size: var(--font2);
     font-weight: 600;
@@ -744,6 +759,22 @@ select:-webkit-autofill:active
 
 .dashboard__valueSmall {
     font-size: var(--font1);
+}
+
+.premium__unit {
+    padding-top: var(--px32);
+    padding-bottom: var(--px32);
+    background-color: var(--darkBlue);
+}
+
+.premium__headline {
+    font-size: var(--font2);
+    color: var(--white);
+}
+
+.premium__description {
+    font-size: var(--font15);
+    color: var(--white);
 }
 
 .addressNormalizationBox {
@@ -860,7 +891,7 @@ select:-webkit-autofill:active
     font-weight: 600;
 }
 
-#narrowScreen__button, .uspsFormat__button, .originalFormat__button {
+#narrowScreen__button, .uspsFormat__button, .originalFormat__button, .upgradePremium__button {
     padding-top: var(--half);
     padding-bottom: var(--half);
     width: 100%;
@@ -868,7 +899,7 @@ select:-webkit-autofill:active
     border: none;
 }
 
-#narrowScreen__button {
+#narrowScreen__button, .upgradePremium__button {
     font-size: var(--font2);
     background-color: var(--grey64);
 }
@@ -895,6 +926,31 @@ select:-webkit-autofill:active
 
 .register__body {
     background-color: rgb(250, 250, 250);
+}
+
+.cancelBar, .successBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--px16);
+    padding-bottom: var(--px16);
+    border-bottom: .0625rem solid var(--grey192);
+}    
+
+.cancelBar {
+    background-color: var(--orange128);
+}
+
+.successBar {
+    background-color: var(--green200);
+}
+
+.xClose {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-right: var(--px32);
+    margin-left: var(--px32);
 }
 
 .footer__container {
@@ -959,6 +1015,13 @@ select:-webkit-autofill:active
 
 .-errorBorderCheckbox {
     border-color: var(--red); 
+}
+
+.-errorBorderVanish {
+    border-top: 3px solid var(--red);
+    border-right: 3px solid var(--red);
+    border-bottom: 3px solid var(--red);
+    border-left: 3px solid var(--red);
 }
 
 .-errorColor {
@@ -1144,6 +1207,11 @@ select:-webkit-autofill:active
     padding-left: var(--four); 
 }
 
+.-rightLeftPaddingMedium {
+    padding-right: var(--px32);
+    padding-left: var(--px32); 
+}
+
 .-rightLeftPaddingMediumVanish {
     padding-right: var(--px32Vanish);
     padding-left: var(--px32Vanish); 
@@ -1172,6 +1240,11 @@ select:-webkit-autofill:active
     margin-left: var(--px8);
 }
 
+.-rightLeftPaddingSmall {
+    padding-right: var(--px16);
+    padding-left: var(--px16);
+}
+
 .-rightLeftPaddingSmallStatic {
     padding-right: 16px;
     padding-left: 16px;
@@ -1197,6 +1270,10 @@ select:-webkit-autofill:active
 }
 
 .-blueText {
+    color: var(--blue);
+}
+
+.-darkBlueText {
     color: var(--darkBlue);
 }
 
@@ -1210,6 +1287,10 @@ select:-webkit-autofill:active
 
 .stripeContainer {
     text-align: center;
+}
+
+.-setFontFamilyDefault {
+    font-family: 'Roboto Condensed', sans-serif;
 }
 
 @media all and (min-width:680px) and (max-width:975px) {
@@ -1309,7 +1390,7 @@ select:-webkit-autofill:active
     height: 10.75rem;
 }
 
-.dashboard__unit, .dashboard__unitCovered {
+.dashboard__unit, .dashboard__unitCovered, .dashboard__errorFeatureUnit {
     flex-direction: column;
     justify-content: initial;
     align-items: initial;
@@ -1318,6 +1399,11 @@ select:-webkit-autofill:active
 .dashboard__fauxButton {
     margin-top: 1rem;
     margin-bottom: 0;
+}
+
+.xClose {
+    width: 16px;
+    height: 16px;
 }
 
 .footer__container {
@@ -1331,6 +1417,11 @@ select:-webkit-autofill:active
 
 .footerNavigation__activeUnit, .footerNavigation__unit, .footerLink, #copyright {
     text-align: center;
+}
+
+.-errorBorderVanish {
+    border-right: none;
+    border-left: none;
 }
 
 }
@@ -1382,7 +1473,7 @@ select:-webkit-autofill:active
     height: 10.75rem;
 }
 
-.dashboard__unit, .dashboard__unitCovered {
+.dashboard__unit, .dashboard__unitCovered, .dashboard__errorFeatureUnit {
     flex-direction: column;
     justify-content: initial;
     align-items: initial;
@@ -1391,6 +1482,11 @@ select:-webkit-autofill:active
 .dashboard__fauxButton {
     margin-top: 1rem;
     margin-bottom: 0;
+}
+
+.xClose {
+    width: 16px;
+    height: 16px;
 }
 
 .footer__container {
@@ -1404,6 +1500,11 @@ select:-webkit-autofill:active
 
 .footerNavigation__activeUnit, .footerNavigation__unit, .footerLink, #copyright {
     text-align: center;
+}
+
+.-errorBorderVanish {
+    border-right: none;
+    border-left: none;
 }
 
 }

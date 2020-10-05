@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Company Address</title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+    <script>
+        let patternCompanyCity = "<%- patternCompanyCity %>";
+        let patternCompanyStreet = "<%- patternCompanyStreet %>";
+        let patternCompanyStreetTwo = "<%- patternCompanyStreetTwo %>";
+        let patternCompanyZip = "<%- patternCompanyZip %>";
+    </script>
+    <script defer src="js/character-format.js"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <% if (typeof normalize != "undefined") { %>
+
+            <p class="dashboard__headline -rightLeftPaddingMedium">Address Normalization</p>
+            <p class="dashboard__subText -rightLeftMarginMedium">If the top address is correct we recommend that you normalize your company's address using US Postal Service format.</p>
+            <div class="addressNormalizationBox -rightLeftMarginMedium">
+                <p class="addressNormalization -topMarginMedium"><%- normalize.uspsStreet %><% if (normalize.uspsStreetTwo != "") { %>, <%- normalize.uspsStreetTwo %><% } %></p>
+                <p class="addressNormalization -bottomMarginMedium"><%- normalize.uspsCity %>, <%- normalize.uspsState %> <%- normalize.uspsZip %></p>
+
+                <form action="/add-change-company-address" method="POST">
+                    <div class="-bottomMarginMedium -rightLeftMarginMedium">
+                        <button class="uspsFormat__button">Use US Postal Service format</button>
+                    </div>
+                    <input type="hidden" name="companyStreet" value="<%= normalize.uspsStreet %>">
+                    <input type="hidden" name="companyStreetTwo" value="<%= normalize.uspsStreetTwo %>">
+                    <input type="hidden" name="companyCity" value="<%= normalize.uspsCity %>">
+                    <input type="hidden" name="companyState" value="<%= normalize.uspsState %>">
+                    <input type="hidden" name="companyZip" value="<%= normalize.uspsZip %>">
+                    <input type="hidden" name="overrideUsps" value="false">
+                    <input type="hidden" name="deleteProperty" value="false">
+                </form> 
+
+            </div>
+
+            <div class="addressNormalizationBox -rightLeftMarginMedium">
+                <p class="addressNormalization -topMarginMedium"><%= normalize.userInputStreet %><% if (normalize.userInputStreetTwo != "") { %>, <%= normalize.userInputStreetTwo %><% } %></p>
+                <p class="addressNormalization -bottomMarginMedium"><%= normalize.userInputCity %>, <%= normalize.userInputState %> <%= normalize.userInputZip %></p>
+
+                <form action="/add-change-company-address" method="POST">
+                    <div class="-bottomMarginMedium -rightLeftMarginMedium">
+                        <button class="originalFormat__button">Keep original</button>
+                    </div>
+                    <input type="hidden" name="companyStreet" value="<%= normalize.userInputStreet %>">
+                    <input type="hidden" name="companyStreetTwo" value="<%= normalize.userInputStreetTwo %>">
+                    <input type="hidden" name="companyCity" value="<%= normalize.userInputCity %>">
+                    <input type="hidden" name="companyState" value="<%= normalize.userInputState %>">
+                    <input type="hidden" name="companyZip" value="<%= normalize.userInputZip %>">
+                    <input type="hidden" name="overrideUsps" value="true">
+                    <input type="hidden" name="deleteProperty" value="false">
+                </form> 
+            
+            </div>
+
+            <%- include('includes/back-to-my-account.ejs') %>
+
+            <% } else { %>            
+
+            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Your Company's Address</p>
+
+            <form action="/add-change-company-address" method="POST">
+
+                <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Company Address:</p>
+                <p class="textSmall  -rightLeftPaddingMedium">This address is used on the <a href="/foreclosure-cleanup-vendor-list">vendor list search page</a>.  It allows customers to search for vendors near their location.</p>
+                <input type="hidden" name="overrideUsps" value="false">
+                <input type="hidden" name="deleteProperty" value="false">
+
+                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
+                    <label for="companyStreet" class="input__label">Street Address:</label>
+                    <input id="companyStreet" class="input__field
+                        <% if (typeof companyStreetError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyStreet" <%= companyStreetAttributes %> value="<%= userInput.companyStreet %>" autofocus>
+                    <% if (typeof companyStreetError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyStreetError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
+                    <label for="companyStreetTwo" class="input__label
+                        <% if (typeof companyStreetTwoError != "undefined") { %>
+                            -errorColor
+                        <% } %>   
+                        ">Street Address Line Two:</label>
+                    <input id="companyStreetTwo" class="input__field
+                        <% if (typeof companyStreetTwoError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyStreetTwo" <%= companyStreetTwoAttributes %> value="<%= userInput.companyStreetTwo %>">
+                    <% if (typeof companyStreetTwoError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyStreetTwoError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
+                    <label for="companyCity" class="input__label
+                        <% if (typeof companyCityError != "undefined") { %>
+                            -errorColor
+                        <% } %>   
+                        ">City:</label>
+                    <input id="companyCity" class="input__field
+                        <% if (typeof companyCityError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyCity" <%= companyCityAttributes %> value="<%= userInput.companyCity %>">
+                    <% if (typeof companyCityError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyCityError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
+                    <label for="companyState" class="input__label
+                        <% if (typeof companyStateError != "undefined") { %>
+                            -errorColor
+                        <% } %>   
+                        ">State:</label>
+                    <select id="companyState" class="input__field
+                        <% if (typeof companyStateError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyState">
+                        <option value="" selected disabled>Select Your State</option>
+                        <option value="AL" <% if (userInput.companyState === "AL") { %> selected <% } %>>AL</option>
+                        <option value="AK" <% if (userInput.companyState === "AK") { %> selected <% } %>>AK</option>
+                        <option value="AZ" <% if (userInput.companyState === "AZ") { %> selected <% } %>>AZ</option>
+                        <option value="AR" <% if (userInput.companyState === "AR") { %> selected <% } %>>AR</option>
+                        <option value="CA" <% if (userInput.companyState === "CA") { %> selected <% } %>>CA</option>
+                        <option value="CO" <% if (userInput.companyState === "CO") { %> selected <% } %>>CO</option>
+                        <option value="CT" <% if (userInput.companyState === "CT") { %> selected <% } %>>CT</option>
+                        <option value="DC" <% if (userInput.companyState === "DC") { %> selected <% } %>>DC</option>
+                        <option value="DE" <% if (userInput.companyState === "DE") { %> selected <% } %>>DE</option>
+                        <option value="FL" <% if (userInput.companyState === "FL") { %> selected <% } %>>FL</option>
+                        <option value="GA" <% if (userInput.companyState === "GA") { %> selected <% } %>>GA</option>
+                        <option value="HI" <% if (userInput.companyState === "HI") { %> selected <% } %>>HI</option>
+                        <option value="ID" <% if (userInput.companyState === "ID") { %> selected <% } %>>ID</option>
+                        <option value="IL" <% if (userInput.companyState === "IL") { %> selected <% } %>>IL</option>
+                        <option value="IN" <% if (userInput.companyState === "IN") { %> selected <% } %>>IN</option>
+                        <option value="IA" <% if (userInput.companyState === "IA") { %> selected <% } %>>IA</option>
+                        <option value="KS" <% if (userInput.companyState === "KS") { %> selected <% } %>>KS</option>
+                        <option value="KY" <% if (userInput.companyState === "KY") { %> selected <% } %>>KY</option>
+                        <option value="LA" <% if (userInput.companyState === "LA") { %> selected <% } %>>LA</option>
+                        <option value="ME" <% if (userInput.companyState === "ME") { %> selected <% } %>>ME</option>
+                        <option value="MD" <% if (userInput.companyState === "MD") { %> selected <% } %>>MD</option>
+                        <option value="MA" <% if (userInput.companyState === "MA") { %> selected <% } %>>MA</option>
+                        <option value="MI" <% if (userInput.companyState === "MI") { %> selected <% } %>>MI</option>
+                        <option value="MN" <% if (userInput.companyState === "MN") { %> selected <% } %>>MN</option>
+                        <option value="MS" <% if (userInput.companyState === "MS") { %> selected <% } %>>MS</option>
+                        <option value="MO" <% if (userInput.companyState === "MO") { %> selected <% } %>>MO</option>
+                        <option value="MT" <% if (userInput.companyState === "MT") { %> selected <% } %>>MT</option>
+                        <option value="NE" <% if (userInput.companyState === "NE") { %> selected <% } %>>NE</option>
+                        <option value="NV" <% if (userInput.companyState === "NV") { %> selected <% } %>>NV</option>
+                        <option value="NH" <% if (userInput.companyState === "NH") { %> selected <% } %>>NH</option>
+                        <option value="NJ" <% if (userInput.companyState === "NJ") { %> selected <% } %>>NJ</option>
+                        <option value="NM" <% if (userInput.companyState === "NM") { %> selected <% } %>>NM</option>
+                        <option value="NY" <% if (userInput.companyState === "NY") { %> selected <% } %>>NY</option>
+                        <option value="NC" <% if (userInput.companyState === "NC") { %> selected <% } %>>NC</option>
+                        <option value="ND" <% if (userInput.companyState === "ND") { %> selected <% } %>>ND</option>
+                        <option value="OH" <% if (userInput.companyState === "OH") { %> selected <% } %>>OH</option>
+                        <option value="OK" <% if (userInput.companyState === "OK") { %> selected <% } %>>OK</option>
+                        <option value="OR" <% if (userInput.companyState === "OR") { %> selected <% } %>>OR</option>
+                        <option value="PA" <% if (userInput.companyState === "PA") { %> selected <% } %>>PA</option>
+                        <option value="RI" <% if (userInput.companyState === "RI") { %> selected <% } %>>RI</option>
+                        <option value="SC" <% if (userInput.companyState === "SC") { %> selected <% } %>>SC</option>
+                        <option value="SD" <% if (userInput.companyState === "SD") { %> selected <% } %>>SD</option>
+                        <option value="TN" <% if (userInput.companyState === "TN") { %> selected <% } %>>TN</option>
+                        <option value="TX" <% if (userInput.companyState === "TX") { %> selected <% } %>>TX</option>
+                        <option value="UT" <% if (userInput.companyState === "UT") { %> selected <% } %>>UT</option>
+                        <option value="VT" <% if (userInput.companyState === "VT") { %> selected <% } %>>VT</option>
+                        <option value="VA" <% if (userInput.companyState === "VA") { %> selected <% } %>>VA</option>
+                        <option value="WA" <% if (userInput.companyState === "WA") { %> selected <% } %>>WA</option>
+                        <option value="WV" <% if (userInput.companyState === "WV") { %> selected <% } %>>WV</option>
+                        <option value="WI" <% if (userInput.companyState === "WI") { %> selected <% } %>>WI</option>
+                        <option value="WY" <% if (userInput.companyState === "WY") { %> selected <% } %>>WY</option>
+                    </select>
+
+                    <% if (typeof companyStateError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyStateError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="input__unit -topMarginMedium -bottomMarginLarge -rightLeftMarginMedium"> 
+                    <label for="companyZip" class="input__label
+                        <% if (typeof companyZipError != "undefined") { %>
+                            -errorColor
+                        <% } %>   
+                        ">Zip Code:</label>
+                    <input id="companyZip" class="input__field
+                        <% if (typeof companyZipError != "undefined") { %>
+                            -errorBorder
+                        <% } %>
+                        " name="companyZip" <%= companyZipAttributes %> value="<%= userInput.companyZip %>">
+                    <% if (typeof companyZipError != "undefined") { %>
+                    <div class="input__errorMessage"><%= companyZipError %></div>
+                    <% } %> 
+                </div>
+
+                <div class="-bottomMarginLarge -rightLeftMarginMedium">
+                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                </div>  
+
+            </form>
+
+            <% if (addOrChangeProperty === "change") { %>
+            <form action="/add-change-company-address" method="POST">
+                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
+                    <button class="button_fauxLink">Delete your company's address.</button>
+                </div>
+                <input type="hidden" name="companyStreet" value="">
+                <input type="hidden" name="companyStreetTwo" value="">
+                <input type="hidden" name="companyCity" value="">
+                <input type="hidden" name="companyState" value="">
+                <input type="hidden" name="companyZip" value="">
+                <input type="hidden" name="overrideUsps" value="false">
+                <input type="hidden" name="deleteProperty" value="true">
+            </form>
+            <% } %>  
+
+            <%- include('includes/back-to-my-account.ejs') %>
+
+        <% } %>
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

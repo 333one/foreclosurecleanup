@@ -1,11 +1,20 @@
 "use strict";
 
+const defaultAppValues = require('../models/default-app-values.js');
+const { addChangeCompanyDescription } = require('./default-fields.js');
+
 let paragraphBegin125 = '<p style="font-family: arial, helvetica, sans-serif; font-size: 1.25rem; color: rgb(64, 64, 64)">';
 let paragraphBegin1 = '<p style="font-family: arial, helvetica, sans-serif; font-size: 1rem; color: rgb(64, 64, 64)">';
 
 exports.changeNone = 'No change made.';
 
 exports.changeSuccessful = 'Change successful.';
+
+exports.companyPropertyChangeVerb = {
+    delete: 'deleted',
+    add: 'added',
+    update: 'updated'
+}
 
 exports.confirmationLimitReachedBody = function(email, emailSubject) {
 
@@ -16,7 +25,7 @@ exports.confirmationResentBody = function(email, emailSubject, resetAttempt) {
 
     let topSentence = '';
 
-    if(resetAttempt === 'true') {
+    if (resetAttempt === 'true') {
 
         topSentence = `<p class="textLarge -bottomMarginMedium">Before you can reset your password you must first verify your account.</p>`;
     } 
@@ -34,7 +43,7 @@ exports.emailVerificationEmailBody = function(WEBSITE, ORGANIZATION, HOST, confi
 
     let topSentence;
 
-    if(resetAttempt === 'true') {
+    if (resetAttempt === 'true') {
 
         topSentence = `${ paragraphBegin1 }Recently a password reset request was made for your account at ${ ORGANIZATION }.  Your account must be activated before you can reset the password.  Please activate your account by clicking the link below and confirming your email.`;
     } else {
@@ -78,7 +87,24 @@ exports.passwordResetRequestEmailSubject = function(ORGANIZATION) {
     return `Reset Your ${ ORGANIZATION } Password`;
 }
 
-exports.phoneNotValid = 'Please enter a valid phone number.'
+exports.phoneNotValid = 'Please enter a valid phone number.';
+
+exports.stripeCancelMessage = `We are sorry but there was a problem during payment through Stripe.  Please <a href="mailto:${ process.env.CONTACT_EMAIL }>contact us</a> if you need help upgrading your account.`;
+exports.stripeSuccessMessage = 'Premium Upgrade Successful';
+
+exports.successfulChange = function(companyProperty, changeVerb) {
+
+    let sentenceFragment;
+    if (companyProperty === 'address' || companyProperty === 'description' || companyProperty === 'name'  || companyProperty === 'website') {
+        sentenceFragment = `company's ${ companyProperty } was`;
+    } else if (companyProperty === 'services') {
+        sentenceFragment = `company's ${ companyProperty } were`;
+    } else if (companyProperty === 'email' || companyProperty === 'password'){
+        sentenceFragment = ` ${ companyProperty } was`;
+    }
+
+    return `Your company's ${ sentenceFragment } successfully ${ changeVerb }.`;
+}
 
 exports.unverifiedConfirmationLimitReachedBody = function (email, emailSubject){
 
@@ -86,4 +112,8 @@ exports.unverifiedConfirmationLimitReachedBody = function (email, emailSubject){
     <p class="textLarge -bottomMarginLarge">An additional confirmation email has been sent to <i>${ email }</i> and should arrive within the next few minutes. Please watch for an email titled: <i>${ emailSubject }</i></p>`;
 }
 
+exports.upgradeSalesPitch = `Help support the site. Include a link to your website or social media page plus a company description for ${ defaultAppValues.costInDollarsProduct_1 } for 1 year. There is no contract or recurring billing.`;
+
 exports.unverifiedPasswordResetAttemptHeadline = 'Please Verify First';
+
+exports.URLNotActiveMessage = 'We tried to confirm your website but it didn\'t appear to be active.  Please confirm that your website address is correct.';

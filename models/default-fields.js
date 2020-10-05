@@ -1,10 +1,14 @@
-exports.changeAboutMyBusiness = ['aboutMyBusiness'];
+"use strict";
 
-exports.addChangeBusinessAddress = ['businessCity', 'businessState', 'businessStreet', 'businessStreetTwo', 'businessZip', 'overrideUsps', 'deleteProperty'];
+exports.addChangeCompanyAddress = ['companyCity', 'companyState', 'companyStreet', 'companyStreetTwo', 'companyZip', 'overrideUsps', 'deleteProperty'];
 
-exports.addChangeBusinessName = ['businessName', 'deleteProperty'];
+exports.addChangeCompanyDescription = ['companyDescription', 'deleteProperty'];
 
-exports.addChangeBusinessServices = [
+exports.addChangeCompanyName = ['companyName', 'deleteProperty'];
+
+exports.addChangeCompanyPhone = ['companyPhone', 'deleteProperty'];
+
+exports.addChangeCompanyServices = [
     'serviceBoardingSecuring',
     'serviceDebrisRemovalTrashout',
     'serviceEvictionManagement',
@@ -19,9 +23,9 @@ exports.addChangeBusinessServices = [
     'deleteProperty'
 ];
 
-exports.addChangeBusinessPhone = ['businessPhone', 'deleteProperty'];
+exports.addChangeCompanyWebsite = ['companyWebsite', 'deleteProperty'];
 
-exports.changeEmail = ['newEmail', 'emailConfirmation', 'password'];
+exports.changeEmail = ['newEmail', 'emailConfirmation', 'passwordCheck'];
 
 exports.changePassword = ['passwordCurrent', 'password', 'passwordConfirm'];
 

@@ -1,27 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Dashboard</title>
+    <title>My Account</title>
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
-    <script>var stripePublicKey = '<%- stripePublicKey %>';</script>
-    <script defer src="https://js.stripe.com/v3/"></script>
-    <script defer src="js/checkout.js"></script>
+    <script defer src="js/message-x-close-button.js"></script>
+    <script defer>
+        <% if (typeof URLNotActiveMessage === 'string') { %>
+            window.location.hash = '#company-website'
+        <% } %>
+    </script> 
 </head>
 <body>
+    
+    <% if (typeof successMessage === 'string' || typeof failMessage === 'string') { %>
+        <div id="messageContainer"
+            <% if (typeof successMessage === 'string') { %> 
+                class="successBar"
+            <% } else { %>
+                class="cancelBar"
+            <% } %>
+        >
+            <div class="xClose"></div>
+            <div class="standardWidthVanish">
+                <p class="textLarge -centerAlign">
+                    <% if (typeof successMessage === 'string') { %> 
+                        <%= successMessage %>
+                    <% } else { %>
+                        <%= failMessage %>
+                    <% } %>
+                </p>
+            </div>
+            <div id="xButtonContainer" class="xClose"></div>
+        </div>
+    <% } %>    
 
     <%- include('includes/dashboard-header.ejs') %>
 
     <main>
-
+        
         <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
             <p class="dashboard__headline">My Account</p>
             <div class="dashboard__unit -bottomBorder">
                 <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Business Profile Type:</p>
-                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium">Free</p>
-                    <p class="textSmall -rightLeftMarginMedium"><button id="underlinedCheckoutButton" class="button_fauxLink" href="upgrade-premium">Upgrade Your Account</button>: Include a link to your company's website or social media page plus add a company description for just $20 per year.</p>
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Profile Type:</p>
+                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= companyProfileType %></p>
+                    <p class="dashboard__key -rightLeftMarginMedium">Member Since:</p>
+                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= memberSince %></p>
+                    <% if (isAccountUpgraded === false) { %>
+                        <p class="textSmall -rightLeftMarginMedium"><a href="upgrade-premium">Upgrade your company to a <%= upgradedProfileName %></a>. <%= upgradeSalesPitch %></p>
+                    <% } else if (isAccountUpgraded === true) { %>
+                    <p class="dashboard__key -rightLeftMarginMedium">Premium Company Profile Active Until:</p>
+                    <p class="textLarge -rightLeftMarginMedium
+                        <% if (isAccountUpgraded === true) { %> -bottomMarginMedium <% } %>
+                        "><%= premiumExpirationDate %></p>
+                        <% if (isUpgradeExpirationSoon === true) { %>
+                            <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall">Your Premium account will expire in <span class="-errorColor"><strong><%= numberOfDaysUntilExpiration %> days</strong></span>.</p>
+                            <p class="textSmall -rightLeftMarginMedium"><a href="renew-extend-premium">Renew Your Premium Account</a>: Renew your premium account for 12 months for just <%= costInDollarsProduct_1 %>.</p>
+                        <% } %>
+                    <p class="textSmall -rightLeftMarginMedium">
+                        <% if (isUpgradeExpirationSoon === false && premiumAccountExtendsAvailable === true) { %>
+                            <a href="renew-extend-premium">Extend Your Premium Account</a>: Extend your premium account for another 12 months for just <%= costInDollarsProduct_1 %>.
+                        <% } else { %>
+                            Great! Your <%= companyProfileType %> account duration is maxed out. No renewals or extensions are needed at this time.
+                        <% } %>
+                    </p>
+                    <% } %>
                 </div>
             </div>
 
@@ -29,59 +74,59 @@
                 <div>
                     <p class="dashboard__key -rightLeftMarginMedium">Vendor List Status:</p>
                     <% if (isAccountLive === true) { %>
-                        <p class="textLarge -rightLeftMarginMedium -liveText">Your Business Profile Is Live.</p>
+                        <p class="textLarge -rightLeftMarginMedium -liveText">Your Company Profile Is Live.</p>
                     <% } else { %>
-                        <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall -inactiveText">Your Business Profile Is Not Live.</p>
-                        <p class="textSmall -rightLeftMarginMedium">Please add your company's <%- businessPropertiesUnfilled %> to make your business profile live.</p>
+                        <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall -inactiveText">Your Company Profile Is Not Live.</p>
+                        <p class="textSmall -rightLeftMarginMedium">Please add your company's <%- companyPropertiesUnfilled %> to make your company profile live.</p>
                     <% } %>
                 </div>
             </div>
 
-            <p class="dashboard__headline">Business Information</p>
+            <p class="dashboard__headline">Company Information</p>
 
             <div class="dashboard__unit -bottomBorder">
                 <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Business Name:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= businessNameMyAccountValue %></p>
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Name:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= companyNameMyAccountValue %></p>
                 </div>
                 <div class="-leftMarginLargeVanish">
-                    <% if (isBusinessNameAdded === true) { %>
-                        <a href="/add-change-business-name"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% if (isCompanyNameAdded === true) { %>
+                        <a href="/add-change-company-name"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
                     <% } else { %>
-                        <a href="/add-change-business-name"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
-            </div>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Business Phone:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= businessPhoneMyAccountValue %></p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isBusinessPhoneAdded === true) { %>
-                        <a href="/add-change-business-phone"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-business-phone"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                        <a href="/add-change-company-name"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
                     <% } %>
                 </div>
             </div>
 
             <div class="dashboard__unit -bottomBorder">
                 <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Business Address:</p>
-                    <% if (isBusinessAddressAdded) { %>
-                        <p class="textLarge -rightLeftMarginMedium"><%= businessStreetMyAccountValue %></p>
-                        <p class="textLarge -rightLeftMarginMedium"><%= businessRegionMyAccountValue %></p>
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Phone:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= companyPhoneMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isCompanyPhoneAdded === true) { %>
+                        <a href="/add-change-company-phone"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
                     <% } else { %>
-                    <p class="textLarge -rightLeftMarginMedium"><%= businessStreetMyAccountValue %></p>
+                        <a href="/add-change-company-phone"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="dashboard__unit -bottomBorder">
+                <div>
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Address:</p>
+                    <% if (isCompanyAddressAdded) { %>
+                        <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
+                        <p class="textLarge -rightLeftMarginMedium"><%= companyRegionMyAccountValue %></p>
+                    <% } else { %>
+                    <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
                     <% } %>
                 </div>
                 <div class="-leftMarginLargeVanish">
-                    <% if (isBusinessAddressAdded === true) { %>
-                        <a href="/add-change-business-address"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% if (isCompanyAddressAdded === true) { %>
+                        <a href="/add-change-company-address"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
                     <% } else { %>
-                        <a href="/add-change-business-address"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                        <a href="/add-change-company-address"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
                     <% } %>
                 </div>
             </div>
@@ -89,32 +134,84 @@
             <div class="dashboard__unit -bottomBorder">
                 <div>
                     <p class="dashboard__key -rightLeftMarginMedium">Services Offered:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%- businessServicesMyAccountValue %></p>
+                    <p class="textLarge -rightLeftMarginMedium"><%- companyServicesMyAccountValue %></p>
                 </div>
                 <div class="-leftMarginLargeVanish">
-                    <% if (isBusinessServicesAdded === true) { %>
-                        <a href="/add-change-business-services"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+                    <% if (isCompanyServicesAdded === true) { %>
+                        <a href="/add-change-company-services"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
                     <% } else { %>
-                        <a href="/add-change-business-services"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                        <a href="/add-change-company-services"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
                     <% } %>
                 </div>
             </div>
 
+            <div class="premium__unit -topMarginMedium -bottomBorder">
+                <% if (isAccountUpgraded === true) { %><div class="premium__headline -centerAlign"><%= companyProfileType %> Information</div><% } %>
+                <% if (isAccountUpgraded === false) { %>
+                    <div class="premium__headline -rightLeftMarginMedium"><%= upgradedProfileName %>:</div>
+                    <div class="premium__description -rightLeftMarginMedium"><%= upgradeSalesPitch %></div>
+                <% } %>
+            </div>
+
+            <% if (isAccountUpgraded === false) { %>
             <div class="dashboard__unitCovered -bottomBorder">
-                <button href="upgrade-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium -opacity50">Website Or Social Media Page:</p>
-                    <p class="textSmall -rightLeftMarginMedium -opacity50">Upgrade to add.</p>
-                </button>
+                <a href="upgrade-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium">Website Or Social Media Page:</p>
+                    <p class="textSmall -rightLeftMarginMedium">Upgrade to a <%= upgradedProfileName %>.</p>
+                </a>
             </div>
 
             <div class="dashboard__unitCovered -bottomBorder -bottomMarginHuge">
-                <button href="upgrade-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium -opacity50">Company Description:</p>
-                    <p class="textSmall -rightLeftMarginMedium -opacity50">Upgrade to add.</p>
-                </button>
+                <a href="upgrade-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Description:</p>
+                    <p class="textSmall -rightLeftMarginMedium">Upgrade to a <%= upgradedProfileName %>.</p>
+                </a>
+            </div>
+            <% } else { %>
+
+            <a id="company-website"></a>
+
+            <div class="dashboard__errorFeatureUnit -topMarginMedium
+            <% if (typeof URLNotActiveMessage !== 'string') { %>
+                -bottomBorder
+            <% } %>
+            <% if (typeof URLNotActiveMessage === 'string') { %>
+                -errorBorderVanish
+            <% } %>
+            ">
+                <div>
+                    <p class="dashboard__key -blueText -rightLeftMarginMedium">Website Or Social Media Page:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= companyWebsiteMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isCompanyWebsiteAdded === true) { %>
+                        <a href="/add-change-company-website"><div class="dashboard__fauxButtonPremium -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-company-website"><div class="dashboard__fauxButtonPremiumAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+            <% if (typeof URLNotActiveMessage === 'string') { %>
+                <p class="textLarge -topPaddingSmall -bottomPaddingLarge -rightLeftPaddingMedium -errorColor -bottomBorder"><%= URLNotActiveMessage %></p>
+            <% } %>
+
+            <div class="dashboard__unit -bottomBorder -bottomMarginHuge">
+                <div>
+                    <p class="dashboard__key -blueText -rightLeftMarginMedium">Company Description:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= companyDescriptionMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isCompanyDescriptionAdded === true) { %>
+                        <a href="/add-change-company-description"><div class="dashboard__fauxButtonPremium -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-company-description"><div class="dashboard__fauxButtonPremiumAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
             </div>
 
-            <p class="dashboard__headline">Account Information</p>
+            <% } %>
+
+            <p class="dashboard__headline">Login</p>
 
             <div class="dashboard__unit -bottomBorder">
                 <div>
