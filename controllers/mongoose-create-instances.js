@@ -6,9 +6,7 @@ const {
     PasswordResetRequest,
     RecentDeletedAccount,
     RecentPasswordResetSuccess,
-    StripeCancelKey,
     StripeCheckoutSession,
-    StripeSuccessKey,
     UnverifiedUser,
     User
 } = require('../models/mongoose-schema');

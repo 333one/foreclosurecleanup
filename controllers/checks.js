@@ -3,12 +3,12 @@
 const phoneNormalizer = require('phone');
 const zxcvbn = require('zxcvbn');
 
-const defaultAppValues = require('../models/default-app-values');
-const defaultFields = require('../models/default-fields.js');
+const formFields = require('../models/values-form-fields.js');
+const timeValue = require('../models/values-time');
 
-exports.checkAllFieldsFilled = function(defaultFields, userInputFields) {
+exports.checkAllFieldsFilled = function(formFields, userInputFields) {
 
-    for(let element of defaultFields) {
+    for(let element of formFields) {
         if (userInputFields[element] === '' || userInputFields[element] === undefined) {
             return false;
         }
@@ -23,7 +23,7 @@ exports.checkAllUserValuesFilled = function(sessionUserValues) {
     // companyStreetTwo is allowed to be empty so delete that.
     delete userProperties.companyStreetTwo;
 
-    let companyServiceProperties = [...defaultFields.addChangeCompanyServices];
+    let companyServiceProperties = [...formFields.addChangeCompanyServices];
     // Remove deleteProperty because it isn't needed for this test.
     companyServiceProperties.pop();
 
@@ -51,7 +51,7 @@ exports.checkArePremiumAccountExtendsAvailable = function(expirationDate, isUpgr
 
     let numberOfDays = Math.floor((Date.UTC(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate())) - (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))) / oneDay;
 
-    let maxDays = defaultAppValues.premiumAccountExtendsCutoff;
+    let maxDays = timeValue.premiumAccountExtendsCutoff;
 
     if (numberOfDays < maxDays) {
 
@@ -99,7 +99,7 @@ exports.checkIsUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
     // A negative number indicates this is a free account.
     if (numberOfDaysUntilExpiration < 0) {
         return false;
-    } else if (numberOfDaysUntilExpiration >= defaultAppValues.upgradeExpirationAlarmTime) {
+    } else if (numberOfDaysUntilExpiration >= timeValue.upgradeExpirationAlarmTime) {
         return false;
     } else {
         return true;

@@ -10,12 +10,11 @@ const session = require('express-session');
 //let RedisStore = require('connect-redis')(session);
 //let redisClient = redis.createClient();
 
-const defaultAppValues = require('./models/default-app-values.js');
-
 const endpointsUserAccounts = require('./controllers/endpoints-user-accounts');
 const endpointsStripe = require('./controllers/endpoints-stripe');
 const endpointsDefault = require('./controllers/endpoints-default');
 const { customExpressErrorHandler, logErrorMessage } = require('./controllers/error-handling');
+const siteValue = require('./models/values-site');
 
 // Custom path to .env file.
 require('dotenv').config({ path: path.join(__dirname, '/models/.env')});
@@ -60,8 +59,8 @@ mongoose.connect(process.env.DB_CONNECTION, { useCreateIndex: true, useNewUrlPar
         logErrorMessage(err);
     });
 
-app.listen(defaultAppValues.port, function(){
-    console.log(`app.js listening on port ${ defaultAppValues.port }`);
+app.listen(siteValue.port, function(){
+    console.log(`app.js listening on port ${ siteValue.port }`);
 });
 
 // close mongoose connection gracefully when app is terminated with ctrl-c.

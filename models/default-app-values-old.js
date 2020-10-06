@@ -75,7 +75,7 @@ exports.emailField = {
 
 exports.falseEmailConfirmationRequestExpiration = 2 * 60 * 60;
 
-//  This old date is used for a required value in the User Schema.
+//  This old, fake date is used as a filler for a required value in the User Schema.
 exports.freeAccountExpiration = new Date('Mon Jan 01 1900 00:00:00 GMT-0700 (Mountain Standard Time)');
 
 exports.host = 'http://localhost:8080';
@@ -140,7 +140,6 @@ exports.messageCompanyWebsitePattern = 'letters A - Z, numbers 0 - 9 or special 
 
 exports.patternCompanyZip = '[0-9]';
 exports.messageCompanyZipPattern = 'numbers 0 - 9';
-
 
 // Users can't extend their premium account again if it is more than this many days from expiration.
 exports.premiumAccountExtendsCutoff = 729;

@@ -2,43 +2,73 @@
 
 const path = require('path');
 
-const defaultAppValues = require('../models/default-app-values.js');
-const defaultMessages = require('../models/default-messages');
+const regexpValue = require('./values-messages-regexp');
+const renderValue = require('./values-rendering');
 
 // Custom path to .env file.
-require('dotenv').config({ path: path.join(__dirname, '../models/.env') });
+require('dotenv').config({ path: path.join(__dirname, '/.env') });
+
+let phoneNotValid = 'Please enter a valid phone number.';
+
+let emailAlreadyInUse = 'We\'re sorry but the email you entered is already associated with a different account.  Please try a different email address.';
+
+let emailExistingEmpty = 'Please enter your email address.';
+
+let emailNotValid = 'The email you entered is not valid.';
+
+let existingPasswordEmpty = 'Please enter your password.';
+
+let existingPasswordIncorrect = 'The username and password combination you entered is incorrect.  Please try again.';
+
+function fieldTooLong (fieldName, maxLength) {
+    return `Your ${ fieldName } must be ${ maxLength } characters or less.`;
+}
+
+function fieldTooShort(fieldName, maxLength) {
+    return `Your ${ fieldName } must be ${ maxLength } characters or more.`;
+}
+
+function invalidCharacterMessage(pattern) {
+    return `Please only use valid ${ pattern }.`;
+}
+
+exports.confirmationLimitReachedBody = function(email, emailSubject) {
+
+    return `<p class="textLarge -bottomMarginMedium">We are sorry but the maximum number of confirmation emails that can be sent to <span class="highlightEffect">${ email }</span> has been reached.  Please check your inbox for emails titled: <span class="highlightEffect">${ emailSubject }</span>.</p>`;
+}
 
 exports.getCompanyCityError = function(isCompanyCityFilled, isCompanyCityTooLong, isCompanyCityTooShort, isCompanyCityValidCharacters) {
 
     if (isCompanyCityFilled === false) return 'Please enter the city where your company is located.';
-    if (isCompanyCityTooLong === true) return defaultMessages.fieldTooLong('company\'s city', defaultAppValues.companyCityField.maxLength);
-    if (isCompanyCityTooShort === true) return defaultMessages.fieldTooShort('company\'s city', defaultAppValues.companyCityField.minLength);
-    if (isCompanyCityValidCharacters === false) return 'Please only use valid characters from A - Z.';
+    if (isCompanyCityTooLong === true) return fieldTooLong('company\'s city', renderValue.companyCityField.maxLength);
+    if (isCompanyCityTooShort === true) return fieldTooShort('company\'s city', renderValue.companyCityField.minLength);
+    if (isCompanyCityValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyCity); 
 }
 
 exports.getCompanyDescriptionError = function(isCompanyDescriptionFilled, isCompanyDescriptionTooLong, isCompanyDescriptionTooShort, isCompanyDescriptionProfane, isCompanyDescriptionValidCharacters) {
 
     if (isCompanyDescriptionFilled === false) return 'Please enter your company\'s name.';
-    if (isCompanyDescriptionTooLong === true) return defaultMessages.fieldTooLong('company\'s description', defaultAppValues.companyDescriptionField.maxLength);
-    if (isCompanyDescriptionTooShort === true) return defaultMessages.fieldTooShort('company\'s description', defaultAppValues.companyDescriptionField.minLength);
+    if (isCompanyDescriptionTooLong === true) return fieldTooLong('company\'s description', renderValue.companyDescriptionField.maxLength);
+    if (isCompanyDescriptionTooShort === true) return fieldTooShort('company\'s description', renderValue.companyDescriptionField.minLength);
     if (isCompanyDescriptionProfane === true) return 'Please do not use profanity in your company\'s description.';
-    if (isCompanyDescriptionValidCharacters === false) return validCharacterMessage(defaultAppValues.messageCompanyDescriptionPattern); 
+    if (isCompanyDescriptionValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyDescription); 
 }
 
 exports.getCompanyNameError = function(isCompanyNameFilled, isCompanyNameTooLong, isCompanyNameTooShort, isCompanyNameProfane, isCompanyNameValidCharacters, doesCompanyNameContainCharacterOrNumber) {
 
     if (isCompanyNameFilled === false) return 'Please enter your company\'s name.';
-    if (isCompanyNameTooLong === true) return defaultMessages.fieldTooLong('company\'s name', defaultAppValues.companyNameField.maxLength);
-    if (isCompanyNameTooShort === true) return defaultMessages.fieldTooShort('company\'s name', defaultAppValues.companyNameField.minLength);
+    if (isCompanyNameTooLong === true) return fieldTooLong('company\'s name', renderValue.companyNameField.maxLength);
+    if (isCompanyNameTooShort === true) return fieldTooShort('company\'s name', renderValue.companyNameField.minLength);
     if (isCompanyNameProfane === true) return 'Please enter a valid name.';
     if (doesCompanyNameContainCharacterOrNumber === false) return 'Your company\'s name must include at least 1 letter or number.';
-    if (isCompanyNameValidCharacters === false) return validCharacterMessage(defaultAppValues.messageCompanyNamePattern); 
+    if (isCompanyNameValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyName); 
 }
 
-exports.getCompanyPhoneError = function(isCompanyPhoneFilled, isCompanyPhoneValid) {
+exports.getCompanyPhoneError = function(isCompanyPhoneFilled, isCompanyPhoneValid, isCompanyPhoneValidCharacters) {
 
     if (isCompanyPhoneFilled === false) return 'Please enter your company\'s phone number.';
     if (isCompanyPhoneValid === false) return 'Please enter a valid phone number.';
+    if (isCompanyPhoneValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyPhone); 
 }
 
 exports.getCompanyServicesError = function(isCompanyServicesFilled) {
@@ -55,9 +85,9 @@ exports.getCompanyStateError = function(isCompanyStateFilled, isCompanyStateVali
 exports.getCompanyStreetError = function(isCompanyStreetFilled, isCompanyStreetTooLong, isCompanyStreetTooShort, isCompanyStreetValidCharacters, isCompanyRegionFilled, uspsNormalizationError) {
 
     if (isCompanyStreetFilled === false) return 'Please enter the street address where your company is located.';
-    if (isCompanyStreetTooLong === true) return defaultMessages.fieldTooLong('company\'s street address', defaultAppValues.companyStreetField.maxLength);
-    if (isCompanyStreetTooShort === true) return defaultMessages.fieldTooShort('company\'s street address', defaultAppValues.companyStreetField.minLength);
-    if (isCompanyStreetValidCharacters === false) return 'Please only use valid characters from A - Z, 0 - 9, \', and - .';
+    if (isCompanyStreetTooLong === true) return fieldTooLong('company\'s street address', renderValue.companyStreetField.maxLength);
+    if (isCompanyStreetTooShort === true) return fieldTooShort('company\'s street address', renderValue.companyStreetField.minLength);
+    if (isCompanyStreetValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyStreet);
     if (isCompanyRegionFilled === false) return undefined;
     if (uspsNormalizationError) return 'We are sorry but this address was not found in the US Postal Service database.  Please check your address and try again.';
 }
@@ -65,39 +95,39 @@ exports.getCompanyStreetError = function(isCompanyStreetFilled, isCompanyStreetT
 exports.getCompanyStreetTwoError = function(isCompanyStreetTwoFilled, isCompanyStreetTwoTooLong, isCompanyStreetTwoTooShort, isCompanyStreetTwoValidCharacters) {
 
     if (isCompanyStreetTwoFilled === false) return undefined;
-    if (isCompanyStreetTwoTooLong === true) return defaultMessages.fieldTooLong('company\'s street address', defaultAppValues.companyStreetField.maxLength);
-    if (isCompanyStreetTwoTooShort === true) return defaultMessages.fieldTooShort('company\'s street address', defaultAppValues.companyStreetField.minLength);
-    if (isCompanyStreetTwoValidCharacters === false) return 'Please only use valid characters from A - Z, 0 - 9, #, \', and - .';
+    if (isCompanyStreetTwoTooLong === true) return fieldTooLong('company\'s street address', renderValue.companyStreetField.maxLength);
+    if (isCompanyStreetTwoTooShort === true) return fieldTooShort('company\'s street address', renderValue.companyStreetField.minLength);
+    if (isCompanyStreetTwoValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyStreetTwo);
 }
 
 exports.getCompanyWebsiteError = function(isCompanyWebsiteFilled, isCompanyWebsiteTooLong, isCompanyWebsiteValid, isCompanyWebsiteValidCharacters) {
 
     if (isCompanyWebsiteFilled === false) return 'Please enter your company\'s website or social media page.';
-    if (isCompanyWebsiteTooLong === true) return defaultMessages.fieldTooLong('company\'s website', defaultAppValues.companyWebsiteField.maxLength);
+    if (isCompanyWebsiteTooLong === true) return fieldTooLong('company\'s website', renderValue.companyWebsiteField.maxLength);
     if (isCompanyWebsiteValid === false) return 'Please enter a valid website address.';
     if (isCompanyWebsiteValidCharacters === false) return 'Please enter a valid website address.';
-    if (isCompanyWebsiteValidCharacters === false) return `${ validCharacterMessage(defaultAppValues.messageCompanyWebsitePattern) }.  If you need to use a character outside these please <a href="${ process.env.CONTACT_EMAIL }">contact us</a> and we will see if that is possible`; 
+    if (isCompanyWebsiteValidCharacters === false) return `${ invalidCharacterMessage(regexpValue.messageCompanyWebsite) }.  If you need to use a character outside these please <a href="${ process.env.CONTACT_EMAIL }">contact us</a> and we will see if that is possible`; 
 }
 
 exports.getCompanyZipError = function(isCompanyZipFilled, isCompanyZipFiveDigits, isCompanyZipValidCharacters) {
 
     if (isCompanyZipFilled === false) return 'Please enter the zip code where your company is located.';
     if (isCompanyZipFiveDigits === false) return 'Please enter a 5 digit zip code.';
-    if (isCompanyZipValidCharacters === false) return 'Please only use valid characters from 0 - 9.';
+    if (isCompanyZipValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyZip);
 }
 
 exports.getDeleteAccountError = function(password, isPasswordCorrect) {
 
-    if (password === '') return defaultMessages.existingPasswordEmpty;
+    if (password === '') return existingPasswordEmpty;
     if (isPasswordCorrect === false) return 'The password you entered was incorrect.  Please try again.';
 }
 
 exports.getEmailError = function(email, isEmailValid, isEmailTooLong, doesUserAlreadyExist, doesUnverifiedUserAlreadyExist) {
     
     if (email === '') return 'Please enter your email address.';
-    if (isEmailTooLong === true) return defaultMessages.fieldTooLong('email address', defaultAppValues.emailField.maxLength);
-    if (isEmailValid === false) return defaultMessages.emailNotValid;
-    if (doesUnverifiedUserAlreadyExist === true ||  doesUserAlreadyExist === true) return defaultMessages.emailAlreadyInUse;
+    if (isEmailTooLong === true) return fieldTooLong('email address', renderValue.emailField.maxLength);
+    if (isEmailValid === false) return emailNotValid;
+    if (doesUnverifiedUserAlreadyExist === true ||  doesUserAlreadyExist === true) return emailAlreadyInUse;
 }
 
 exports.getEmailConfirmationError = function(emailReenter, doEmailsMatch) {
@@ -106,29 +136,16 @@ exports.getEmailConfirmationError = function(emailReenter, doEmailsMatch) {
     if (doEmailsMatch === false) return 'Email confirmation did not match.  Please re-enter your new email address.';
 }
 
-exports.getExpirationTime = function(expiration) {
-
-    let minutes = expiration / 60;
-    let hours = minutes / 60;
-    let days = hours / 24;
-
-    if (minutes === 1) return `${ minutes } minute`;
-    if (minutes < 60) return `${ minutes } minutes`;
-    if (minutes === 60) return `${ hours } hour`;
-    if (minutes < 1440) return `${ hours } hours`;
-    if (minutes === 1440) return `${ days } day`;
-}
-
 exports.getLoginEmailError = function(email, isEmailValid) {
 
-    if (email === '') return defaultMessages.emailExistingEmpty;
-    if (isEmailValid === false) return defaultMessages.emailNotValid;
+    if (email === '') return emailExistingEmpty;
+    if (isEmailValid === false) return emailNotValid;
 }
 
 exports.getLoginPasswordError = function(password, passwordCorrect, emailError) {
 
-    if (password === '' && emailError === undefined) return defaultMessages.existingPasswordEmpty;
-    if (passwordCorrect === false && emailError === undefined) return defaultMessages.existingPasswordIncorrect;
+    if (password === '' && emailError === undefined) return existingPasswordEmpty;
+    if (passwordCorrect === false && emailError === undefined) return existingPasswordIncorrect;
 }
 
 exports.getNewEmailError = function(email, whyEmailUsed, isEmailTooLong, isEmailValid, doesUserAlreadyExist, doesUnverifiedUserAlreadyExist, isEmailValidCharacters) {
@@ -138,10 +155,10 @@ exports.getNewEmailError = function(email, whyEmailUsed, isEmailTooLong, isEmail
         if (whyEmailUsed === 'register') return 'Please enter your email.';
     } 
 
-    if (isEmailTooLong === true) return defaultMessages.fieldTooLong('email address', defaultAppValues.emailField.maxLength);
-    if (isEmailValid === false) return defaultMessages.emailNotValid;
-    if (doesUnverifiedUserAlreadyExist === true || doesUserAlreadyExist === true) return defaultMessages.emailAlreadyInUse;
-    if (isEmailValidCharacters === false) return `${ validCharacterMessage(defaultAppValues.messageEmailPattern) }.  If you need to use a character outside these please <a href="${ process.env.CONTACT_EMAIL }">contact us</a> and we will see if that is possible`; ;
+    if (isEmailTooLong === true) return fieldTooLong('email address', renderValue.emailField.maxLength);
+    if (isEmailValid === false) return emailNotValid;
+    if (doesUnverifiedUserAlreadyExist === true || doesUserAlreadyExist === true) return emailAlreadyInUse;
+    if (isEmailValidCharacters === false) return `${ invalidCharacterMessage(regexpValue.messageEmail) }.  If you need to use a character outside these please <a href="${ process.env.CONTACT_EMAIL }">contact us</a> and we will see if that is possible`; ;
 }
 
 exports.getPasswordNewError = function(whyPasswordUsed, password, isPasswordTooLong, doesPasswordMeetRequirements, isPasswordValidCharacters) {
@@ -161,7 +178,7 @@ exports.getPasswordNewError = function(whyPasswordUsed, password, isPasswordTooL
 
     if (isPasswordTooLong === true) {
         returnObject.errorType = 'tooLong';
-        returnObject.message = defaultMessages.fieldTooLong('Password', defaultAppValues.passwordField.maxLength);
+        returnObject.message = fieldTooLong('Password', renderValue.passwordField.maxLength);
         return returnObject;
     } 
 
@@ -173,7 +190,7 @@ exports.getPasswordNewError = function(whyPasswordUsed, password, isPasswordTooL
 
     if (isPasswordValidCharacters === false) {
         returnObject.errorType = undefined;
-        returnObject.message = patternPassword;
+        returnObject.message = invalidCharacterMessage(regexpValue.messagePassword);
         return returnObject;
     } 
 }
@@ -212,7 +229,7 @@ exports.getPasswordError = function(whyPasswordUsed, password, isPasswordCorrect
 exports.getPasswordErrors = function(password, isPasswordTooLong, passwordConfirm, doesPasswordMeetRequirements, doPasswordsMatch, nonPasswordError) {
 
     if (password === '') return 'Please enter and confirm your password.';
-    if (isPasswordTooLong === true) return defaultMessages.fieldTooLong('password', defaultAppValues.passwordField.maxLength);
+    if (isPasswordTooLong === true) return fieldTooLong('password', renderValue.passwordField.maxLength);
     if (doesPasswordMeetRequirements === false) return 'Password was not strong enough, please try again.';
     if (passwordConfirm === '') return 'Please enter and confirm your password.';
     if (doPasswordsMatch === false) return 'Password confirmation did not match.  Please try again.';
@@ -222,21 +239,23 @@ exports.getPasswordErrors = function(password, isPasswordTooLong, passwordConfir
 exports.getPhoneError = function(phone, isPhoneValid) {
 
     if (phone === '') return 'Please enter your company\'s phone number.';
-    if (isPhoneValid === false) return defaultMessages.phoneNotValid;
+    if (isPhoneValid === false) return phoneNotValid;
 }
 
 exports.getSaveEmailPasswordError = function(passwordCheck, isPasswordCorrect) {
 
-    if (passwordCheck === '') return defaultMessages.existingPasswordEmpty;
+    if (passwordCheck === '') return existingPasswordEmpty;
     if (isPasswordCorrect === false) return 'The password you used was incorrect.  Please try again.';
 }
 
 exports.getSavePasswordError = function(passwordCurrent, isCurrentPasswordCorrect) {
 
-    if (passwordCurrent === '') return defaultMessages.existingPasswordEmpty;
-    if (isCurrentPasswordCorrect === false) return defaultMessages.existingPasswordIncorrect;
+    if (passwordCurrent === '') return existingPasswordEmpty;
+    if (isCurrentPasswordCorrect === false) return existingPasswordIncorrect;
 }
 
-function validCharacterMessage(pattern) {
-    return `Please only use valid characters from ${ pattern }.`;
+exports.unverifiedConfirmationLimitReachedBody = function (email, emailSubject){
+
+    return `<p class="textLarge -bottomMarginMedium">We are sorry but you must verify your email before you can reset your password.</p>
+    <p class="textLarge -bottomMarginLarge">An additional confirmation email has been sent to <i>${ email }</i> and should arrive within the next few minutes. Please watch for an email titled: <i>${ emailSubject }</i></p>`;
 }

@@ -3,27 +3,21 @@
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const cryptoRandomString = require('crypto-random-string');
-const fetch = require('node-fetch');
 const normalizeUrl = require('normalize-url');
 const objectHash = require('object-hash');
 const path = require('path');
 
 const communication = require('./communication');
-const defaultAppValues = require('../models/default-app-values.js');
-const defaultMessages = require('../models/default-messages');
-const { logErrorMessage, wrapAsync } = require('./error-handling');
-const logicMessages = require('./logic-messages');
+const defaultValue = require('../models/values-default');
+const emailMessage = require('../models/messages-email');
 const mongooseInstance = require('./mongoose-create-instances');
+const renderValue = require('../models/values-rendering');
+const timeValue = require('../models/values-time');
 
 const { 
-    FalseEmailConfirmationRequest,
     LoginFailure,
     PasswordResetRequest,
-    RecentDeletedAccount,
-    RecentPasswordResetLimitReached,
-    RecentPasswordResetRequest,
     StripeCheckoutSession,
-    UnverifiedUser,
     User
 } = require('../models/mongoose-schema');
 
@@ -46,17 +40,17 @@ exports.assembleCompanyServices = function (
 
     let assembledServices = '';
 
-    if (serviceBoardingSecuring === 'yes') assembledServices += `${ defaultAppValues.serviceBoardingSecuring }, `;
-    if (serviceDebrisRemovalTrashout === 'yes') assembledServices += `${ defaultAppValues.serviceDebrisRemovalTrashout }, `;
-    if (serviceEvictionManagement === 'yes') assembledServices += `${ defaultAppValues.serviceEvictionManagement }, `;
-    if (serviceFieldInspection === 'yes') assembledServices += `${ defaultAppValues.serviceFieldInspection }, `;
-    if (serviceHandymanGeneralMaintenance === 'yes') assembledServices += `${ defaultAppValues.serviceHandymanGeneralMaintenance }, `;
-    if (serviceLandscapeMaintenance === 'yes') assembledServices += `${ defaultAppValues.serviceLandscapeMaintenance }, `;
-    if (serviceLockChanges === 'yes') assembledServices += `${ defaultAppValues.serviceLockChanges }, `;
-    if (serviceOverseePropertyRehabilitation === 'yes') assembledServices += `${ defaultAppValues.serviceOverseePropertyRehabilitation }, `;
-    if (servicePoolMaintenance === 'yes') assembledServices += `${ defaultAppValues.servicePoolMaintenance }, `;
-    if (servicePropertyCleaning === 'yes') assembledServices += `${ defaultAppValues.servicePropertyCleaning }, `;
-    if (serviceWinterizations === 'yes') assembledServices += `${ defaultAppValues.serviceWinterizations }, `;
+    if (serviceBoardingSecuring === 'yes') assembledServices += `${ renderValue.serviceBoardingSecuring }, `;
+    if (serviceDebrisRemovalTrashout === 'yes') assembledServices += `${ renderValue.serviceDebrisRemovalTrashout }, `;
+    if (serviceEvictionManagement === 'yes') assembledServices += `${ renderValue.serviceEvictionManagement }, `;
+    if (serviceFieldInspection === 'yes') assembledServices += `${ renderValue.serviceFieldInspection }, `;
+    if (serviceHandymanGeneralMaintenance === 'yes') assembledServices += `${ renderValue.serviceHandymanGeneralMaintenance }, `;
+    if (serviceLandscapeMaintenance === 'yes') assembledServices += `${ renderValue.serviceLandscapeMaintenance }, `;
+    if (serviceLockChanges === 'yes') assembledServices += `${ renderValue.serviceLockChanges }, `;
+    if (serviceOverseePropertyRehabilitation === 'yes') assembledServices += `${ renderValue.serviceOverseePropertyRehabilitation }, `;
+    if (servicePoolMaintenance === 'yes') assembledServices += `${ renderValue.servicePoolMaintenance }, `;
+    if (servicePropertyCleaning === 'yes') assembledServices += `${ renderValue.servicePropertyCleaning }, `;
+    if (serviceWinterizations === 'yes') assembledServices += `${ renderValue.serviceWinterizations }, `;
 
     // remove the last coma and space.
     let trimmedAssembledServices = assembledServices.slice(0, -2);
@@ -122,7 +116,7 @@ exports.cleanCompanyDescription = function(companyDescription) {
     return cleanedCompanyDescription;
 }
 
-exports.cleanFields = function(defaultFields, reqBody) {
+exports.cleanFields = function(formFields, reqBody) {
 
     //TODO: remove all characters over the maximum number of characters for each field.
 
@@ -132,7 +126,7 @@ exports.cleanFields = function(defaultFields, reqBody) {
     // This checks to see if the keys on req.body are different from those in the form.
     // If a key is fake the value false is stored and that key is deleted from req.body.
     for(let property in reqBody) {
-        isReqBodyKeyGenuine = defaultFields.includes(property);
+        isReqBodyKeyGenuine = formFields.includes(property);
         if (isReqBodyKeyGenuine === false) {
             delete reqBody[property];
             wereAllKeysGenuine = false;
@@ -152,7 +146,7 @@ exports.cleanFields = function(defaultFields, reqBody) {
     }
 
     // If a key was not included in req.body add the key with a value of empty string ''.
-    defaultFields.forEach(function(element) {
+    formFields.forEach(function(element) {
         reqBody[element] = reqBody[element] || '';
     });
 
@@ -176,7 +170,7 @@ exports.cleanFields = function(defaultFields, reqBody) {
 
 function createNewExpirationDate(upgradeRenewalDate, expirationDate) {
 
-    let newExpirationStartPoint = String(expirationDate) === String(defaultAppValues.freeAccountExpiration) ? new Date(upgradeRenewalDate) : new Date(expirationDate);
+    let newExpirationStartPoint = String(expirationDate) === String(timeValue.freeAccountExpiration) ? new Date(upgradeRenewalDate) : new Date(expirationDate);
     let newExpirationYear = newExpirationStartPoint.getFullYear() + 1;
     newExpirationStartPoint.setFullYear(newExpirationYear);
 
@@ -344,7 +338,7 @@ exports.incrementExistingPasswordResetOrCreateNew = async function(email, confir
     if (retrievedPasswordResetRequest) {
 
         // If you've surpassed the maximum number of requests forward to password-reset-limit-reached.
-        if (retrievedPasswordResetRequest.numberOfRequests >= defaultAppValues.numberOfPasswordResetRequestsAllowed) {
+        if (retrievedPasswordResetRequest.numberOfRequests >= defaultValue.numberOfPasswordResetRequestsAllowed) {
 
             return true;
         } else {
@@ -373,11 +367,11 @@ exports.logoutSteps = function(req, res) {
     });
 }
 
-exports.makeFieldsEmpty = function(defaultFields) {
+exports.makeFieldsEmpty = function(formFields) {
 
     let emptyFields = {};
 
-    defaultFields.forEach(function(element) {
+    formFields.forEach(function(element) {
         emptyFields[element] = '';
     });
 
@@ -433,7 +427,7 @@ exports.sendEmailIfNecessary = async function(email, confirmationHash, emailSubj
     
     if (retrievedUser && forward != 'true') {
 
-        let emailBody = defaultMessages.passwordResetRequestEmailBody(defaultAppValues.website, defaultAppValues.companyIcon, defaultAppValues.organization, defaultAppValues.host, confirmationHash, expirationTime);
+        let emailBody = emailMessage.passwordResetRequestEmailBody(confirmationHash, expirationTime);
 
         communication.sendEmail(email, emailSubject, emailBody);
     }  
@@ -462,7 +456,7 @@ exports.stripeSuccessUpdateDB = async function(eventDataObjectId) {
     let updatedExpirationDate = createNewExpirationDate(upgradeRenewalDate, expirationDate);
 
     await User.updateOne({ email: email },
-        { companyProfileType: defaultAppValues.accountUpgrade,
+        { companyProfileType: defaultValue.accountUpgrade,
             expirationDate: updatedExpirationDate,
             $push: {'upgradeRenewalDates': upgradeRenewalDate } }
     );
@@ -488,19 +482,13 @@ async function testIfURLActive(possiblyActiveURL) {
     return false;
 }
 
-exports.testURLAndResave = async function(partiallyProcessedURL, processedURL, email, req) {
+exports.testURLAndResave = async function(processedURL, email, req) {
 
     // try in this order of importance
     let httpsWwwURL = `https://www.${ processedURL }`;
     let httpsURL = `https://${ processedURL }`;
     let httpWwwURL = `http://www.${ processedURL }`;
     let httpURL = `http://${ processedURL }`;
-
-    let isOriginalURLActive = await testIfURLActive(partiallyProcessedURL);
-    if (isOriginalURLActive === true) {
-        saveActiveURL(partiallyProcessedURL, email, req);
-        return;
-    }
 
     let isHttpsWwwURLActive = await testIfURLActive(httpsWwwURL);
     if (isHttpsWwwURLActive === true) {

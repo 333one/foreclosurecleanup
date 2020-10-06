@@ -1,6 +1,8 @@
 "use strict";
 
-const defaultAppValues = require('./default-app-values.js');
+const defaultValue = require('../models/values-default');
+const stripeValue = require('../models/values-messages-stripe');
+const timeValue = require('../models/values-time');
 
 const mongoose = require('mongoose');
 
@@ -17,7 +19,7 @@ const FalseEmailConfirmationRequestSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.falseEmailConfirmationRequestExpiration
+        expires: timeValue.falseEmailConfirmationRequestExpiration
     }
 });
 
@@ -34,7 +36,7 @@ const LoginFailureSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.loginFailureExpiration
+        expires: timeValue.loginFailureExpiration
     }
 });
 
@@ -46,7 +48,7 @@ const PasswordResetRequestSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.passwordResetRequestExpiration
+        expires: timeValue.passwordResetRequestExpiration
     },
     email: {
         type: String,
@@ -63,7 +65,7 @@ const RecentDeletedAccountSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.recentRequestExpiration
+        expires: timeValue.recentRequestExpiration
     },
     email: {
         type: String,
@@ -75,7 +77,7 @@ const RecentPasswordResetSuccessSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.recentRequestExpiration
+        expires: timeValue.recentRequestExpiration
     },
     email: {
         type: String,
@@ -87,7 +89,7 @@ const StripeCancelKeySchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.stripeCancelSuccessKeyExpiration
+        expires: stripeValue.cancelSuccessKeyExpiration
     },
     email: {
         type: String,
@@ -103,7 +105,7 @@ const StripeCheckoutSessionSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.stripeCheckoutSessionExpiration
+        expires: stripeValue.checkoutSessionExpiration
     },
     email: {
         type: String,
@@ -119,7 +121,7 @@ const StripeSuccessKeySchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.stripeCancelSuccessKeyExpiration
+        expires: stripeValue.cancelSuccessKeyExpiration
     },
     email: {
         type: String,
@@ -143,7 +145,7 @@ const UnverifiedUserSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: defaultAppValues.unverifiedUserExpiration
+        expires: timeValue.unverifiedUserExpiration
     },
     email: {
         type: String,
@@ -183,7 +185,7 @@ const UserSchema = new mongoose.Schema({
     },
     companyProfileType: {
         type: String,
-        default: defaultAppValues.accountDefault,
+        default: defaultValue.accountDefault,
         required: true
     },
     companyState: {
@@ -221,7 +223,7 @@ const UserSchema = new mongoose.Schema({
     },
     expirationDate: {
         type: Date,
-        default: defaultAppValues.freeAccountExpiration,
+        default: timeValue.freeAccountExpiration,
         required: true
     },
     live: {

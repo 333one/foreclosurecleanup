@@ -3,9 +3,10 @@
 const cryptoRandomString = require('crypto-random-string');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-const defaultAppValues = require('../models/default-app-values');
 const logicUserAccounts = require('./logic-user-accounts');
 const mongooseInstance = require('./mongoose-create-instances');
+const siteValue = require('../models/values-site');
+const stripeValue = require('../models/values-messages-stripe');
 
 const { logErrorMessage, wrapAsync } = require('./error-handling');
 
@@ -18,7 +19,7 @@ exports.renewExtendPremium = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'renew-extend-premium';
-    let contactEmail = process.env.CONTACT_EMAIL;
+    let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('renew-extend-premium', { activeLink, contactEmail, loggedIn, stripePublicKey: process.env.STRIPE_PUBLIC_KEY });
@@ -28,7 +29,7 @@ exports.upgradePremium = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'upgrade-premium';
-    let contactEmail = process.env.CONTACT_EMAIL;
+    let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('upgrade-premium', { activeLink, contactEmail, loggedIn, stripePublicKey: process.env.STRIPE_PUBLIC_KEY });
@@ -40,8 +41,8 @@ exports.postCreateCheckoutSession = wrapAsync(async function(req, res) {
     let stripeSuccessString = cryptoRandomString({ length: 32 });
     let stripeCancelPath = `/my-account?cancel=${ stripeCancelString }`;
     let stripeSuccessPath = `/my-account?success=${ stripeSuccessString }`;
-    let stripeCancelUrl = `${ defaultAppValues.host }${ stripeCancelPath }`;
-    let stripeSuccessUrl = `${ defaultAppValues.host }${ stripeSuccessPath }`;
+    let stripeCancelUrl = `${ siteValue.host }${ stripeCancelPath }`;
+    let stripeSuccessUrl = `${ siteValue.host }${ stripeSuccessPath }`;
     
     const session = await stripe.checkout.sessions.create({
         submit_type: 'auto',
@@ -51,11 +52,11 @@ exports.postCreateCheckoutSession = wrapAsync(async function(req, res) {
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: defaultAppValues.stripeProductDataName_1,
-                        description: defaultAppValues.stripeProductDataDescription_1,
-                        images: [defaultAppValues.stripeProductDataImages_1_a]
+                        name: stripeValue.productDataName_1,
+                        description: stripeValue.productDataDescription_1,
+                        images: [stripeValue.productDataImages_1_a]
                     },
-                    unit_amount: defaultAppValues.stripeProductDataUnitAmount_1,
+                    unit_amount: stripeValue.productDataUnitAmount_1,
                 },
                 quantity: 1,
             }

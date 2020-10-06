@@ -9,13 +9,15 @@ const logger = winston.createLogger({
     ]
 });
 
+const siteValue = require('../models/values-site');
+
 exports.customExpressErrorHandler = function(error, req, res, next) {
 
     sendToLogger(error)
 
     // For rendering.
     let activeLink = 'error500';
-    let contactEmail = process.env.CONTACT_EMAIL;
+    let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('error500', { activeLink, contactEmail, loggedIn });

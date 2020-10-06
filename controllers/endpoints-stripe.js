@@ -4,9 +4,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 
 const middlewareStripe = require('./middleware-stripe');
-const {
-    redirectLogin
-    } = require('./middleware-user-accounts'); 
+const { redirectLogin } = require('./middleware-user-accounts'); 
 
 const router = express.Router();
 

@@ -1,5 +1,3 @@
-"use strict";
-
 exports.addChangeCompanyAddress = ['companyCity', 'companyState', 'companyStreet', 'companyStreetTwo', 'companyZip', 'overrideUsps', 'deleteProperty'];
 
 exports.addChangeCompanyDescription = ['companyDescription', 'deleteProperty'];
