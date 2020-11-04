@@ -1,81 +1,56 @@
 "use strict";
 
-var password__toggle = document.getElementsByClassName('password__toggle');
+let password__toggle = document.getElementsByClassName('password__toggle');
 
-for (var i = 0; i < password__toggle.length; i++) {
+// Display the toggles if Js is active.
+for (let i = 0; i < password__toggle.length; i++) {
     password__toggle[i].style.display = 'block';
 }
 
-document.getElementById('password__eye').addEventListener('click', function(e) {
-    if (document.getElementById('password__eye').getAttribute('src') === "images/eye-slash-solid.svg") {
-        document.getElementById('password__eye').setAttribute('src', 'images/eye-regular.svg');
-        document.getElementById('password').setAttribute('type', 'text');
-        if (document.getElementById('password__eyeConfirm')) {
-            document.getElementById('password__eyeConfirm').setAttribute('src', 'images/eye-regular.svg');
-            document.getElementById('passwordConfirm').setAttribute('type', 'text');
-        }        
-        if (document.getElementById('password__eyeCurrent')) {
-            document.getElementById('password__eyeCurrent').setAttribute('src', 'images/eye-regular.svg');
-            document.getElementById('passwordCurrent').setAttribute('type', 'text');
-        }
-    } else {
-        document.getElementById('password__eye').setAttribute('src', 'images/eye-slash-solid.svg');
-        document.getElementById('password').setAttribute('type', 'password');
-        if (document.getElementById('password__eyeConfirm')) {
-            document.getElementById('password__eyeConfirm').setAttribute('src', 'images/eye-slash-solid.svg');
-            document.getElementById('passwordConfirm').setAttribute('type', 'password');
-        } 
-        if (document.getElementById('password__eyeCurrent')) {
-            document.getElementById('password__eyeCurrent').setAttribute('src', 'images/eye-slash-solid.svg');
-            document.getElementById('passwordCurrent').setAttribute('type', 'password');
-        }
-    }
-});
+function setUpToggles(coreID, secondID, thirdID) {
 
-if (document.getElementById('password__eyeConfirm')) {
-    document.getElementById('password__eyeConfirm').addEventListener('click', function(e) {
-        if (document.getElementById('password__eyeConfirm').getAttribute('src') === "images/eye-slash-solid.svg") {
-            document.getElementById('password__eyeConfirm').setAttribute('src', 'images/eye-regular.svg');
-            document.getElementById('password__eye').setAttribute('src', 'images/eye-regular.svg');
-            document.getElementById('passwordConfirm').setAttribute('type', 'text');
-            document.getElementById('password').setAttribute('type', 'text');
-            if (document.getElementById('password__eyeCurrent')) {
-                document.getElementById('password__eyeCurrent').setAttribute('src', 'images/eye-regular.svg');
-                document.getElementById('passwordCurrent').setAttribute('type', 'text');
+    document.getElementById(`${ coreID }Eye`).addEventListener('click', function(event) {
+
+        if (document.getElementById(`${ coreID }Eye`).getAttribute('src') === "images/eye-slash-solid.svg") {
+
+            setToRegularEye(coreID);
+
+            if (document.getElementById(`${ secondID }Eye`)) {
+                setToRegularEye(secondID);
             }
+
+            if (document.getElementById(`${ thirdID }Eye`)) {
+                setToRegularEye(thirdID);
+            }
+
         } else {
-            document.getElementById('password__eyeConfirm').setAttribute('src', 'images/eye-slash-solid.svg');
-            document.getElementById('password__eye').setAttribute('src', 'images/eye-slash-solid.svg');
-            document.getElementById('passwordConfirm').setAttribute('type', 'password');
-            document.getElementById('password').setAttribute('type', 'password');
-            if (document.getElementById('password__eyeCurrent')) {
-                document.getElementById('password__eyeCurrent').setAttribute('src', 'images/eye-slash-solid.svg');
-                document.getElementById('passwordCurrent').setAttribute('type', 'password');
+
+            setToSlashEye(coreID);
+
+            if (document.getElementById(`${ secondID }Eye`)) {
+                setToSlashEye(secondID);
             }
+
+            if (document.getElementById(`${ thirdID }Eye`)) {
+                setToSlashEye(thirdID);
+            }
+
         }
+    
     });
+
 }
 
-if (document.getElementById('password__eyeCurrent')) {
-    document.getElementById('password__eyeCurrent').addEventListener('click', function(e) {
-        if (document.getElementById('password__eyeCurrent').getAttribute('src') === "images/eye-slash-solid.svg") {
-            document.getElementById('password__eyeCurrent').setAttribute('src', 'images/eye-regular.svg');
-            document.getElementById('password__eye').setAttribute('src', 'images/eye-regular.svg');
-            document.getElementById('passwordCurrent').setAttribute('type', 'text');
-            document.getElementById('password').setAttribute('type', 'text');
-            if (document.getElementById('password__eyeConfirm')) {
-                document.getElementById('password__eyeConfirm').setAttribute('src', 'images/eye-regular.svg');
-                document.getElementById('passwordConfirm').setAttribute('type', 'text');
-            }
-        } else {
-            document.getElementById('password__eyeCurrent').setAttribute('src', 'images/eye-slash-solid.svg');
-            document.getElementById('password__eye').setAttribute('src', 'images/eye-slash-solid.svg');
-            document.getElementById('passwordCurrent').setAttribute('type', 'password');
-            document.getElementById('password').setAttribute('type', 'password');
-            if (document.getElementById('password__eyeConfirm')) {
-                document.getElementById('password__eyeConfirm').setAttribute('src', 'images/eye-slash-solid.svg');
-                document.getElementById('passwordConfirm').setAttribute('type', 'password');
-            }
-        }
-    });
+function setToRegularEye(elementID) {
+
+    document.getElementById(`${ elementID }Eye`).setAttribute('src', 'images/eye-regular.svg');
+    document.getElementById(elementID).setAttribute('type', 'text');
+
+}
+
+function setToSlashEye(elementID) {
+
+    document.getElementById(`${ elementID }Eye`).setAttribute('src', 'images/eye-slash-solid.svg');
+    document.getElementById(elementID).setAttribute('type', 'password');
+
 }

@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Company Name</title>
+
+    <title><%= htmlTitle %></title>
+    
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
-    <script>let patternCompanyName = "<%- patternCompanyName %>"</script>
-    <script defer src="js/character-format.js"></script>
+
+    <script>
+        let patternCompanyName = <%- patternCompanyName %>;
+    </script>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/company-name-character-blocker.js"></script>
+
 </head>
 <body>
 
@@ -39,7 +46,7 @@
                         <% } %>
                         " name="companyName" <%= companyNameAttributes %> value="<%= userInput.companyName %>" autofocus>
                     <% if (typeof companyNameError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyNameError %></div>
+                    <div class="input__error"><%= companyNameError %></div>
                     <% } %> 
                 </div>
 
@@ -52,7 +59,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-name" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete your company's name.</button>
+                    <button class="button_fauxLink">Delete Your Company's Name</button>
                 </div>
                 <input type="hidden" name="companyName" value="">
                 <input type="hidden" name="deleteProperty" value="true">

@@ -10,8 +10,7 @@ const router = express.Router();
 
 const bodyParserRaw = bodyParser.raw({ type: 'application/json' });
 
-router.get('/renew-extend-premium', redirectLogin, middlewareStripe.renewExtendPremium);
-router.get('/upgrade-premium', redirectLogin, middlewareStripe.upgradePremium);
+router.get('/upgrade-extend-premium', redirectLogin, middlewareStripe.upgradeExtendPremium);
 
 router.post('/create-checkout-session', bodyParserRaw, redirectLogin, middlewareStripe.postCreateCheckoutSession);
 router.post('/webhook-premium-upgrade', bodyParserRaw, middlewareStripe.webhookPremiumUpgrade);

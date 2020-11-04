@@ -3,20 +3,29 @@
 <head>
     <title>Register Your Property Preservation Company On The National Vendor List</title>
     <%- include('includes/head-boilerplate.ejs') %>
-    <script defer src="js/form-button-errors-check.js"></script>
-    <script defer src="js/password-strength-match.js"></script>
-    <script defer src="js/password-toggle.js"></script>
-    <script defer src="js/screen-width.js"></script>
     <script defer src="js/zxcvbn.js"></script>
+
+    <script defer src="js/register-activate-form-button.js"></script>
+
+    <script defer src="js/password-toggle.js"></script>
+    <script defer src="js/connect/register-password-toggle.js"></script>
+
+    <script defer src="js/password-errors-match-meter.js"></script>
+    <script defer src="js/connect/register-password-errors-match-meter.js"></script>
+
     <script>
-        let patternEmail = "<%- patternEmail %>";
-        let patternPassword = "<%- patternPassword %>";
+        let patternNewEmail = <%- patternNewEmail %>;
+        let patternNewPassword = <%- patternNewPassword %>;
     </script>
-    <script defer src="js/character-format.js"></script>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/register-character-blocker.js"></script>
+
+    <script defer src="js/register-remove-newemail-error.js"></script>
+
 </head>
 <body>
 
-    <%- include('includes/narrowScreen-top-boilerplate.ejs') %>
+    <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
                 
                 <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Create Your Account</h3>
 
@@ -25,34 +34,26 @@
                 <form action="/register" method="POST">
 
                     <div class="input__unit -bottomMarginMedium"> 
-                        <label for="email" id="targetEmailLabel" class="input__label
-                            <% if (typeof emailError != "undefined") { %>
-                                -errorColor
-                            <% } %>   
-                            ">Email:</label>
-                        <input id="email" class="input__field
-                            <% if (typeof emailError != "undefined") { %>
+                        <label for="newEmail" class="input__label">Email:</label>
+                        <input id="newEmail" class="input__field
+                            <% if (typeof newEmailError != "undefined") { %>
                                 -errorBorder
                             <% } %>
-                            " name="email" <%= emailAttributes %> value="<%= userInput.email %>" autofocus>
-                        <% if (typeof emailError != "undefined") { %>
-                        <div id="targetEmailErrorMessage" class="input__errorMessage"><%= emailError %></div>
+                            " name="newEmail" <%= emailAttributes %> value="<%= userInput.newEmail %>" autofocus>
+                        <% if (typeof newEmailError != "undefined") { %>
+                        <div id="targetNewEmailError" class="input__error"><%= newEmailError %></div>
                         <% } %> 
                     </div>
 
                     <div class="input__unit -bottomMarginMedium"> 
-                        <label for="password" id="targetPasswordLabel" class="input__label
-                            <% if (typeof passwordErrorMessage != "undefined") { %>
-                                -errorColor
-                            <% } %> 
-                            ">Password:</label>
-                        <div id="targetPasswordContainer" class="password__container 
-                            <% if (typeof passwordErrorMessage != "undefined") { %>
+                        <label for="newPassword" class="input__label">Password:</label>
+                        <div id="targetNewPasswordContainer" class="password__container 
+                            <% if (typeof newPasswordError != "undefined") { %>
                                 -errorBorder
                             <% } %>
                             ">
-                            <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %> value="<%= userInput.password %>">
-                            <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                            <input id="newPassword" class="input__passwordField" name="newPassword" <%= passwordAttributes %> value="<%= userInput.newPassword %>" autocomplete="new-password">
+                            <div class="password__toggle"><img id="newPasswordEye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
                         </div>
                         
                         <div id="passwordMeterContainer">
@@ -64,46 +65,43 @@
                             <div id="passwordMeterLabel"></div>
                         </div>
 
-                        <% if (typeof passwordErrorMessage != "undefined") { %>
-                        <div id="targetPasswordErrorMessage" class="input__errorMessage"><%= passwordErrorMessage %></div>
+                        <% if (typeof newPasswordError != "undefined") { %>
+                        <div id="targetNewPasswordError" class="input__error"><%= newPasswordError %></div>
                         <% } %> 
                     </div>
 
                     <div class="input__unit -bottomMarginLarge"> 
-                        <label for="passwordConfirm" id="targetPasswordConfirmLabel" class="input__label
-                            <% if (typeof passwordConfirmErrorMessage != "undefined") { %>
-                                -errorColor
-                            <% } %> 
-                            ">Confirm Password:</label>
-                        <div id="targetPasswordConfirmContainer" class="password__container 
-                            <% if (typeof passwordConfirmErrorMessage != "undefined") { %>
+                        <label for="confirmationPassword" class="input__label">Confirm Password:</label>
+                        <div id="targetConfirmationPasswordContainer" class="password__container 
+                            <% if (typeof confirmationPasswordError != "undefined") { %>
                                 -errorBorder
                             <% } %>
                             ">
-                            <input id="passwordConfirm" class="input__passwordField" name="passwordConfirm" <%= passwordConfirmAttributes %> value="<%= userInput.passwordConfirm %>">
-                            <div class="password__toggle"><img id="password__eyeConfirm" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                            <input id="confirmationPassword" class="input__passwordField" name="confirmationPassword" <%= passwordAttributes %> value="<%= userInput.confirmationPassword %>" autocomplete="new-password">
+                            <div class="password__toggle"><img id="confirmationPasswordEye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
                         </div>
 
                         <div id="passwordMatchLabel"></div>
-                        <% if (typeof passwordConfirmErrorMessage != "undefined") { %>
-                        <div id="targetPasswordConfirmErrorMessage" class="input__errorMessage"><%= passwordConfirmErrorMessage %></div>
+
+                        <% if (typeof confirmationPasswordError != "undefined") { %>
+                        <div id="targetConfirmationPasswordError" class="input__error"><%= confirmationPasswordError %></div>
                         <% } %> 
 
                     </div>
 
                     <div class="-bottomMarginLarge">
-                        <div id="termsOfUseUnit" class="checkBox__unit
+                        <div id="targetTermsOfUseContainer" class="checkBox__unit
                             <% if (typeof termsOfUseError != "undefined") { %>
-                                    -errorBorderCheckbox
+                                    -errorBorder
                             <% } %> 
                             ">
-                            <input type="checkbox" id="termsOfUse" name="termsOfUse" value="yes"
-                                <% if (userInput.termsOfUse === "yes") { %> checked<% } %>
+                            <input type="checkbox" id="termsOfUse" name="termsOfUse" value="isChecked"
+                                <% if (userInput.termsOfUse === "isChecked") { %> checked<% } %>
                             >
-                            <label class="textSmall" for="termsOfUse">By creating an account I agree to the <a href="/terms-use-privacy-policy">Terms Of Use</a> and acknowledge that I have read the <a href="/terms-use-privacy-policy">Privacy Policy</a>.</label>
+                            <label class="textSmall" for="termsOfUse">By creating an account I agree to the <a href="/privacy-policy-terms-Service">Terms Of Service</a> and acknowledge that I have read the <a href="/privacy-policy-terms-service#privacyPolicy">Privacy Policy</a>.</label>
                         </div>
                         <% if (typeof termsOfUseError != "undefined") { %>
-                            <div id="targetTermsOfUseErrorMessage" class="input__errorMessage"><%= termsOfUseError %></div>
+                            <div id="targetTermsOfUseError" class="input__error"><%= termsOfUseError %></div>
                         <% } %> 
                     </div>
                     

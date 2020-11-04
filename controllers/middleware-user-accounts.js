@@ -13,18 +13,20 @@ require('dotenv').config({ path: path.join(__dirname, '../models/.env') });
 
 const checks = require('./checks');
 const communication = require('./communication');
-const defaultMessage = require('../models/messages-default');
-const defaultValue = require('../models/values-default');
-const emailMessage = require('../models/messages-email');
-const errorMessage = require('../models/messages-error');
-const formFields = require('../models/values-form-fields');
+const defaultMessage = require('../models/default-messages');
+const defaultValue = require('../models/default-values');
+const emailMessage = require('../models/email-messages');
+const errorMessage = require('../models/error-messages');
+const formFields = require('../models/forms-default-fields');
+const logicStripe = require('./logic-stripe');
 const logicUserAccounts = require('./logic-user-accounts');
+const logoutSteps = require('./logout-steps');
 const mongooseInstance = require('./mongoose-create-instances');
-const regexpValue = require('../models/values-messages-regexp');
-const renderValue = require('../models/values-rendering');
-const siteValue = require('../models/values-site');
-const stripeValue = require('../models/values-messages-stripe');
-const timeValue = require('../models/values-time');
+const regExpValue = require('../models/regexp-values');
+const renderValue = require('../models/rendering-values');
+const siteValue = require('../models/site-values');
+const stripeValue = require('../models/stripe-values');
+const timeValue = require('../models/time-values');
 const { wrapAsync } = require('./error-handling');
 
 const filter = new Filter();
@@ -36,12 +38,12 @@ const usps = new USPS({
 });
 
 const {
-    FalseEmailConfirmationRequest,
     LoginFailure,
     PasswordResetRequest,
     RecentDeletedAccount,
     RecentPasswordResetSuccess,
     StripeCancelKey,
+    StripeCheckoutSession,
     StripeSuccessKey,
     User,
     UnverifiedUser
@@ -49,18 +51,12 @@ const {
 
 exports.accountDeleted = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let email = req.query.email ? req.query.email : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    let doesRecentDeletedAccountExist = await RecentDeletedAccount.exists( { email: email } );
-
-    // If this account wasn't recently deleted forward to the homepage.
+    let doesRecentDeletedAccountExist = await RecentDeletedAccount.exists({ email });
     if (!doesRecentDeletedAccountExist) return res.status(404).redirect('/page-not-found');
-
-    req.session.destroy( function(error) {
-        if (error) {
-            res.clearCookie(process.env.SESSION_NAME);
-        }
-    });
 
     // For rendering.
     let activeLink = 'account-deleted';
@@ -74,7 +70,12 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
 
     // Create these now and set the value in the if block below.
     let inputFields = {};
-    let addOrChangeProperty; 
+    let addOrChangeProperty = 
+        req.session.userValues.companyCity &&
+        req.session.userValues.companyState &&
+        req.session.userValues.companyStreet &&
+        req.session.userValues.companyZip
+        ? 'change' : 'add';
 
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
@@ -93,45 +94,43 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
         // Set object to previous form input.
         inputFields = cleanedFields;
 
-        addOrChangeProperty = req.session.userValues.companyCity ? 'change' : 'add';
-
-    // If req.session.userValues.companyCity has a value then all location properties also have a value.
-    } else if (req.session.userValues.companyCity) {
-
-        // Set object to the values stored in the session.
-        inputFields.companyCity = req.session.userValues.companyCity;
-        inputFields.companyState = req.session.userValues.companyState;
-        inputFields.companyStreet = req.session.userValues.companyStreet;
-        inputFields.companyStreetTwo = req.session.userValues.companyStreetTwo;
-        inputFields.companyZip = req.session.userValues.companyZip;
-
-        addOrChangeProperty = 'change';
-
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         inputFields = logicUserAccounts.makeFieldsEmpty(formFields.addChangeCompanyAddress);
 
-        addOrChangeProperty = 'add';
     }
 
-    // Grab the data from req.session and then delete it.
-    if (req.session.normalize) {
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Address`;
 
-        var normalize = {};
+    let showUspsNormalizedVsOriginal = false;
+    if (req.session.originalInput && req.session.uspsNormalized) {
 
-        normalize.userInputStreet = req.session.normalize.userInputStreet;
-        normalize.userInputStreetTwo = req.session.normalize.userInputStreetTwo;
-        normalize.userInputCity = req.session.normalize.userInputCity;
-        normalize.userInputState = req.session.normalize.userInputState;
-        normalize.userInputZip = req.session.normalize.userInputZip;
-        normalize.uspsStreet = req.session.normalize.uspsStreet;
-        normalize.uspsStreetTwo = req.session.normalize.uspsStreetTwo;
-        normalize.uspsCity = req.session.normalize.uspsCity;
-        normalize.uspsState = req.session.normalize.uspsState;
-        normalize.uspsZip = req.session.normalize.uspsZip;
+        showUspsNormalizedVsOriginal = true;
 
-        delete req.session.normalize;
+        var originalInput = {};
+
+        originalInput.companyStreet = req.session.originalInput.companyStreet;
+        originalInput.companyStreetTwo = req.session.originalInput.companyStreetTwo;
+        originalInput.companyCity = req.session.originalInput.companyCity;
+        originalInput.companyState = req.session.originalInput.companyState;
+        originalInput.companyZip = req.session.originalInput.companyZip;
+
+        var uspsNormalized = {};
+
+        uspsNormalized.companyStreet = req.session.uspsNormalized.companyStreet;
+        uspsNormalized.companyStreetTwo = req.session.uspsNormalized.companyStreetTwo;
+        uspsNormalized.companyCity = req.session.uspsNormalized.companyCity;
+        uspsNormalized.companyState = req.session.uspsNormalized.companyState;
+        uspsNormalized.companyZip = req.session.uspsNormalized.companyZip;
+
+        delete req.session.originalInput;
+        delete req.session.uspsNormalized;
+
     }
+
+    let { companyCity, companyState, companyStreet, companyStreetTwo, companyZip } = req.session.userValues;
 
     // For rendering.
     let activeLink = 'add-change-company-address';
@@ -139,12 +138,12 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
     let loggedIn = req.session.userValues ? true : false;
     let companyCityAttributes = renderValue.companyCityField.attributes;
     let companyStreetAttributes = renderValue.companyStreetField.attributes;
-    let companyStreetTwoAttributes = renderValue.companyStreetField.attributes;
+    let companyStreetTwoAttributes = renderValue.companyStreetTwoField.attributes;
     let companyZipAttributes = renderValue.companyZipField.attributes;
-    let patternCompanyCity = regexpValue.companyCity;
-    let patternCompanyStreet = regexpValue.companyStreet;
-    let patternCompanyStreetTwo = regexpValue.companyStreetTwo;
-    let patternCompanyZip = regexpValue.companyZip;
+    let patternCompanyCity = regExpValue.companyCity;
+    let patternCompanyStreet = regExpValue.companyStreet;
+    let patternCompanyStreetTwo = regExpValue.companyStreetTwo;
+    let patternCompanyZip = regExpValue.companyZip;
 
     res.render('add-change-company-address', {
         userInput: inputFields,
@@ -152,6 +151,11 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
         contactEmail,
         loggedIn,
         addOrChangeProperty,
+        companyCity,
+        companyState,
+        companyStreet,
+        companyStreetTwo,
+        companyZip,
         companyCityError,
         companyStateError,
         companyStreetError,
@@ -161,11 +165,14 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
         companyStreetAttributes,
         companyStreetTwoAttributes,
         companyZipAttributes,
-        normalize,
+        htmlTitle,
         patternCompanyCity,
         patternCompanyStreet,
         patternCompanyStreetTwo,
-        patternCompanyZip
+        patternCompanyZip,
+        showUspsNormalizedVsOriginal,
+        originalInput,
+        uspsNormalized
     });
 });
 
@@ -173,50 +180,55 @@ exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
 
     // Create these now and set the value in the if block below.
     let inputFields = {};
-    let addOrChangeProperty; 
+    let addOrChangeProperty = req.session.userValues.companyDescription ? 'change' : 'add';
 
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
         var { cleanedFields, companyDescriptionError } = req.session.transfer;
-
         delete req.session.transfer;
 
         // Set object to previous form input.
         inputFields = cleanedFields;
 
-        addOrChangeProperty = req.session.userValues.companyDescription ? 'change' : 'add';
-
-    } else if (req.session.userValues.companyDescription) {
-
-        // Set object to the values stored in the session.
-        inputFields.companyDescription = req.session.userValues.companyDescription;
-
-        addOrChangeProperty = 'change';
-
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         inputFields = logicUserAccounts.makeFieldsEmpty(formFields.addChangeCompanyDescription);
 
-        addOrChangeProperty = 'add';
-    }
+    } 
+
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Description`;
 
     // For rendering.
     let activeLink = 'add-change-company-description';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let companyDescriptionAttributes = renderValue.companyDescriptionField.attributes;
     let companyDescription = req.session.userValues.companyDescription;
-    let patternCompanyDescription = regexpValue.companyDescription;
+    let companyDescriptionAttributes = renderValue.companyDescriptionField.attributes;
+    let patternCompanyDescription = regExpValue.companyDescription;
 
-    res.render('add-change-company-description', { userInput: inputFields, activeLink, contactEmail, loggedIn, addOrChangeProperty, companyDescription, companyDescriptionAttributes, companyDescriptionError, patternCompanyDescription });
+    res.render('add-change-company-description', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        addOrChangeProperty,
+        companyDescription,
+        companyDescriptionAttributes,
+        patternCompanyDescription,
+        companyDescriptionError,
+        htmlTitle
+    });
+
 });
 
 exports.addChangeCompanyName = wrapAsync(async function(req, res) {
 
     // Create these now and set the value in the if block below.
     let inputFields = {};
-    let addOrChangeProperty; 
+    let addOrChangeProperty = req.session.userValues.companyName ? 'change' : 'add';
 
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
@@ -227,32 +239,44 @@ exports.addChangeCompanyName = wrapAsync(async function(req, res) {
         // Set object to previous form input.
         inputFields = cleanedFields;
 
-        addOrChangeProperty = req.session.userValues.companyName ? 'change' : 'add';
-
     } else {
 
         // If req.session data isn't used set every property to an empty string.
         inputFields = logicUserAccounts.makeFieldsEmpty(formFields.addChangeCompanyName);
 
-        addOrChangeProperty = req.session.userValues.companyName ? 'change' : 'add';
     }
+
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Name`;
 
     // For rendering.
     let activeLink = 'add-change-company-name';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let companyNameAttributes = renderValue.companyNameField.attributes;
     let companyName = req.session.userValues.companyName;
-    let patternCompanyName = regexpValue.companyName;
+    let companyNameAttributes = renderValue.companyNameField.attributes;
+    let patternCompanyName = regExpValue.companyName;
 
-    res.render('add-change-company-name', { userInput: inputFields, activeLink, contactEmail, loggedIn, addOrChangeProperty, companyName, companyNameAttributes, companyNameError, patternCompanyName });
+    res.render('add-change-company-name', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        addOrChangeProperty,
+        companyName,
+        companyNameAttributes,
+        patternCompanyName,
+        companyNameError,
+        htmlTitle
+    });
+
 });
 
 exports.addChangeCompanyPhone = wrapAsync(async function(req, res) {
 
     // Create these now and set the value in the if block below.
     let inputFields = {};
-    let addOrChangeProperty; 
+    let addOrChangeProperty = req.session.userValues.companyPhone ? 'change' : 'add';
 
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
@@ -263,109 +287,89 @@ exports.addChangeCompanyPhone = wrapAsync(async function(req, res) {
         // Set object to previous form input.
         inputFields = cleanedFields;
 
-        addOrChangeProperty = req.session.userValues.companyPhone ? 'change' : 'add';
-
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         inputFields = logicUserAccounts.makeFieldsEmpty(formFields.addChangeCompanyPhone);
 
-        addOrChangeProperty = req.session.userValues.companyPhone ? 'change' : 'add';
     }
+
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Phone Number`;
 
     // For rendering.
     let activeLink = 'add-change-company-phone';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let companyPhoneAttributes = renderValue.companyPhoneField.attributes;
     let companyPhone = req.session.userValues.companyPhone;
+    let companyPhoneAttributes = renderValue.companyPhoneField.attributes;
 
-    res.render('add-change-company-phone', { userInput: inputFields, activeLink, contactEmail, loggedIn, addOrChangeProperty, companyPhone, companyPhoneAttributes, companyPhoneError });
+    res.render('add-change-company-phone', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        addOrChangeProperty,
+        companyPhone,
+        companyPhoneAttributes,
+        companyPhoneError,
+        htmlTitle
+    });
+
 });
 
 exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
 
-    // Create these now and set the value in the if block below.
-    let addOrChangeProperty; 
-
-    // Bring these in from the session to see if this is an add or change situation.
-    let {
-        serviceBoardingSecuring,
-        serviceDebrisRemovalTrashout,
-        serviceEvictionManagement,
-        serviceFieldInspection,
-        serviceHandymanGeneralMaintenance,
-        serviceLandscapeMaintenance,
-        serviceLockChanges,
-        serviceOverseePropertyRehabilitation,
-        servicePoolMaintenance,
-        servicePropertyCleaning,
-        serviceWinterizations
-        } = req.session.userValues;
-
-    let doCompanyServicesHaveValue = checks.checkCompanyServicesHaveValue(
-        serviceBoardingSecuring,
-        serviceDebrisRemovalTrashout,
-        serviceEvictionManagement,
-        serviceFieldInspection,
-        serviceHandymanGeneralMaintenance,
-        serviceLandscapeMaintenance,
-        serviceLockChanges,
-        serviceOverseePropertyRehabilitation,
-        servicePoolMaintenance,
-        servicePropertyCleaning,
-        serviceWinterizations
-        );
+    let inputFields = {}, inputFieldsBoolean = {};
+    let addOrChangeProperty = 
+        req.session.userValues.boardingSecuring === false &&
+        req.session.userValues.debrisRemovalTrashout === false &&
+        req.session.userValues.evictionManagement === false &&
+        req.session.userValues.fieldInspection === false &&
+        req.session.userValues.handymanGeneralMaintenance === false &&
+        req.session.userValues.landscapeMaintenance === false &&
+        req.session.userValues.lockChanges === false &&
+        req.session.userValues.overseePropertyRehabilitation === false &&
+        req.session.userValues.poolMaintenance === false &&
+        req.session.userValues.propertyCleaning === false &&
+        req.session.userValues.winterizations === false
+            ? 'add' : 'change';
 
     // Grab the data from req.session and then delete it.
-    let inputFields;
-
     if (req.session.transfer) {
 
-        var { companyServicesError, cleanedFields } = req.session.transfer;
+        var { cleanedFields, companyServicesError } = req.session.transfer;
         delete req.session.transfer;
 
-        // Because there was an error set the values to the previous forms input instead of the session values.  This also makes sure every empty property has a 'no' value.
-        cleanedFields.serviceBoardingSecuring = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceBoardingSecuring);
-        cleanedFields.serviceDebrisRemovalTrashout = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceDebrisRemovalTrashout);
-        cleanedFields.serviceEvictionManagement = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceEvictionManagement);
-        cleanedFields.serviceFieldInspection = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceFieldInspection);
-        cleanedFields.serviceHandymanGeneralMaintenance = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceHandymanGeneralMaintenance);
-        cleanedFields.serviceLandscapeMaintenance = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceLandscapeMaintenance);
-        cleanedFields.serviceLockChanges = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceLockChanges);
-        cleanedFields.serviceOverseePropertyRehabilitation = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceOverseePropertyRehabilitation);
-        cleanedFields.servicePoolMaintenance = logicUserAccounts.setCheckInputYesNo(cleanedFields.servicePoolMaintenance);
-        cleanedFields.servicePropertyCleaning = logicUserAccounts.setCheckInputYesNo(cleanedFields.servicePropertyCleaning);
-        cleanedFields.serviceWinterizations = logicUserAccounts.setCheckInputYesNo(cleanedFields.serviceWinterizations);
-
-        addOrChangeProperty = doCompanyServicesHaveValue ? 'change' : 'add';
-        
         // Set object to previous form input.
         inputFields = cleanedFields;
 
     } else {
 
-        addOrChangeProperty = doCompanyServicesHaveValue ? 'change' : 'add';
+        inputFieldsBoolean = logicUserAccounts.addCompanyServices(formFields.addChangeCompanyServices, req.session.userValues);
+        inputFields = logicUserAccounts.convertBooleanToString(inputFieldsBoolean);
 
-        // If there isn't an error set the values to those stored in the session.
-        inputFields = req.session.userValues
     }
+
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Services`;
 
     // For rendering.
     let activeLink = 'add-change-company-services';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
-    let labelBoardingSecuring = renderValue.serviceBoardingSecuring;
-    let labelDebrisRemovalTrashout = renderValue.serviceDebrisRemovalTrashout;
-    let labelEvictionManagement = renderValue.serviceEvictionManagement;
-    let labelFieldInspection = renderValue.serviceFieldInspection;
-    let labelHandymanGeneralMaintenance = renderValue.serviceHandymanGeneralMaintenance;
-    let labelLandscapeMaintenance = renderValue.serviceLandscapeMaintenance;
-    let labelLockChanges = renderValue.serviceLockChanges;
-    let labelOverseePropertyRehabilitation = renderValue.serviceOverseePropertyRehabilitation;
-    let labelPoolMaintenance = renderValue.servicePoolMaintenance;
-    let labelPropertyCleaning = renderValue.servicePropertyCleaning;
-    let labelWinterizations = renderValue.serviceWinterizations;
+    let labelBoardingSecuring = renderValue.boardingSecuring;
+    let labelDebrisRemovalTrashout = renderValue.debrisRemovalTrashout;
+    let labelEvictionManagement = renderValue.evictionManagement;
+    let labelFieldInspection = renderValue.fieldInspection;
+    let labelHandymanGeneralMaintenance = renderValue.handymanGeneralMaintenance;
+    let labelLandscapeMaintenance = renderValue.landscapeMaintenance;
+    let labelLockChanges = renderValue.lockChanges;
+    let labelOverseePropertyRehabilitation = renderValue.overseePropertyRehabilitation;
+    let labelPoolMaintenance = renderValue.poolMaintenance;
+    let labelPropertyCleaning = renderValue.propertyCleaning;
+    let labelWinterizations = renderValue.winterizations;
 
     res.render('add-change-company-services',
         { 
@@ -374,6 +378,8 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
             contactEmail,
             loggedIn,
             addOrChangeProperty,
+            loggedIn,
+            htmlTitle,
             labelBoardingSecuring,
             labelDebrisRemovalTrashout,
             labelEvictionManagement,
@@ -385,17 +391,6 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
             labelPoolMaintenance,
             labelPropertyCleaning,
             labelWinterizations,
-            serviceBoardingSecuring,
-            serviceDebrisRemovalTrashout,
-            serviceEvictionManagement,
-            serviceFieldInspection,
-            serviceHandymanGeneralMaintenance,
-            serviceLandscapeMaintenance,
-            serviceLockChanges,
-            serviceOverseePropertyRehabilitation,
-            servicePoolMaintenance,
-            servicePropertyCleaning,
-            serviceWinterizations,
             companyServicesError
         });
 });
@@ -404,7 +399,7 @@ exports.addChangeCompanyWebsite = wrapAsync(async function(req, res) {
     
     // Create these now and set the value in the if block below.
     let inputFields = {};
-    let addOrChangeProperty; 
+    let addOrChangeProperty = req.session.userValues.companyWebsite ? 'change' : 'add';
 
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
@@ -415,14 +410,15 @@ exports.addChangeCompanyWebsite = wrapAsync(async function(req, res) {
         // Set object to previous form input.
         inputFields = cleanedFields;
 
-        addOrChangeProperty = req.session.userValues.companyWebsite ? 'change' : 'add';
-
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         inputFields = logicUserAccounts.makeFieldsEmpty(formFields.addChangeCompanyWebsite);
 
-        addOrChangeProperty = req.session.userValues.companyWebsite ? 'change' : 'add';
     }
+
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Website`;
 
     // For rendering.
     let activeLink = 'add-change-company-website';
@@ -430,9 +426,21 @@ exports.addChangeCompanyWebsite = wrapAsync(async function(req, res) {
     let loggedIn = req.session.userValues ? true : false;
     let companyWebsiteAttributes = renderValue.companyWebsiteField.attributes;
     let companyWebsite = req.session.userValues.companyWebsite;
-    let patternCompanyWebsite = regexpValue.companyWebsite;
+    let patternCompanyWebsite = regExpValue.companyWebsite;
 
-    res.render('add-change-company-website', { userInput: inputFields, activeLink, contactEmail, loggedIn, addOrChangeProperty, companyWebsite, companyWebsiteAttributes, companyWebsiteError, patternCompanyWebsite });
+    res.render('add-change-company-website', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        addOrChangeProperty,
+        companyWebsite,
+        companyWebsiteAttributes,
+        patternCompanyWebsite,
+        companyWebsiteError,
+        htmlTitle
+    });
+
 });
 
 exports.changeEmail = wrapAsync(async function(req, res) {
@@ -442,27 +450,43 @@ exports.changeEmail = wrapAsync(async function(req, res) {
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, newEmailError, emailConfirmationError, passwordError } = req.session.transfer;
+        var { cleanedFields, changedEmailError, confirmationEmailError, currentPasswordError } = req.session.transfer;
         delete req.session.transfer;
 
         // Set object to previous form input.
         var inputFields = cleanedFields;
 
     } else {
-        // If req.session data isn't used set every property to an empty string.
+
+        // If req.session inputs aren't used set every property to an empty string.
         var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.changeEmail);
+
     }
 
     // For rendering.
     let activeLink = 'change-email';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let emailAttributes = renderValue.emailField.attributes;
-    let passwordAttributes = renderValue.passwordField.attributes();
-    let currentEmail = email;
-    let patternEmail = regexpValue.email;
 
-    res.render('change-email', { userInput: inputFields, activeLink, contactEmail, loggedIn, emailAttributes, passwordAttributes, currentEmail, newEmailError, emailConfirmationError, passwordError, patternEmail });
+    let emailAttributes = renderValue.emailField.attributes;
+    let passwordAttributes = renderValue.passwordField.attributes;
+    let currentEmail = email;
+    let patternChangedEmail = regExpValue.email;
+
+    res.render('change-email', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        emailAttributes,
+        passwordAttributes,
+        currentEmail,
+        changedEmailError,
+        confirmationEmailError,
+        currentPasswordError,
+        patternChangedEmail
+    });
+
 });
 
 exports.changePassword = wrapAsync(async function(req, res) {
@@ -470,21 +494,7 @@ exports.changePassword = wrapAsync(async function(req, res) {
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, passwordCurrentError, passwordError, passwordConfirmError } = req.session.transfer;
-
-        if (passwordCurrentError) {
-            var passwordCurrentErrorMessage = passwordCurrentError;
-        }
-
-        if (passwordError) {
-            var passwordErrorMessage = passwordError.message;
-            var passwordErrorType = passwordError.errorType;
-        }
-        
-        if (passwordConfirmError) {
-            var passwordConfirmErrorMessage = passwordConfirmError.message;
-            var passwordConfirmErrorType = passwordConfirmError.errorType;
-        }
+        var { cleanedFields, currentPasswordError, changedPasswordError, confirmationPasswordError } = req.session.transfer;
 
         delete req.session.transfer;
 
@@ -501,81 +511,106 @@ exports.changePassword = wrapAsync(async function(req, res) {
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
-    let passwordCurrentAttributes = renderValue.passwordField.attributes();
-    let passwordAttributes = renderValue.passwordField.attributes(passwordErrorType);
-    let passwordConfirmAttributes = renderValue.passwordField.attributes(passwordConfirmErrorType);
-    let patternPassword = regexpValue.password;
+    let allPasswordsAttributes = renderValue.passwordField.attributes;
+    let patternChangedPassword = regExpValue.password;
 
-    res.render('change-password', { userInput: inputFields, activeLink, contactEmail, loggedIn, passwordCurrentErrorMessage, passwordErrorMessage, passwordConfirmErrorMessage, passwordCurrentAttributes, passwordAttributes, passwordConfirmAttributes, patternPassword });
+    res.render('change-password', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        currentPasswordError,
+        changedPasswordError,
+        confirmationPasswordError,
+        allPasswordsAttributes,
+        patternChangedPassword
+    });
+    
 });
 
 exports.confirmationLimitReached = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let email = req.query.email ? req.query.email : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    // If the email matches an unverified user grab it.
-    let unverifiedUser = await UnverifiedUser.findOne({ email: email });
+    let unverifiedUser = await UnverifiedUser.findOne({ email });
+    if (!unverifiedUser) return res.status(404).redirect('/page-not-found');
 
-    // If the hash is wrong or not present redirect to the home page.
-    if (email === '' || unverifiedUser === null) return res.status(404).redirect('/page-not-found');
+    // If number is out of range redirect to page-not-found.  Counter stops incrementing at max + 1 and stays at that number.
+    if (unverifiedUser.numberOfConfirmations != defaultValue.numberOfEmailConfirmationsAllowed + 1) return res.status(404).redirect('/page-not-found');
 
-    // If for some reason the user has never been to the registration sent page redirect them to that.
-    if (unverifiedUser.numberOfConfirmations === 0) return res.redirect(`registration-sent?email=${email}`);
+    let isResetAttemptBeforeVerified = req.query.resetattempt === 'true' ? true : false;
 
-    // If the user has confirmation requests but hasn't gone over the limit redirect to confirmation-resent.
-    if (unverifiedUser.numberOfConfirmations >= 1 && unverifiedUser.numberOfConfirmations < defaultValue.numberOfEmailConfirmationsAllowed) {
-        return res.redirect(`confirmation-resent?email=${email}`);
-    }
+    let emailSubject = emailMessage.verificationEmailSubject();
+    let expirationTime = timeValue.getExpirationTime(timeValue.unverifiedUserExpiration);
+    let emailBody = emailMessage.verificationEmailBody(confirmationHash, isResetAttemptBeforeVerified);
+    
+    communication.sendEmail(email, emailSubject, emailBody);
+
+    let htmlBody = defaultMessage.confirmationLimitReachedBody(email, emailSubject, expirationTime, isResetAttemptBeforeVerified);
 
     // For rendering.
     let activeLink = 'confirmation-limit-reached';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let emailSubject = emailMessage.emailVerificationEmailSubject();
-    let body = errorMessage.confirmationLimitReachedBody(email, emailSubject);
-    let expirationTime = timeValue.getExpirationTime(timeValue.unverifiedUserExpiration);
 
-    res.render('confirmation-limit-reached', { activeLink, contactEmail, loggedIn, body, email, emailSubject, expirationTime });
+    res.render('confirmation-limit-reached', { activeLink, contactEmail, loggedIn, htmlBody });
+
 });
 
-exports.confirmationResent = wrapAsync(async function(req, res) {
+exports.confirmationSent = wrapAsync(async function(req, res) {
 
+    // If the email is not present redirect to page-not-found.
     let email = req.query.email ? req.query.email : '';
-    let resetAttempt = req.query.resetattempt ? req.query.resetattempt : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    // If the email matches an unverified user grab it.
-    let unverifiedUser = await UnverifiedUser.findOne({ email: email });
+    let isNewRegister = req.query.newregister === 'true' ? true : false;
+    let isUnverifiedMultipleRegisters = req.query.unverifiedmultipleregisters === 'true'  ? true : false;
+    let isConfirmationResent = req.query.resend === 'true' ? true : false;
+    let isResetAttemptBeforeVerified = req.query.resetattempt === 'true' ? true : false;
 
-    // If the hash is wrong or not present redirect to page-not-found.
-    if (email === '' || unverifiedUser === null) return res.status(404).redirect('/page-not-found');
+    // If none of the queries are present or correct redirect to page-not-found.
+    if (
+        isNewRegister === false &&
+        isUnverifiedMultipleRegisters === false &&
+        isConfirmationResent === false &&
+        isResetAttemptBeforeVerified === false
+        ) {
+            return res.status(404).redirect('/page-not-found'); 
+        }
 
-    // If for some reason the user has never been to the registration sent page redirect them to that.
-    if (unverifiedUser.numberOfConfirmations === 0) return res.redirect(`registration-sent?email=${ email }`);
-    
-    // If the user has exceeded the maximum number of confirmations redirect them to the confirmation limit reached page.
-    if (unverifiedUser.numberOfConfirmations >= defaultValue.numberOfEmailConfirmationsAllowed) return res.redirect(`/confirmation-limit-reached?email=${ email }`);
+    // If no user exists redirect to page-not-found.
+    let unverifiedUser = await UnverifiedUser.findOne({ email });
+    if (!unverifiedUser) return res.status(404).redirect('/page-not-found');
 
-    let emailSubject = emailMessage.emailVerificationEmailSubject();
+    let numberOfConfirmations = unverifiedUser.numberOfConfirmations += 1;
 
-    // If an unverified user exists update the db and send the email.
-    if (unverifiedUser) {
+    // If the user has equaled or exceeded the maximum number of confirmations redirect them to the confirmation limit reached page.
+    if (numberOfConfirmations > defaultValue.numberOfEmailConfirmationsAllowed) {
 
-        var { confirmationHash } = unverifiedUser;
+        await UnverifiedUser.updateOne({ email }, { numberOfConfirmations: defaultValue.numberOfEmailConfirmationsAllowed + 1 });
 
-        await UnverifiedUser.updateOne({ email: email }, { numberOfConfirmations: unverifiedUser.numberOfConfirmations += 1 });
-        
-        var emailBody = emailMessage.emailVerificationEmailBody(confirmationHash, resetAttempt);
+        return res.redirect(`/confirmation-limit-reached?email=${ email }`);
 
-        communication.sendEmail(email, emailSubject, emailBody);
     } 
 
+    await UnverifiedUser.updateOne({ email }, { numberOfConfirmations });
+
+    let { confirmationHash } = unverifiedUser;    
+    let emailSubject = emailMessage.verificationEmailSubject();
+    let emailBody = emailMessage.verificationEmailBody(confirmationHash, isResetAttemptBeforeVerified);
+        
+    communication.sendEmail(email, emailSubject, emailBody);
+
+    let htmlBody = defaultMessage.confirmationSentBody(email, emailSubject, isNewRegister, isUnverifiedMultipleRegisters, isConfirmationResent, isResetAttemptBeforeVerified);
+
     // For rendering.
-    let activeLink = 'confirmation-resent';
+    let activeLink = 'confirmation-sent';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let body = defaultMessage.confirmationResentBody(email, emailSubject, resetAttempt);
 
-    res.render('confirmation-resent', { activeLink, contactEmail, loggedIn, email, emailSubject, body });
+    res.render('confirmation-sent', { activeLink, contactEmail, loggedIn, htmlBody, email, emailSubject });
 });
 
 exports.deleteYourAccount = wrapAsync(async function(req, res) {
@@ -583,7 +618,7 @@ exports.deleteYourAccount = wrapAsync(async function(req, res) {
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, deleteAccountError } = req.session.transfer;
+        var { cleanedFields, currentPasswordError } = req.session.transfer;
         delete req.session.transfer;
 
         // Set object to previous form input.
@@ -591,16 +626,16 @@ exports.deleteYourAccount = wrapAsync(async function(req, res) {
 
     } else {
         // If req.session data isn't used set every property to an empty string.
-        var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.changeYourName);
+        var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.deleteYourAccount);
     }
 
     // For rendering.
     let activeLink = 'delete-your-account';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let passwordAttributes = renderValue.passwordField.attributes();
+    let passwordAttributes = renderValue.passwordField.attributes;
 
-    res.render('delete-your-account', { userInput: inputFields, activeLink, contactEmail, loggedIn, passwordAttributes, deleteAccountError });
+    res.render('delete-your-account', { userInput: inputFields, activeLink, contactEmail, loggedIn, passwordAttributes, currentPasswordError });
 });
 
 exports.login = wrapAsync( async function(req, res) {
@@ -608,11 +643,14 @@ exports.login = wrapAsync( async function(req, res) {
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, emailError, passwordError } = req.session.transfer;
+        var { cleanedFields, currentEmailError, currentPasswordError } = req.session.transfer;
         delete req.session.transfer;
 
         // Set object to previous form input.
         var inputFields = cleanedFields;
+
+        // Clear currentPassword for rendering.
+        inputFields.currentPassword = '';
 
     } else {
         // If req.session data isn't used set every property to an empty string.
@@ -624,20 +662,36 @@ exports.login = wrapAsync( async function(req, res) {
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
     let emailAttributes  = renderValue.emailField.attributes;
-    let passwordAttributes = renderValue.passwordField.attributes();
+    let passwordAttributes = renderValue.passwordField.attributes;
+    let patternCurrentEmail = regExpValue.email;
+    let patternCurrentPassword = regExpValue.password;
 
-    res.render('login', { userInput: inputFields, activeLink, contactEmail, loggedIn, emailAttributes, passwordAttributes, emailError, passwordError });
+    res.render('login', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        emailAttributes,
+        passwordAttributes,
+        currentEmailError,
+        currentPasswordError,
+        patternCurrentEmail,
+        patternCurrentPassword
+    });
+
 });
 
 exports.loginFailureLimitReached = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let email = req.query.email ? req.query.email : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    // If the hash matches an unverified user grab it.
-    let loginFailure = await LoginFailure.findOne({ email: email });
+    let loginFailure = await LoginFailure.findOne({ email });
+    if (!loginFailure) return res.status(404).redirect('/page-not-found');
 
-    // If the hash is wrong or not present redirect to the home page.
-    if (email === '' || loginFailure === null) return res.status(404).redirect('/page-not-found');
+    // If numberOfFailures doesn't equal max + 1 the client shouldn't be here.
+    if (loginFailure.numberOfFailures != defaultValue.numberOfLoginFailuresAllowed + 1) return res.redirect('/page-not-found');
 
     // For rendering.
     let activeLink = 'login-failure-limit-reached';
@@ -647,11 +701,13 @@ exports.loginFailureLimitReached = wrapAsync(async function(req, res) {
     let expirationTime = timeValue.getExpirationTime(timeValue.loginFailureExpiration);
 
     res.render('login-failure-limit-reached', { activeLink, contactEmail, loggedIn, expirationTime });
+
 });
 
 exports.logout = wrapAsync(async function(req, res) {
 
-    logicUserAccounts.logoutSteps(req, res);
+    return logoutSteps.logoutUser(req, res, '/index');
+
 });
 
 exports.myAccount = wrapAsync(async function(req, res) {
@@ -671,38 +727,49 @@ exports.myAccount = wrapAsync(async function(req, res) {
         email,
         expirationDate,
         password,
-        serviceBoardingSecuring,
-        serviceDebrisRemovalTrashout,
-        serviceEvictionManagement,
-        serviceFieldInspection,
-        serviceHandymanGeneralMaintenance,
-        serviceLandscapeMaintenance,
-        serviceLockChanges,
-        serviceOverseePropertyRehabilitation,
-        servicePoolMaintenance,
-        servicePropertyCleaning,
-        serviceWinterizations
+        boardingSecuring,
+        debrisRemovalTrashout,
+        evictionManagement,
+        fieldInspection,
+        handymanGeneralMaintenance,
+        landscapeMaintenance,
+        lockChanges,
+        overseePropertyRehabilitation,
+        poolMaintenance,
+        propertyCleaning,
+        winterizations,
+        shouldBrowserFocusOnURLNotActiveError,
+        urlNotActiveError
     } = req.session.userValues;
 
     let isAccountUpgraded = companyProfileType === defaultValue.accountUpgrade ? true : false;
 
     // Start the Message / Stripe section.
-    let failMessage, successMessage;
+    let failMessage, noChangeMessage, successMessage;
 
-    // Both queries should never exist in the same response.  If they do this indicates shenanigans.
-    if (req.query.success && !req.query.cancel) {
+    // Both queries should never exist in the same response.  If they do this indicates shenanigans.  Log out the user.
+    if (req.query.success && req.query.cancel) {
+        return logoutSteps.logoutUser(req, res, '/index');
+    }
 
-        // If the success key exists grab paymentIntent for use in updating the DB if that is needed.
-        let stripeSuccessKey = await StripeSuccessKey.findOne( { entryKey: req.query.success } );
+    // The success query string, success=${ stripeSuccessString } is set up in middlewareStripe.postCreateCheckoutSession.  
+    // If the success query exists it is because Stripe sent the user here.    
+    if (req.query.success) {
+
+        // Get the data from the DB to make sure the query string was real.  Below use paymentIntent as a key to update the db.
+        // If stripeSuccessKey doesn't exist there are 2 reasons.  1) webhookPremiumUpgrade got there first and already deleted it after use.  2) success was a fake key.
+        let stripeSuccessKey = await StripeSuccessKey.findOne({ entryKey: req.query.success });
 
         let paymentIntent = stripeSuccessKey ? stripeSuccessKey.paymentIntent : null;
 
         if (paymentIntent) {
 
-            // If webhookPremiumUpgrade has already updated DB this returns.
-            await logicUserAccounts.stripeSuccessUpdateDB(paymentIntent);
+            // Both webhookPremiumUpgrade and myAccount can update the DB.  Whichever is faster does the job.
+            // This redundancy from webhookPremiumUpgrade ensures that the DB update always happens even if the session is lost because the client or server crashed.
+            await logicStripe.stripeSuccessUpdateDB(paymentIntent);
 
-            let userValues = await User.findOne({ email: email });
+            // Update the session values and other variables to reflect the upgrade that took place in stripeSuccessUpdateDB(paymentIntent).
+            let userValues = await User.findOne({ email });
             req.session.userValues = userValues;
 
             companyProfileType = req.session.userValues.companyProfileType;
@@ -710,39 +777,58 @@ exports.myAccount = wrapAsync(async function(req, res) {
         
             isAccountUpgraded = true;
             successMessage = stripeValue.successMessage; 
-        } 
+
+        }
+        
     } 
 
-    if (req.query.cancel && !req.query.success) {
+    // my-acccount is used as the Stripe cancel route.  my-account?cancel=${ stripeCancelString }
+    if (req.query.cancel) {
 
-        let doesStripeCancelKeyExist = await StripeCancelKey.exists( { entryKey: req.query.cancel } );
+        let doesStripeCancelKeyExist = await StripeCancelKey.exists({ entryKey: req.query.cancel });
         if (doesStripeCancelKeyExist) failMessage = stripeValue.cancelMessage;
+
     }
 
-    // Both keys are always created in middlewareStripe.postCreateCheckoutSession.  If either exists delete them both.
-    if (req.query.cancel || req.query.success) {
+    // Both keys are always created in middlewareStripe.postCreateCheckoutSession.  Just to be careful if either exists delete them both.
+    if (req.query.success || req.query.cancel) {
 
-        await StripeSuccessKey.findOneAndRemove( { email: email } );
-        await StripeCancelKey.findOneAndRemove( { email: email } );   
-    }
-
-    if (req.session.userValues.successMessage || req.session.userValues.failMessage) {
+        await StripeSuccessKey.findOneAndRemove({ email });
+        await StripeCancelKey.findOneAndRemove({ email });  
         
-        // It won't matter if both are set because only one will be a string and that's what will be displayed in my-account.ejs
-        successMessage = req.session.userValues.successMessage;
-        failMessage = req.session.userValues.failMessage;
-
-        delete req.session.userValues.successMessage;
-        delete req.session.userValues.failMessage;
     }
 
-    let URLNotActiveMessage;
-    if (req.session.userValues.URLNotActiveError) {
+    // A successMessage is created whenever there is a successful addChange on the account properties.
+    if (req.session.userValues.successMessage) {
 
-        URLNotActiveMessage = defaultMessage.URLNotActiveMessage;
+        successMessage = req.session.userValues.successMessage;
+        delete req.session.userValues.successMessage;
 
-        await User.updateOne({ email: req.session.userValues.email }, { URLNotActiveError: false });
-        delete req.session.userValues.URLNotActiveError;
+    }
+
+    // A successMessage is created whenever there is a successful addChange on the account properties.
+    if (req.session.userValues.noChangeMessage) {
+
+        noChangeMessage = req.session.userValues.noChangeMessage;
+        delete req.session.userValues.noChangeMessage;
+
+    }
+
+    // This value comes from logicUserAccounts.testFormattedURL.
+    // When a company website is changed or added the update to the session and DB happens immediately.  
+    // testFormattedURL runs in the background to check if the URL is active.  After the check is done the result is stored in the DB.
+    if (urlNotActiveError === true) {
+
+        var urlNotActiveMessage = defaultMessage.urlNotActiveMessage;
+
+        if (shouldBrowserFocusOnURLNotActiveError === true) {
+
+            // Updated in the DB and on the session so that it focuses only one time when a URL error occurs.
+            await User.updateOne({ email }, { shouldBrowserFocusOnURLNotActiveError: false });
+            req.session.userValues.shouldBrowserFocusOnURLNotActiveError = false;
+
+        }
+        
     }
 
     // Prepare Date information for rendering.
@@ -755,58 +841,68 @@ exports.myAccount = wrapAsync(async function(req, res) {
         numberOfDaysUntilExpiration = logicUserAccounts.getNumberOfDaysUntilExpiration(new Date(expirationDate));
         isUpgradeExpirationSoon = checks.checkIsUpgradeExpirationSoon(numberOfDaysUntilExpiration);
         premiumAccountExtendsAvailable = checks.checkArePremiumAccountExtendsAvailable(new Date(expirationDate), isUpgradeExpirationSoon);
-        premiumExpirationDate = logicUserAccounts.getPremiumExpirationDate(new Date(expirationDate))
+        premiumExpirationDate = logicUserAccounts.getPremiumExpirationDate(new Date(expirationDate));
+
     }
     
-    let companyStreetAssembled = logicUserAccounts.getCompanyStreetFull(companyStreet, companyStreetTwo);
+    // let companyStreetAssembled = logicUserAccounts.getCompanyStreetFull(companyStreet, companyStreetTwo);
     let companyRegionAssembled = logicUserAccounts.getCompanyRegionFull(companyCity, companyState, companyZip);
 
+    // These next steps are used determine the rendering value for company services.
     let doCompanyServicesHaveValue = checks.checkCompanyServicesHaveValue (
-        serviceBoardingSecuring,
-        serviceDebrisRemovalTrashout,
-        serviceEvictionManagement,
-        serviceFieldInspection,
-        serviceHandymanGeneralMaintenance,
-        serviceLandscapeMaintenance,
-        serviceLockChanges,
-        serviceOverseePropertyRehabilitation,
-        servicePoolMaintenance,
-        servicePropertyCleaning,
-        serviceWinterizations
+        boardingSecuring,
+        debrisRemovalTrashout,
+        evictionManagement,
+        fieldInspection,
+        handymanGeneralMaintenance,
+        landscapeMaintenance,
+        lockChanges,
+        overseePropertyRehabilitation,
+        poolMaintenance,
+        propertyCleaning,
+        winterizations
         );
 
     let companyServicesMyAccountValue;
-    if (doCompanyServicesHaveValue) {
+    if (doCompanyServicesHaveValue === true) {
+
         companyServicesMyAccountValue = logicUserAccounts.assembleCompanyServices (
-            serviceBoardingSecuring,
-            serviceDebrisRemovalTrashout,
-            serviceEvictionManagement,
-            serviceFieldInspection,
-            serviceHandymanGeneralMaintenance,
-            serviceLandscapeMaintenance,
-            serviceLockChanges,
-            serviceOverseePropertyRehabilitation,
-            servicePoolMaintenance,
-            servicePropertyCleaning,
-            serviceWinterizations
+            boardingSecuring,
+            debrisRemovalTrashout,
+            evictionManagement,
+            fieldInspection,
+            handymanGeneralMaintenance,
+            landscapeMaintenance,
+            lockChanges,
+            overseePropertyRehabilitation,
+            poolMaintenance,
+            propertyCleaning,
+            winterizations
         );
+
     } else {
         companyServicesMyAccountValue = defaultMessage.myAccountInformationEmpty;
     }
 
-    // For rendering.
-    let activeLink = 'my-account';
-    let contactEmail = siteValue.contactEmail;
-    let loggedIn = true;
-
+    // The next steps are used to determine if the account is Live and for rendering.
     let companyDescriptionMyAccountValue = companyDescription ? companyDescription : defaultMessage.myAccountInformationEmpty;
     let companyNameMyAccountValue = companyName ? companyName : defaultMessage.myAccountInformationEmpty;
     let companyPhoneMyAccountValue = companyPhone ? companyPhone : defaultMessage.myAccountInformationEmpty;
-    let companyRegionMyAccountValue = companyRegionAssembled ? companyRegionAssembled : defaultMessage.myAccountInformationEmpty;
-    let companyStreetMyAccountValue = companyStreetAssembled ? companyStreetAssembled : defaultMessage.myAccountInformationEmpty;
-    let companyStreetTwoMyAccountValue = companyStreetTwo ? companyStreetTwo : defaultMessage.myAccountInformationEmpty;
     let companyWebsiteMyAccountValue = companyWebsite ? companyWebsite : defaultMessage.myAccountInformationEmpty;
 
+    // The account value for address has to be processed separately.
+    let companyStreetMyAccountValue, companyStreetTwoMyAccountValue, companyRegionMyAccountValue;
+    if (companyStreet && companyRegionAssembled) {
+
+        companyStreetMyAccountValue = companyStreet;
+        if (companyStreetTwo) companyStreetTwoMyAccountValue = companyStreetTwo;
+        companyRegionMyAccountValue = companyRegionAssembled;
+
+    } else {
+        companyStreetMyAccountValue = defaultMessage.myAccountInformationEmpty;
+    }
+
+    // Check to see if properties were added.  During rendering, typeof === string check won't work because all accountValues store a string even if empty.
     let isCompanyAddressAdded = companyStreetMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyDescriptionAdded = companyDescriptionMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyNameAdded = companyNameMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
@@ -814,15 +910,20 @@ exports.myAccount = wrapAsync(async function(req, res) {
     let isCompanyServicesAdded = companyServicesMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyWebsiteAdded = companyWebsiteMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
 
-
-    let companyPropertiesUnfilled = logicUserAccounts.assembleCompanyPropertiesUnfilled(isCompanyNameAdded, isCompanyPhoneAdded, isCompanyAddressAdded, isCompanyServicesAdded);
-
     let isAccountLive = 
         isCompanyAddressAdded === true &&
         isCompanyNameAdded === true &&
         isCompanyPhoneAdded === true &&
         isCompanyServicesAdded === true
         ? true : false;
+
+    // This tells the user which properties he needs to add to make his account live.
+    let companyPropertiesUnfilled = logicUserAccounts.assembleCompanyPropertiesUnfilled(isCompanyNameAdded, isCompanyPhoneAdded, isCompanyAddressAdded, isCompanyServicesAdded);
+
+    // For rendering.
+    let activeLink = 'my-account';
+    let contactEmail = siteValue.contactEmail;
+    let loggedIn = true;
 
     res.render('my-account', {
         activeLink,
@@ -852,15 +953,18 @@ exports.myAccount = wrapAsync(async function(req, res) {
         isCompanyWebsiteAdded,
         isUpgradeExpirationSoon,
         memberSince,
+        noChangeMessage,
         numberOfDaysUntilExpiration,
         password,
         premiumAccountExtendsAvailable,
         premiumExpirationDate,
+        shouldBrowserFocusOnURLNotActiveError,
         successMessage,
         upgradedProfileName: defaultValue.accountUpgrade,
         upgradeSalesPitch: defaultMessage.upgradeSalesPitch,
-        URLNotActiveMessage
+        urlNotActiveMessage
     });
+
 });
 
 exports.pageNotFound = wrapAsync(async function(req, res) {
@@ -875,25 +979,16 @@ exports.pageNotFound = wrapAsync(async function(req, res) {
 
 exports.passwordReset = wrapAsync(async function(req, res) {
 
-    // Check to see if hash is legitimate.
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let hash = req.query.hash ? req.query.hash : '';
-    let passwordResetRequest = await PasswordResetRequest.findOne({ confirmationHash: hash });
+    if (hash === '') return res.status(404).redirect('/page-not-found');
 
+    let passwordResetRequest = await PasswordResetRequest.findOne({ confirmationHash: hash });
     if (!passwordResetRequest) return res.status(404).redirect('/page-not-found');
 
     // If there is an error available from previous postPasswordReset grab it from req.session and then delete it.
     if (req.session.transfer) {
-        var { cleanedFields, passwordError, passwordConfirmError } = req.session.transfer;
-
-        if (passwordError) {
-            var passwordErrorMessage = passwordError.message;
-            var passwordErrorType = passwordError.errorType;
-        }
-        
-        if (passwordConfirmError) {
-            var passwordConfirmErrorMessage = passwordConfirmError.message;
-            var passwordConfirmErrorType = passwordConfirmError.errorType;
-        }
+        var { cleanedFields, changedPasswordError, confirmationPasswordError } = req.session.transfer;
 
         delete req.session.transfer;
 
@@ -908,11 +1003,10 @@ exports.passwordReset = wrapAsync(async function(req, res) {
     let activeLink = 'password-reset';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    let passwordAttributes = renderValue.passwordField.attributes(passwordErrorType);
-    let passwordConfirmAttributes = renderValue.passwordField.attributes(passwordConfirmErrorType);
-    let patternPassword = regexpValue.password;
+    let passwordAttributes = renderValue.passwordField.attributes;
+    let patternChangedPassword = regExpValue.password;
 
-    res.render('password-reset', { userInput: inputFields, activeLink, contactEmail, loggedIn, hash, passwordErrorMessage, passwordConfirmErrorMessage, passwordAttributes, passwordConfirmAttributes, patternPassword });
+    res.render('password-reset', { userInput: inputFields, activeLink, contactEmail, loggedIn, hash, changedPasswordError, confirmationPasswordError, passwordAttributes, patternChangedPassword });
 });
 
 exports.passwordResetRequest = wrapAsync(async function(req, res) {
@@ -920,76 +1014,62 @@ exports.passwordResetRequest = wrapAsync(async function(req, res) {
     // If transfer data exists from postPasswordResetRequest grab it from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, emailError } = req.session.transfer;
+        var { cleanedFields, currentEmailError } = req.session.transfer;
         delete req.session.transfer;
 
         // Set object to previous form input.
         var inputFields = cleanedFields;
 
     } else {
+
         // If transfer data doesn't exist set every property to an empty string.
         var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.passwordResetRequest);
+
     }
 
     // For rendering.
     let activeLink = 'password-reset-request';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
+    let emailAttributes = renderValue.emailField.attributes;
+    let patternCurrentEmail = regExpValue.email;
 
-    res.render('password-reset-request', { userInput: inputFields, activeLink, contactEmail, loggedIn, emailError, emailAttributes });
+    res.render('password-reset-request', { userInput: inputFields, activeLink, contactEmail, loggedIn, currentEmailError, emailAttributes, patternCurrentEmail });
+
 });
 
 exports.passwordResetRequestSent = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let email = req.query.email ? req.query.email : '';
-    let forward = req.query.forward ? req.query.forward : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    // Check to see if PasswordResetRequest exists.
-    let passwordResetRequest = await PasswordResetRequest.findOne({ email: email });
-    let requests = passwordResetRequest ? passwordResetRequest.numberOfRequests : 0;
-
-    // Check to see if client passed fake info.
-    if (
-        (forward != 'true' && forward != 'false') ||
-        email === '' ||
-        requests < 1 ||
-        requests > defaultValue.numberOfPasswordResetRequestsAllowed ||
-        passwordResetRequest === null
-    ) {
-        return res.status(404).redirect('/page-not-found');
-    }
+    let doesPasswordResetRequestExist = await PasswordResetRequest.exists({ email });
+    if (doesPasswordResetRequestExist === false) return res.status(404).redirect('/page-not-found');
 
     let emailSubject = emailMessage.passwordResetRequestEmailSubject();
     let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
-
-    let confirmationHash = await logicUserAccounts.getOrCreateConfirmationHash(email);
-    let wasConfirmationLimitReached = await logicUserAccounts.incrementExistingPasswordResetOrCreateNew(email, confirmationHash, forward);
-    if (wasConfirmationLimitReached) return res.redirect(`/password-reset-limit-reached?email=${ email }`);
-    await logicUserAccounts.sendEmailIfNecessary(email, confirmationHash, emailSubject, expirationTime, forward); 
 
     // For rendering.
     let activeLink = 'password-reset-request-sent';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
-    forward = 'false';
     
-    res.render('password-reset-request-sent', { activeLink, contactEmail, loggedIn, forward, email, emailSubject, expirationTime });
+    res.render('password-reset-request-sent', { activeLink, contactEmail, loggedIn, email, emailSubject, expirationTime });
+
 });
 
 exports.passwordResetLimitReached = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let email = req.query.email ? req.query.email : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    // Check to see if PasswordResetRequest exists.
-    let passwordResetRequest = await PasswordResetRequest.findOne({ email: email });
+    let passwordResetRequest = await PasswordResetRequest.findOne({ email });
+    if (!passwordResetRequest) return res.status(404).redirect('/page-not-found');
 
-    let wasLimitReached = false;
-    if (passwordResetRequest) {
-        if (passwordResetRequest.numberOfRequests >= defaultValue.numberOfPasswordResetRequestsAllowed) wasLimitReached = true;
-    }
-
-    // If the hash is wrong or not present redirect to the home page.
-    if (email === '' || wasLimitReached === false) return res.status(404).redirect('/page-not-found');
+    // If number is out of range redirect to page-not-found.  Counter stops incrementing at max + 1 and stays at that number.
+    if (passwordResetRequest.numberOfRequests != defaultValue.numberOfEmailConfirmationsAllowed + 1) return res.status(404).redirect('/page-not-found');
 
     // For rendering.
     let activeLink = 'password-reset-limit-reached';
@@ -999,17 +1079,17 @@ exports.passwordResetLimitReached = wrapAsync(async function(req, res) {
     let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
 
     res.render('password-reset-limit-reached', { activeLink, contactEmail, loggedIn, email, emailSubject, expirationTime });
+
 });
 
 exports.passwordResetSuccess = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let email = req.query.email ? req.query.email : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
 
-    // Check to see if RecentPasswordResetSuccess exists.
-    let doesRecentPasswordResetSuccessExist = await RecentPasswordResetSuccess.exists({ email: email });
-
-    // If credentials were fake forward to page-not-found.
-    if (!doesRecentPasswordResetSuccessExist) return res.status(404).redirect('/page-not-found');
+    let doesRecentPasswordResetSuccessExist = await RecentPasswordResetSuccess.exists({ email });
+    if (doesRecentPasswordResetSuccessExist === false) return res.status(404).redirect('/page-not-found');
 
     // For rendering.
     let activeLink = 'password-reset-success';
@@ -1017,106 +1097,209 @@ exports.passwordResetSuccess = wrapAsync(async function(req, res) {
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('password-reset-success', { activeLink, contactEmail, loggedIn });
+
 });
 
 exports.postChangeEmail = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.changeEmail, req.body);
-    let { newEmail, emailConfirmation, passwordCheck } = cleanedFields;
+    let { changedEmail, confirmationEmail, currentPassword } = cleanedFields;
+    let { email } = req.session.userValues;
+
+    let changeProperty = 'email';
+
+    let isChangedEmailFilled = changedEmail === '' ? false : true;
 
     // Check for a change.  If nothing changed redirect to MyAccount.
-    let didEmailChange = req.session.userValues.email === newEmail ? false : true;
+    let isEmailUnchanged = email === changedEmail ? true : false;
+    if (isChangedEmailFilled === true && isEmailUnchanged === true) {
 
-    if (didEmailChange === false) return res.redirect('/my-account');
+        req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+        return res.redirect('/my-account');
 
-    let areAllFieldsFilled = checks.checkAllFieldsFilled(formFields.changeEmail, cleanedFields);
-    let isEmailTooLong = checks.checkIfInputTooLong(newEmail, renderValue.emailField.maxLength);
-    let isEmailValid = emailValidator.validate(newEmail);
-    let doEmailsMatch = newEmail === emailConfirmation ? true : false;    
-    let isPasswordCorrect = await bcrypt.compare(passwordCheck, req.session.userValues.password);
-    let doesUnverifiedUserAlreadyExist = await UnverifiedUser.exists({ email: newEmail });
-    let userDBSearch = await User.exists({ email: newEmail });
-    let doesUserAlreadyExist = userDBSearch === true && didEmailChange === true ? true : false;
+    }
 
-    let regExpEmail = new RegExp(regexpValue.email, 'gi');
-    let isEmailValidCharacters = regExpEmail.test(newEmail);
+    let isChangedEmailInsideMaxLength = checks.checkIfInputInsideMaxLength(changedEmail, renderValue.emailField.maxLength);
+    let regExpChangedEmail = new RegExp(regExpValue.email, 'i');
+    let isChangedEmailValidCharacters = regExpChangedEmail.test(changedEmail);
+    let isChangedEmailValid = emailValidator.validate(changedEmail);
+    let isChangedEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: changedEmail }));
+    let isChangedEmailAvailableInUsers = !(await User.exists({ email: changedEmail }));
 
+    // If changedEmail has any errors clear out confirmationEmail & currentPassword which will trigger an error for confirmationEmail & currentPassword as well.
     if (
-        areAllFieldsFilled === true &&
-        isEmailTooLong === false &&
-        isEmailValid === true &&
+        isChangedEmailFilled === false ||
+        isChangedEmailInsideMaxLength === false ||
+        isChangedEmailValidCharacters === false ||
+        isChangedEmailValid === false ||
+        isChangedEmailAvailableInUnverifiedUsers === false ||
+        isChangedEmailAvailableInUsers === false
+        ) {
+
+        confirmationEmail = '';
+        cleanedFields.confirmationEmail = '';
+        currentPassword = '';
+        cleanedFields.currentPassword = '';
+
+    }
+
+    let isConfirmationEmailFilled = confirmationEmail === '' ? false : true;
+    let doEmailsMatch = changedEmail === confirmationEmail ? true : false; 
+
+    // If confirmationEmail has any errors clear out confirmationEmail & currentPassword.  This will trigger an error for currentPassword as well.
+    if (
+        isConfirmationEmailFilled === false ||
+        confirmationEmail === false
+        ) {
+
+        confirmationEmail = '';
+        cleanedFields.confirmationEmail = '';
+        currentPassword = '';
+        cleanedFields.currentPassword = '';
+
+    }
+
+    let isCurrentPasswordFilled = currentPassword === '' ? false : true;
+    let isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, req.session.userValues.password);
+
+    // If currentPassword has any errors clear it out.
+    if(isCurrentPasswordFilled === false || isCurrentPasswordCorrect === false) {
+
+        currentPassword = '';
+        cleanedFields.currentPassword = '';
+
+    }
+    
+    if (
+        isChangedEmailFilled === true &&
+        isChangedEmailInsideMaxLength === true &&
+        isChangedEmailValidCharacters === true &&
+        isChangedEmailValid === true &&
+        isChangedEmailAvailableInUnverifiedUsers === true &&
+        isChangedEmailAvailableInUsers === true &&
+        isConfirmationEmailFilled === true &&
         doEmailsMatch === true &&
-        isPasswordCorrect === true &&
-        doesUnverifiedUserAlreadyExist === false &&
-        doesUserAlreadyExist === false &&
-        isEmailValidCharacters === true
+        isCurrentPasswordFilled === true &&
+        isCurrentPasswordCorrect === true
     ) {
 
-        await User.updateOne({ email: req.session.userValues.email }, { email: newEmail });
+        await User.updateOne({ email }, { email: changedEmail });
 
         let changeProperty = 'email';
         let changeVerb = defaultMessage.companyPropertyChangeVerb.update;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.email = newEmail;
+        req.session.userValues.email = changedEmail;
+
+        // Notify the user of the change.
+        let emailSubject = emailMessage.emailChangedSubject();
+        let emailBody = emailMessage.emailChangedBody(email, changedEmail);
+        communication.sendEmail(email, emailSubject, emailBody);
 
         return res.redirect('/my-account');
+
     } else {
 
         // Create and redirect the errors to changeEmail where they will be rendered and deleted.
-        let whyEmailUsed = 'change';
-        let newEmailError = errorMessage.getNewEmailError(newEmail, whyEmailUsed, isEmailTooLong, isEmailValid, doesUserAlreadyExist, doesUnverifiedUserAlreadyExist, isEmailValidCharacters);
-        let emailConfirmationError = errorMessage.getEmailConfirmationError(emailConfirmation, doEmailsMatch);
-        let passwordError = errorMessage.getSaveEmailPasswordError(passwordCheck, isPasswordCorrect);
-
-        // If there is an email error blank out emailConfirm field.  After any error always blank out password field.
-        if (newEmailError) cleanedFields.emailConfirmation = '';
-        cleanedFields.password = '';
+        let changedEmailError = errorMessage.getChangedEmailError(isChangedEmailFilled, isChangedEmailInsideMaxLength, isChangedEmailValidCharacters, isChangedEmailValid, isChangedEmailAvailableInUnverifiedUsers, isChangedEmailAvailableInUsers);
+        let confirmationEmailError = errorMessage.getChangedEmailConfirmationError(isConfirmationEmailFilled, doEmailsMatch);
+        let currentPasswordError = errorMessage.getCurrentPasswordError(isCurrentPasswordFilled, isCurrentPasswordCorrect);
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.newEmailError = newEmailError;
-        req.session.transfer.emailConfirmationError = emailConfirmationError;
-        req.session.transfer.passwordError = passwordError;
+        req.session.transfer.changedEmailError = changedEmailError;
+        req.session.transfer.confirmationEmailError = confirmationEmailError;
+        req.session.transfer.currentPasswordError = currentPasswordError;
 
         return res.redirect('/change-email');
+
     }
+
 });
 
 exports.postChangePassword = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.changePassword, req.body);
-    let { passwordConfirm, passwordCurrent, password } = cleanedFields;
+    let { currentPassword, changedPassword, confirmationPassword } = cleanedFields;
     let { email } = req.session.userValues;
 
-    let isCurrentPasswordCorrect = await bcrypt.compare(passwordCurrent, req.session.userValues.password);
-    let isPasswordFilled = password === '' ? false : true;
-    let isPasswordConfirmFilled = passwordConfirm === '' ? false : true;
-    let isPasswordTooLong = checks.checkIfInputTooLong(password, renderValue.passwordField.maxLength);
-    let doesPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(password);
-    let doPasswordsMatch = password === passwordConfirm ? true : false;
+    let changeProperty = 'password';
 
-    let regExpPassword = new RegExp(regexpValue.password, 'gi');
-    let isPasswordValidCharacters = regExpPassword.test(password);
-    
+    let isCurrentPasswordFilled = currentPassword === '' ? false : true;
+    let isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, req.session.userValues.password);
+
+    // If nothing changed send user back to my-account.  Don't check unless isCurrentPasswordCorrect is true.
+    if (isCurrentPasswordCorrect === true) {
+
+        let isPasswordUnchanged = await bcrypt.compare(changedPassword, req.session.userValues.password);
+
+        if (isPasswordUnchanged === true) {
+
+            req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+            return res.redirect('/my-account');
+
+        }
+
+    }
+
+    // If currentPassword has any errors clear it out for rendering.
+    if (isCurrentPasswordFilled === false || isCurrentPasswordCorrect === false) {
+        currentPassword = '';
+        cleanedFields.currentPassword = '';
+    }
+
+    let isChangedPasswordFilled = changedPassword === '' ? false : true;
+    let isChangedPasswordInsideMaxLength = checks.checkIfInputInsideMaxLength(changedPassword, renderValue.passwordField.maxLength);
+    let regExpPassword = new RegExp(regExpValue.password, 'i');
+    let isChangedPasswordValidCharacters = regExpPassword.test(changedPassword);
+    let doesChangedPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(changedPassword);
+
+    // If changedPassword has any errors clear it out and confirmationPassword which will trigger an error for it as well.
     if (
+        isChangedPasswordFilled === false ||
+        isChangedPasswordInsideMaxLength === false ||
+        isChangedPasswordValidCharacters === false ||
+        doesChangedPasswordMeetRequirements === false
+        ) {
+        changedPassword = '';
+        cleanedFields.changedPassword = '';
+        confirmationPassword = '';
+        cleanedFields.confirmationPassword = '';
+    }
+
+    let isConfirmationPasswordFilled = confirmationPassword === '' ? false : true;
+    let doPasswordsMatch = changedPassword === confirmationPassword ? true : false;
+
+    // If confirmationPassword has any errors clear it out for rendering.
+    if (isConfirmationPasswordFilled === false || doPasswordsMatch === false) {
+        confirmationPassword = '';
+        cleanedFields.confirmationPassword = '';
+    }
+
+    if (
+        isCurrentPasswordFilled === true &&
         isCurrentPasswordCorrect === true &&
-        isPasswordFilled === true &&
-        isPasswordConfirmFilled === true &&
-        isPasswordTooLong === false &&
-        doesPasswordMeetRequirements === true &&
-        doPasswordsMatch === true &&
-        isPasswordValidCharacters === true
+        isChangedPasswordFilled === true &&
+        isChangedPasswordInsideMaxLength === true &&
+        isChangedPasswordValidCharacters === true &&
+        doesChangedPasswordMeetRequirements === true &&
+        isConfirmationPasswordFilled === true &&
+        doPasswordsMatch === true
     ) {
 
-        // If any of these are stored in the db delete them.
-        await LoginFailure.findOneAndRemove({ email: email });
-        await PasswordResetRequest.findOneAndRemove({ email: email });
+        // If any of these are stored in the DB delete them.
+        await LoginFailure.findOneAndRemove({ email });
+        await PasswordResetRequest.findOneAndRemove({ email });
 
-        let passwordHashed = await logicUserAccounts.hashPassword(password);
+        let passwordHashed = await logicUserAccounts.hashPassword(changedPassword);
 
-        await User.updateOne({ email: email }, { password: passwordHashed });
+        await User.updateOne({ email }, { password: passwordHashed });
+
+        // Notify the user of the change.
+        let emailSubject = emailMessage.passwordChangedSubject();
+        let emailBody = emailMessage.passwordChangedBody(email);
+        communication.sendEmail(email, emailSubject, emailBody);
 
         let changeProperty = 'password';
         let changeVerb = defaultMessage.companyPropertyChangeVerb.update;
@@ -1124,59 +1307,51 @@ exports.postChangePassword = wrapAsync(async function(req, res) {
         req.session.userValues.password = passwordHashed;
 
         return res.redirect('/my-account');
-    } else {
-        
-        // Create and redirect the errors to changePassword where they will be rendered and deleted.
-        let whyPasswordUsed = 'changePassword';
-        let passwordCurrentError = errorMessage.getPasswordError(whyPasswordUsed, passwordCurrent, isCurrentPasswordCorrect);
-        let passwordError = errorMessage.getPasswordNewError(whyPasswordUsed, password, isPasswordTooLong, doesPasswordMeetRequirements, isPasswordValidCharacters);
-        let passwordConfirmError = errorMessage.getPasswordConfirmError(whyPasswordUsed, passwordError, passwordConfirm, doPasswordsMatch);
-        
-        // If there is a current password error change it to an empty string for rendering at changePassword.
-        if (passwordCurrentError) {
-            cleanedFields.passwordCurrent = '';
-        }
 
-        // If there is a password error change the password and confirmation to an empty string for rendering at register.
-        if (passwordError) {
-            cleanedFields.password = '';
-            cleanedFields.passwordConfirm = '';
-        }
+    } else {
+
+        // Create and redirect the errors to changePassword where they will be rendered and deleted.
+        let currentPasswordError = errorMessage.getCurrentPasswordError(isCurrentPasswordFilled, isCurrentPasswordCorrect);
+        let changedPasswordError = errorMessage.getChangedPasswordError(isChangedPasswordFilled, isChangedPasswordInsideMaxLength, isChangedPasswordValidCharacters, doesChangedPasswordMeetRequirements);
+        let confirmationPasswordError = errorMessage.getChangedConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.passwordCurrentError = passwordCurrentError;
-        req.session.transfer.passwordError = passwordError;
-        req.session.transfer.passwordConfirmError = passwordConfirmError;
+        req.session.transfer.currentPasswordError = currentPasswordError;
+        req.session.transfer.changedPasswordError = changedPasswordError;
+        req.session.transfer.confirmationPasswordError = confirmationPasswordError;
 
-        return res.redirect('change-password');
+        return res.redirect('/change-password');
+        
     }
+
 });
 
 exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyAddress, req.body);
-    let { companyCity, companyState, companyStreet, companyStreetTwo, companyZip, overrideUsps, deleteProperty } = cleanedFields;
+    let { companyCity, companyState, companyStreet, companyStreetTwo, companyZip, useOriginalInput, deleteProperty } = cleanedFields;
+    let { email } = req.session.userValues;
 
     let changeProperty = 'address';
     let changeVerb;
 
     if (deleteProperty === 'true') {
 
-        await User.updateOne({ email: req.session.userValues.email }, { 
-            companyCity: '',
-            companyState: '',
+        await User.updateOne({ email }, { 
             companyStreet: '',
             companyStreetTwo: '',
+            companyCity: '',
+            companyState: '',
             companyZip: '',
             live: false
         });
 
-        req.session.userValues.companyCity = '';
-        req.session.userValues.companyState = '';
         req.session.userValues.companyStreet = '';
         req.session.userValues.companyStreetTwo = '';
+        req.session.userValues.companyCity = '';
+        req.session.userValues.companyState = '';
         req.session.userValues.companyZip = '';
         req.session.userValues.live = false;
 
@@ -1184,185 +1359,243 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
+
     }
 
-    // Check for a change.  If nothing changed redirect to my-account.
-    let didCompanyAddressChange =
+    let isCompanyStreetFilled = companyStreet === '' ? false : true;
+    let isCompanyStreetTwoFilled = companyStreetTwo === '' ? false : true;
+    let isCompanyCityFilled = companyCity === '' ? false : true;
+    let isCompanyStateFilled = companyState === '' ? false : true;
+    let isCompanyZipFilled = companyZip === '' ? false : true;
+
+    // Capitalize the input.  This needs to be done before values are compared.
+    let capitalizeEveryWordPattern = new RegExp(regExpValue.capitalizeEveryWord, 'g');
+
+    if (isCompanyStreetFilled === true) {
+
+        companyStreet = companyStreet.replace(capitalizeEveryWordPattern, function(match) { return match.toUpperCase() });
+        cleanedFields.companyStreet = companyStreet;
+
+    }
+
+    if (isCompanyStreetTwoFilled === true) {
+
+        companyStreetTwo = companyStreetTwo.replace(capitalizeEveryWordPattern, function(match) { return match.toUpperCase() });
+        cleanedFields.companyStreetTwo = companyStreetTwo;
+
+    }
+
+    if (isCompanyCityFilled === true) {
+
+        companyCity = companyCity.replace(capitalizeEveryWordPattern, function(match) { return match.toUpperCase() });
+        cleanedFields.companyCity = companyCity;
+
+    }
+
+    // Check for a change.  If the form is filled out and nothing changed redirect to my-account using next 2 blocks.
+    let isCompanyAddressUnchanged =
         req.session.userValues.companyCity === companyCity &&
         req.session.userValues.companyState === companyState &&
         req.session.userValues.companyStreet === companyStreet &&
         req.session.userValues.companyStreetTwo === companyStreetTwo &&
-        req.session.userValues.companyZip === companyZip &&
-        companyCity &&
-        companyState &&
-        companyStreet &&
-        companyZip
-        ? false : true;
-
-    if (didCompanyAddressChange === false) return res.redirect('/my-account');
-
-    let isCompanyCityFilled = companyCity === '' ? false : true;
-    let isCompanyCityTooShort = companyCity.length >= renderValue.companyCityField.minLength ? false : true;
-    let isCompanyCityTooLong = companyCity.length <= renderValue.companyCityField.maxLength ? false : true;
-
-    let regExpCompanyCity = new RegExp(regexpValue.companyCity, 'gi');
-    let isCompanyCityValidCharacters = regExpCompanyCity.test(companyCity);
-
-    let isCompanyStateFilled = companyState === '' ? false : true;
-    let isCompanyStateValid = checks.checkCompanyStateValid(companyState);
-
-    let isCompanyStreetFilled = companyStreet === '' ? false : true;
-    let isCompanyStreetTooShort = companyStreet.length >= renderValue.companyStreetField.minLength ? false : true;
-    let isCompanyStreetTooLong = companyStreet.length <= renderValue.companyStreetField.maxLength ? false : true;
-
-    let regExpCompanyStreet = new RegExp(regexpValue.companyStreet, 'gi');
-    let isCompanyStreetValidCharacters = regExpCompanyStreet.test(companyStreet);
-
-    let isCompanyStreetTwoFilled = companyStreetTwo === '' ? false : true;
-
-    let isCompanyStreetTwoTooShort;
-    if (isCompanyStreetTwoFilled) {
-        isCompanyStreetTwoTooShort = companyStreetTwo.length >= renderValue.companyStreetField.minLength ? false : true;
-    } else {
-        isCompanyStreetTwoTooShort = false;
-    }
-    
-    let isCompanyStreetTwoTooLong = companyStreetTwo.length <= renderValue.companyStreetField.maxLength ? false : true; 
-    
-    let regExpCompanyStreetTwo = new RegExp(regexpValue.companyStreetTwo, 'gi');
-    let isCompanyStreetTwoValidCharacters = regExpCompanyStreetTwo.test(companyStreetTwo);
-
-    let isCompanyZipFilled = companyZip === '' ? false : true;
-    let isCompanyZipFiveDigits = companyZip.length === 5 ? true : false;
-
-    let regExpCompanyZip = new RegExp(regexpValue.companyZip, 'gi');
-    let isCompanyZipValidCharacters = regExpCompanyZip.test(companyZip);
-
-    let uspsNormalizedCompanyAddress = await usps.verify({
-        street1: companyStreet,
-        street2: companyStreetTwo,
-        city: companyCity,
-        state: companyState,
-        zip: companyZip
-    });
-
-    let isCompanyAddressNormalized = checks.checkCompanyAddressNormalized(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, uspsNormalizedCompanyAddress);
-
-    // If USPS can't normalize the address it returns a .name property.  Without .name an error doesn't exist.
-    let uspsNormalizationError = uspsNormalizedCompanyAddress.name;
+        req.session.userValues.companyZip === companyZip 
+        ? true : false;
 
     if (
+        isCompanyAddressUnchanged === true &&
+        isCompanyStreetFilled === true &&
         isCompanyCityFilled === true &&
-        isCompanyCityTooShort === false &&
-        isCompanyCityTooLong === false &&
+        isCompanyStateFilled === true &&
+        isCompanyZipFilled === true
+        ) {
+
+            req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+            return res.redirect('/my-account');
+
+        }
+
+    let regExpCompanyStreet = new RegExp(regExpValue.companyStreet, 'i');
+    let isCompanyStreetValidCharacters = regExpCompanyStreet.test(companyStreet);
+    let isCompanyStreetInsideMinLength = companyStreet.length >= renderValue.companyStreetField.minLength ? true : false;
+    let isCompanyStreetInsideMaxLength = companyStreet.length <= renderValue.companyStreetField.maxLength ? true : false;
+
+    if (isCompanyStreetTwoFilled === true) {
+
+        let regExpCompanyStreetTwo = new RegExp(regExpValue.companyStreetTwo, 'i');
+        var isCompanyStreetTwoValidCharacters = regExpCompanyStreetTwo.test(companyStreetTwo);
+        var isCompanyStreetTwoInsideMinLength = companyStreetTwo.length >= renderValue.companyStreetTwoField.minLength ? true : false;
+        var isCompanyStreetTwoInsideMaxLength = companyStreetTwo.length <= renderValue.companyStreetTwoField.maxLength ? true : false;
+
+    }
+
+    let regExpCompanyCity = new RegExp(regExpValue.companyCity, 'i');
+    let isCompanyCityValidCharacters = regExpCompanyCity.test(companyCity);
+    let isCompanyCityInsideMinLength = companyCity.length >= renderValue.companyCityField.minLength ? true : false;
+    let isCompanyCityInsideMaxLength = companyCity.length <= renderValue.companyCityField.maxLength ? true : false;
+
+    let isCompanyStateValid = checks.checkCompanyStateValid(companyState);
+    
+    let isCompanyZipFiveDigits = companyZip.length === 5 ? true : false;
+
+    let regExpCompanyZip = new RegExp(regExpValue.companyZip, 'i');
+    let isCompanyZipValidCharacters = regExpCompanyZip.test(companyZip);
+
+    // Don't waste the bandwidth on usps.verify if there are other errors to deal with first.
+    let isCompanyAddressNormalized, uspsNormalized, isCompanyAddressValid;
+    if(
+        isCompanyStreetFilled === true &&
+        isCompanyStreetInsideMinLength === true &&
+        isCompanyStreetInsideMaxLength === true &&
+        isCompanyStreetValidCharacters === true &&
+        isCompanyStreetTwoInsideMinLength !== false &&
+        isCompanyStreetTwoInsideMaxLength !== false &&
+        isCompanyStreetTwoValidCharacters !== false &&
+        isCompanyCityFilled === true &&
+        isCompanyCityInsideMinLength === true &&
+        isCompanyCityInsideMaxLength === true &&
         isCompanyCityValidCharacters === true &&
         isCompanyStateFilled === true &&
         isCompanyStateValid === true &&
+        isCompanyZipFilled === true &&
+        isCompanyZipFiveDigits === true &&
+        isCompanyZipValidCharacters === true
+    ) {
+
+        uspsNormalized = await usps.verify({
+            street1: companyStreet,
+            street2: companyStreetTwo,
+            city: companyCity,
+            state: companyState,
+            zip: companyZip
+        });
+
+        isCompanyAddressNormalized = checks.checkCompanyAddressNormalized(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, uspsNormalized);
+
+        // If USPS can't normalize the address it returns a .name property that holds the value 'USPS Webtools Error'.
+        // If there is no error .name is not returned.
+        isCompanyAddressValid = uspsNormalized.name === undefined ? true : false;
+
+    }
+
+    if (
         isCompanyStreetFilled === true &&
-        isCompanyStreetTooShort === false &&
-        isCompanyStreetTooLong === false &&
+        isCompanyStreetInsideMinLength === true &&
+        isCompanyStreetInsideMaxLength === true &&
         isCompanyStreetValidCharacters === true &&
-        isCompanyStreetTwoTooShort === false &&
-        isCompanyStreetTwoTooLong === false &&
-        isCompanyStreetTwoValidCharacters === true &&
+        isCompanyStreetTwoInsideMinLength !== false &&
+        isCompanyStreetTwoInsideMaxLength !== false &&
+        isCompanyStreetTwoValidCharacters !== false &&
+        isCompanyCityFilled === true &&
+        isCompanyCityInsideMinLength === true &&
+        isCompanyCityInsideMaxLength === true &&
+        isCompanyCityValidCharacters === true &&
+        isCompanyStateFilled === true &&
+        isCompanyStateValid === true &&
         isCompanyZipFilled === true &&
         isCompanyZipFiveDigits === true &&
         isCompanyZipValidCharacters === true &&
-        uspsNormalizationError === undefined &&
-        (isCompanyAddressNormalized === true || overrideUsps === 'true')
+        isCompanyAddressValid === true &&
+        (isCompanyAddressNormalized === true || useOriginalInput === 'true')
     ) {
 
-        req.session.userValues.companyCity = companyCity;
-        req.session.userValues.companyState = companyState;
+        // True / False boolean.  If every account property has a value the account is live.
+        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyAddress');
+
+        await User.updateOne({ email }, { 
+            companyStreet: companyStreet,
+            companyStreetTwo: companyStreetTwo,
+            companyCity: companyCity,
+            companyState: companyState,
+            companyZip: companyZip,
+            live: areAllAccountPropertiesFilled
+        }); 
+
+        let wasCompanyAddressAdded =
+            req.session.userValues.companyStreet === '' &&
+            req.session.userValues.companyCity === '' &&
+            req.session.userValues.companyState === '' &&
+            req.session.userValues.companyZip === ''
+            ? true : false;
+
+        changeVerb = wasCompanyAddressAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
+        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+
         req.session.userValues.companyStreet = companyStreet;
         req.session.userValues.companyStreetTwo = companyStreetTwo;
+        req.session.userValues.companyCity = companyCity;
+        req.session.userValues.companyState = companyState;
         req.session.userValues.companyZip = companyZip;
-
-        let areAllUserValuesFilled = checks.checkAllUserValuesFilled(req.session.userValues);
-
-        if (areAllUserValuesFilled === true) {
-
-            await User.updateOne({ email: req.session.userValues.email }, { 
-                companyCity: companyCity,
-                companyState: companyState,
-                companyStreet: companyStreet,
-                companyStreetTwo: companyStreetTwo,
-                companyZip: companyZip,
-                live: true
-            });
-        } else {
-
-            await User.updateOne({ email: req.session.userValues.email }, { 
-                companyCity: companyCity,
-                companyState: companyState,
-                companyStreet: companyStreet,
-                companyStreetTwo: companyStreetTwo,
-                companyZip: companyZip,
-                live: false
-            });
-        }    
-
-        changeVerb = didCompanyAddressChange === true ? defaultMessage.companyPropertyChangeVerb.update : defaultMessage.companyPropertyChangeVerb.add;
-        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
 
     } else if (
+        isCompanyStreetFilled === true &&
+        isCompanyStreetInsideMinLength === true &&
+        isCompanyStreetInsideMaxLength === true &&
+        isCompanyStreetValidCharacters === true &&
+        isCompanyStreetTwoInsideMinLength !== false &&
+        isCompanyStreetTwoInsideMaxLength !== false &&
+        isCompanyStreetTwoValidCharacters !== false &&
         isCompanyCityFilled === true &&
-        isCompanyCityTooShort === false &&
-        isCompanyCityTooLong === false &&
+        isCompanyCityInsideMinLength === true &&
+        isCompanyCityInsideMaxLength === true &&
         isCompanyCityValidCharacters === true &&
         isCompanyStateFilled === true &&
         isCompanyStateValid === true &&
-        isCompanyStreetFilled === true &&
-        isCompanyStreetTooShort === false &&
-        isCompanyStreetTooLong === false &&
-        isCompanyStreetValidCharacters === true &&
-        isCompanyStreetTwoTooShort === false &&
-        isCompanyStreetTwoTooLong === false &&
-        isCompanyStreetTwoValidCharacters === true &&
         isCompanyZipFilled === true &&
         isCompanyZipFiveDigits === true &&
         isCompanyZipValidCharacters === true &&
-        uspsNormalizationError === undefined &&
+        isCompanyAddressValid === true &&
         isCompanyAddressNormalized === false
-
     ) {
 
-        req.session.normalize = {};
-        req.session.normalize.userInputStreet = companyStreet;
-        req.session.normalize.userInputStreetTwo = companyStreetTwo;
-        req.session.normalize.userInputCity = companyCity;
-        req.session.normalize.userInputState = companyState;
-        req.session.normalize.userInputZip = companyZip;
-        req.session.normalize.uspsStreet = uspsNormalizedCompanyAddress.street1;
-        req.session.normalize.uspsStreetTwo = uspsNormalizedCompanyAddress.street2;
-        req.session.normalize.uspsCity = uspsNormalizedCompanyAddress.city;
-        req.session.normalize.uspsState = uspsNormalizedCompanyAddress.state;
-        req.session.normalize.uspsZip = uspsNormalizedCompanyAddress.Zip5;
+        req.session.uspsNormalized = {};
+        req.session.uspsNormalized.companyStreet = uspsNormalized.street1;
+        req.session.uspsNormalized.companyStreetTwo = uspsNormalized.street2;
+        req.session.uspsNormalized.companyCity = uspsNormalized.city;
+        req.session.uspsNormalized.companyState = uspsNormalized.state;
+        req.session.uspsNormalized.companyZip = uspsNormalized.Zip5;
+
+        req.session.originalInput = {};
+        req.session.originalInput.companyStreet = cleanedFields.companyStreet;
+        req.session.originalInput.companyStreetTwo = cleanedFields.companyStreetTwo;
+        req.session.originalInput.companyCity = cleanedFields.companyCity;
+        req.session.originalInput.companyState = cleanedFields.companyState;
+        req.session.originalInput.companyZip = cleanedFields.companyZip;
 
         return res.redirect('/add-change-company-address');
+
     } else {
         
-        let isCompanyRegionFilled = (companyCity, companyState, companyZip) ? true : false;
-
         // Create and redirect the errors to changeCompanyAddress where they will be rendered and deleted from the session.
-        let companyCityError = errorMessage.getCompanyCityError(isCompanyCityFilled, isCompanyCityTooLong, isCompanyCityTooShort, isCompanyCityValidCharacters);
+        let companyStreetError = errorMessage.getCompanyStreetError(isCompanyStreetFilled, isCompanyStreetValidCharacters, isCompanyStreetInsideMinLength, isCompanyStreetInsideMaxLength, isCompanyAddressValid);
+        let companyStreetTwoError = errorMessage.getCompanyStreetTwoError(isCompanyStreetTwoValidCharacters, isCompanyStreetTwoInsideMinLength, isCompanyStreetTwoInsideMaxLength);
+        let companyCityError = errorMessage.getCompanyCityError(isCompanyCityFilled, isCompanyCityValidCharacters, isCompanyCityInsideMinLength, isCompanyCityInsideMaxLength);
         let companyStateError = errorMessage.getCompanyStateError(isCompanyStateFilled, isCompanyStateValid);
-        let companyStreetError = errorMessage.getCompanyStreetError(isCompanyStreetFilled, isCompanyStreetTooLong, isCompanyStreetTooShort, isCompanyStreetValidCharacters, isCompanyRegionFilled, uspsNormalizationError);
-        let companyStreetTwoError = errorMessage.getCompanyStreetTwoError(isCompanyStreetTwoFilled, isCompanyStreetTwoTooLong, isCompanyStreetTwoTooShort, isCompanyStreetTwoValidCharacters);
-        let companyZipError = errorMessage.getCompanyZipError(isCompanyZipFilled, isCompanyZipFiveDigits, isCompanyZipValidCharacters);
+        let companyZipError = errorMessage.getCompanyZipError(isCompanyZipFilled, isCompanyZipValidCharacters, isCompanyZipFiveDigits);
+
+        // If the USPS sends an error that the street does not exist clear out all other errors and only show that error.
+        if (isCompanyAddressValid === false) {
+
+            companyStreetTwoError = undefined;
+            companyCityError = undefined;
+            companyStateError = undefined;
+            companyZipError = undefined;
+
+        }
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.companyCityError = companyCityError;
-        req.session.transfer.companyStateError = companyStateError;
         req.session.transfer.companyStreetError = companyStreetError;
         req.session.transfer.companyStreetTwoError = companyStreetTwoError;
+        req.session.transfer.companyCityError = companyCityError;
+        req.session.transfer.companyStateError = companyStateError;
         req.session.transfer.companyZipError = companyZipError;
 
         return res.redirect('/add-change-company-address');
+
     }
+
 });
 
 exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
@@ -1377,58 +1610,97 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
 
     if (deleteProperty === 'true') {
 
-        await User.updateOne({ email: email }, { 
-            companyDescription: ''
-        });
+        await User.updateOne({ email }, { companyDescription: '', live: false });
+
+        req.session.userValues.companyDescription = '';
+        req.session.userValues.live = false;
 
         changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.companyDescription = '';
 
         return res.redirect('/my-account');
+        
     }
 
-    // If nothing changed redirect to my-account.
-    let didCompanyDescriptionChange = req.session.userValues.companyDescription !== companyDescription ? true : false;
-    let wasCompanyDescriptionAdded = req.session.userValues.companyDescription === '' && didCompanyDescriptionChange === true ? true : false;
+    // In this route the tests are done a little out of normal order.
     let isCompanyDescriptionFilled = companyDescription === '' ? false : true;
 
-    if (didCompanyDescriptionChange === false && isCompanyDescriptionFilled === true) return res.redirect('/my-account');
+    // If company description is profane it is immediately cleared out.
+    let isCompanyDescriptionFamilyFriendly = !filter.isProfane(companyDescription);
+    if (isCompanyDescriptionFamilyFriendly === false ) {
+        cleanedFields.companyDescription = '';
+        companyDescription = '';
+    } 
 
-    let isCompanyDescriptionProfane = filter.isProfane(companyDescription);
-    let isCompanyDescriptionTooLong = companyDescription.length <= renderValue.companyDescriptionField.maxLength ? false : true;
-    let isCompanyDescriptionTooShort = companyDescription.length >= renderValue.companyDescriptionField.minLength ? false : true;
-
-    let regExpCompanyDescription = new RegExp(regexpValue.companyDescription, 'gi');
+    let regExpCompanyDescription = new RegExp(regExpValue.companyDescription, 'i');
     let isCompanyDescriptionValidCharacters = regExpCompanyDescription.test(companyDescription);
 
+    // Don't bother processing it if it has an early error.
     if (
-        isCompanyDescriptionProfane === false &&
-        isCompanyDescriptionTooLong === false &&
-        isCompanyDescriptionTooShort === false &&
-        isCompanyDescriptionValidCharacters === true
+        isCompanyDescriptionFilled === true &&
+        isCompanyDescriptionValidCharacters === true &&
+        isCompanyDescriptionFamilyFriendly === true 
     ) {
-        let cleanedCompanyDescription = logicUserAccounts.cleanCompanyDescription(companyDescription);
-        let trimmedCompanyDescription = cleanedCompanyDescription.trim();
-        let capitalizedCompanyDescription = trimmedCompanyDescription.charAt(0).toUpperCase() + trimmedCompanyDescription.slice(1);
-        let periodAtEndCompanyDescription = capitalizedCompanyDescription.charAt(-1) === '.' ? capitalizedCompanyDescription : capitalizedCompanyDescription + '.';
+        var processedCompanyDescription = logicUserAccounts.processCompanyDescription(companyDescription);
+    }
 
-        await User.updateOne({ email : email }, { companyDescription: periodAtEndCompanyDescription });
+    if (processedCompanyDescription) {
+
+        cleanedFields.companyDescription = processedCompanyDescription;
+        companyDescription = processedCompanyDescription;
+
+    }
+
+    // If nothing changed redirect to my-account. 
+    let isCompanyDescriptionUnchanged = companyDescription === req.session.userValues.companyDescription ? true : false;
+    if (isCompanyDescriptionFilled === true && isCompanyDescriptionUnchanged === true) {
+
+        req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+        return res.redirect('/my-account');
+
+    }
+
+    let isCompanyDescriptionInsideMinLength = companyDescription.length >= renderValue.companyDescriptionField.minLength ? true : false;
+    let isCompanyDescriptionInsideMaxLength = companyDescription.length <= renderValue.companyDescriptionField.maxLength ? true : false;    
+
+    if (
+        isCompanyDescriptionFilled === true &&
+        isCompanyDescriptionFamilyFriendly === true &&
+        isCompanyDescriptionValidCharacters === true &&
+        isCompanyDescriptionInsideMinLength === true &&
+        isCompanyDescriptionInsideMaxLength === true
+    ) {
+
+        // True / False boolean.  If every account property has a value the account is live.
+        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyDescription');
+
+        await User.updateOne({ email }, { companyDescription, live: areAllAccountPropertiesFilled });
+
+        let wasCompanyDescriptionAdded = req.session.userValues.companyDescription === '' ? true : false;
         changeVerb = wasCompanyDescriptionAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.companyDescription = periodAtEndCompanyDescription;
+
+        req.session.userValues.companyDescription = companyDescription;
 
         return res.redirect('/my-account');
+
     } else {
 
         // Create and redirect the errors to changeCompanyDescription where they will be rendered and deleted.
-        let companyDescriptionError = errorMessage.getCompanyDescriptionError(isCompanyDescriptionFilled, isCompanyDescriptionTooLong, isCompanyDescriptionTooShort, isCompanyDescriptionProfane, isCompanyDescriptionValidCharacters);
+        let companyDescriptionError = errorMessage.getCompanyDescriptionError(
+            isCompanyDescriptionFilled,
+            isCompanyDescriptionFamilyFriendly,
+            isCompanyDescriptionValidCharacters,
+            isCompanyDescriptionInsideMinLength,
+            isCompanyDescriptionInsideMaxLength
+            );
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
         req.session.transfer.companyDescriptionError = companyDescriptionError;
 
         return res.redirect('/add-change-company-description');
+
     }    
 
 });
@@ -1440,15 +1712,13 @@ exports.postAddChangeCompanyName = wrapAsync(async function(req, res) {
     let { companyName, deleteProperty } = cleanedFields;
     let { email } = req.session.userValues;
 
+    // Process deletes first.
     let changeProperty = 'name';
     let changeVerb;
 
     if (deleteProperty === 'true') {
 
-        await User.updateOne({ email: email }, { 
-            companyName: '',
-            live: false
-        });
+        await User.updateOne({ email }, { companyName: '', live: false });
 
         req.session.userValues.companyName = '';
         req.session.userValues.live = false;
@@ -1457,61 +1727,88 @@ exports.postAddChangeCompanyName = wrapAsync(async function(req, res) {
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
+
     }
 
-    // If nothing changed redirect to my-account.
-    let didCompanyNameChange = companyName === req.session.userValues.companyName ? false : true;
-    let wasCompanyNameAdded = req.session.userValues.companyName === '' && didCompanyNameChange === true ? true : false; 
     let isCompanyNameFilled = companyName === '' ? false : true;
 
-    if (didCompanyNameChange === false && isCompanyNameFilled === true) return res.redirect('/my-account');
-    
-    let regexCharacterOrNumber = new RegExp(regexpValue.characterOrNumber, 'g');
-    let doesCompanyNameContainCharacterOrNumber = regexCharacterOrNumber.test(companyName);
+    // No need to process the input if it wasn't filled in.
+    if (isCompanyNameFilled === true) {
 
-    let isCompanyNameProfane = filter.isProfane(companyName);
-    let isCompanyNameTooLong = companyName.length <= renderValue.companyNameField.maxLength ? false : true;
-    let isCompanyNameTooShort = companyName.length >= renderValue.companyNameField.minLength ? false : true;
+        // capitalize the first letter in every word.
+        let capitalizeEveryWordPattern = new RegExp(regExpValue.capitalizeEveryWord, 'g');
+        companyName = companyName.replace(capitalizeEveryWordPattern, function(match){ return match.toUpperCase() });
+        cleanedFields.companyName = companyName;
 
-    let regExpCompanyName = new RegExp(regexpValue.companyName, 'gi');
+    }
+
+    // If nothing changed redirect to my-account. 
+    let isCompanyNameUnchanged = companyName === req.session.userValues.companyName ? true : false;
+    if (isCompanyNameFilled === true && isCompanyNameUnchanged === true) {
+
+        req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+        return res.redirect('/my-account');
+
+    }
+
+    // If company name is profane it is immediately cleared out.
+    let isCompanyNameFamilyFriendly = !filter.isProfane(companyName);
+    if (isCompanyNameFamilyFriendly === false ) {
+        cleanedFields.companyName = '';
+        companyName = '';
+    } 
+
+    let regExpCompanyName = new RegExp(regExpValue.companyName, 'i');
     let isCompanyNameValidCharacters = regExpCompanyName.test(companyName);
 
+    let regexCharacters = new RegExp(regExpValue.characters, 'i');
+    let doesCompanyNameContainAtLeastOneCharacter = regexCharacters.test(companyName);
+
+    let isCompanyNameInsideMinLength = companyName.length >= renderValue.companyNameField.minLength ? true : false;
+    let isCompanyNameInsideMaxLength = companyName.length <= renderValue.companyNameField.maxLength ? true : false;
+
     if (
-        doesCompanyNameContainCharacterOrNumber === true &&
         isCompanyNameFilled === true &&
-        isCompanyNameProfane === false &&
-        isCompanyNameTooLong === false &&
-        isCompanyNameTooShort === false &&
-        isCompanyNameValidCharacters === true
+        isCompanyNameFamilyFriendly === true &&
+        isCompanyNameValidCharacters === true &&
+        doesCompanyNameContainAtLeastOneCharacter === true &&
+        isCompanyNameInsideMaxLength === true &&
+        isCompanyNameInsideMinLength === true
     ) {
-        // capitalize the first letter in every word.
-        let capitalizedPattern = new RegExp(regexpValue.capitalizeEveryWord, 'g');
-        let capitalizedCompanyName = companyName.replace(capitalizedPattern, function(match){ return match.toUpperCase() });
         
-        let areAllUserValuesFilled = checks.checkAllUserValuesFilled(req.session.userValues);
+        // True / False boolean.  If every account property has a value the account is live.
+        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyName');
 
-        if (areAllUserValuesFilled === true) {
-            await User.updateOne({ email : email }, { companyName: capitalizedCompanyName, live: true });
-        } else {
-            await User.updateOne({ email : email }, { companyName: capitalizedCompanyName, live: false });
-        }
+        await User.updateOne({ email }, { companyName, live: areAllAccountPropertiesFilled }); 
 
+        let wasCompanyNameAdded = req.session.userValues.companyName === '' ? true : false;
         changeVerb = wasCompanyNameAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.companyName = capitalizedCompanyName;
 
+        req.session.userValues.companyName = companyName;
+        
         return res.redirect('/my-account');
+
     } else {
 
-        // Create and redirect the errors to changeCompanyName where they will be rendered and deleted.
-        let companyNameError = errorMessage.getCompanyNameError(isCompanyNameFilled, isCompanyNameTooLong, isCompanyNameTooShort, isCompanyNameProfane, isCompanyNameValidCharacters, doesCompanyNameContainCharacterOrNumber);
+        // Create and redirect the errors to changeCompanyName where they will be rendered and deleted from the session.
+        let companyNameError = errorMessage.getCompanyNameError(
+            isCompanyNameFilled,
+            isCompanyNameFamilyFriendly,
+            isCompanyNameValidCharacters,
+            doesCompanyNameContainAtLeastOneCharacter,
+            isCompanyNameInsideMinLength,
+            isCompanyNameInsideMaxLength
+            );
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
         req.session.transfer.companyNameError = companyNameError;
 
         return res.redirect('/add-change-company-name');
+
     }
+
 });
 
 exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
@@ -1519,242 +1816,230 @@ exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyPhone, req.body);
     let { companyPhone, deleteProperty } = cleanedFields;
+    let { email } = req.session.userValues;
 
-    let changeProperty = 'phone';
+    // Process deletes first.
+    let changeProperty = 'phone number';
     let changeVerb;
 
     if (deleteProperty === 'true') {
 
-        await User.updateOne({ email: req.session.userValues.email }, { 
+        await User.updateOne({ email }, { 
             companyPhone: '',
             live: false
         });
 
         req.session.userValues.companyPhone = '';
-        changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
-        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-
-        return res.redirect('/my-account');
-    }
-
-    // Dismantle and rebuild companyPhone.  formatPhone strips out all characters that aren't numbers and returns companyPhone in E.164 format.  
-    let companyPhoneFormatted = logicUserAccounts.formatCompanyPhone(companyPhone);
-
-    // Check for a change.  If nothing changed redirect to my-account.
-    let didCompanyPhoneChange = req.session.userValues.companyPhone === companyPhoneFormatted ? false : true;
-    let wasCompanyPhoneAdded = req.session.userValues.companyPhone === '' && didCompanyPhoneChange === true ? true : false; 
-    let isCompanyPhoneFilled = companyPhone === '' ? false : true;
-    
-    let regExpCompanyPhone = new RegExp(regexpValue.companyPhone, 'gi');
-    let isCompanyPhoneValidCharacters = regExpCompanyPhone.test(companyPhoneFormatted);
-
-    if (didCompanyPhoneChange === false && isCompanyPhoneFilled === true) return res.redirect('/my-account');
-
-    let isCompanyPhoneValid = checks.checkCompanyPhoneValid(companyPhoneFormatted);
-
-    if (
-        isCompanyPhoneFilled === true &&
-        isCompanyPhoneValid === true
-    ) {
-
-        let areAllUserValuesFilled = checks.checkAllUserValuesFilled(req.session.userValues);
-
-        if (areAllUserValuesFilled === true) {
-            await User.updateOne({ email: req.session.userValues.email }, { companyPhone: companyPhoneFormatted, live: true });
-        } else {
-            await User.updateOne({ email: req.session.userValues.email }, { companyPhone: companyPhoneFormatted, live: false });
-        }
-
-        changeVerb = wasCompanyPhoneAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
-        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.companyPhone = companyPhoneFormatted;
-
-        return res.redirect('/my-account');
-    } else {
-        
-        // Create and redirect the errors to changeCompanyPhone where they will be rendered and deleted.
-        let companyPhoneError = errorMessage.getCompanyPhoneError(isCompanyPhoneFilled, isCompanyPhoneValid, isCompanyPhoneValidCharacters);
-
-        req.session.transfer = {};
-        req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.companyPhoneError = companyPhoneError;
-
-        return res.redirect('/add-change-company-phone');
-    }
-});
-
-exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
-
-    // Sanitize and process input.
-    let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyServices, req.body);
-    let { 
-        serviceBoardingSecuring,
-        serviceDebrisRemovalTrashout,
-        serviceEvictionManagement,
-        serviceFieldInspection,
-        serviceHandymanGeneralMaintenance,
-        serviceLandscapeMaintenance,
-        serviceLockChanges,
-        serviceOverseePropertyRehabilitation,
-        servicePoolMaintenance,
-        servicePropertyCleaning,
-        serviceWinterizations,
-        deleteProperty,
-    } = cleanedFields;
-
-    serviceBoardingSecuring = logicUserAccounts.setCheckInputYesNo(serviceBoardingSecuring);
-    serviceDebrisRemovalTrashout = logicUserAccounts.setCheckInputYesNo(serviceDebrisRemovalTrashout);
-    serviceEvictionManagement = logicUserAccounts.setCheckInputYesNo(serviceEvictionManagement);
-    serviceFieldInspection = logicUserAccounts.setCheckInputYesNo(serviceFieldInspection);
-    serviceHandymanGeneralMaintenance = logicUserAccounts.setCheckInputYesNo(serviceHandymanGeneralMaintenance);
-    serviceLandscapeMaintenance = logicUserAccounts.setCheckInputYesNo(serviceLandscapeMaintenance);
-    serviceLockChanges = logicUserAccounts.setCheckInputYesNo(serviceLockChanges);
-    serviceOverseePropertyRehabilitation = logicUserAccounts.setCheckInputYesNo(serviceOverseePropertyRehabilitation);
-    servicePoolMaintenance = logicUserAccounts.setCheckInputYesNo(servicePoolMaintenance);
-    servicePropertyCleaning = logicUserAccounts.setCheckInputYesNo(servicePropertyCleaning);
-    serviceWinterizations = logicUserAccounts.setCheckInputYesNo(serviceWinterizations);
-
-    let changeProperty = 'services';
-    let changeVerb;
-
-    if (deleteProperty === 'yes') {
-
-        await User.updateOne({ email: req.session.userValues.email }, { 
-            serviceBoardingSecuring: 'no',
-            serviceDebrisRemovalTrashout: 'no',
-            serviceEvictionManagement: 'no',
-            serviceFieldInspection: 'no',
-            serviceHandymanGeneralMaintenance: 'no',
-            serviceLandscapeMaintenance: 'no',
-            serviceLockChanges: 'no',
-            serviceOverseePropertyRehabilitation: 'no',
-            servicePoolMaintenance: 'no',
-            servicePropertyCleaning: 'no',
-            serviceWinterizations: 'no',
-            live: false
-        });
-
-        req.session.userValues.serviceBoardingSecuring = 'no';
-        req.session.userValues.serviceDebrisRemovalTrashout = 'no';
-        req.session.userValues.serviceEvictionManagement = 'no';
-        req.session.userValues.serviceFieldInspection = 'no';
-        req.session.userValues.serviceHandymanGeneralMaintenance = 'no';
-        req.session.userValues.serviceLandscapeMaintenance = 'no';
-        req.session.userValues.serviceLockChanges = 'no';
-        req.session.userValues.serviceOverseePropertyRehabilitation = 'no';
-        req.session.userValues.servicePoolMaintenance = 'no';
-        req.session.userValues.servicePropertyCleaning = 'no';
-        req.session.userValues.serviceWinterizations = 'no';
         req.session.userValues.live = false;
 
         changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
+
+    }
+
+    // Dismantle and rebuild companyPhone.  formatPhone strips out all characters that aren't numbers and returns companyPhone in E.164 format.  
+    let companyPhoneFormatted = logicUserAccounts.formatCompanyPhone(companyPhone);
+
+    // If nothing changed redirect to my-account.
+    let isCompanyPhoneFilled = companyPhone === '' ? false : true;
+    let isCompanyPhoneUnchanged = companyPhoneFormatted === req.session.userValues.companyPhone ? true : false;
+    if (isCompanyPhoneFilled === true && isCompanyPhoneUnchanged === true) {
+
+        req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+        return res.redirect('/my-account');
+
+    }
+
+    // Although bad characters are processed out in formatCompanyPhone this check lets the user know they entered a bad character.
+    // This stops the user from entering 6%0%2%5%5%5%5%5%5%5%, the % get processed out and removed and it comes back as a valid phone number.
+    // The test is on companyPhone not companyPhoneFormatted like the other tests.
+    let regExpCompanyPhone = new RegExp(regExpValue.companyPhone, 'i');
+    let isCompanyPhoneValidCharacters = regExpCompanyPhone.test(companyPhone);
+
+    // If invalid characters are submitted clear out the phone number.
+    if (isCompanyPhoneValidCharacters === false) cleanedFields.companyPhone = '';
+
+    // Checks the format as well.  Most of the time this spots incomplete numbers.
+    let isCompanyPhoneValid = checks.checkCompanyPhoneValid(companyPhoneFormatted);
+
+    if (
+        isCompanyPhoneFilled === true &&
+        isCompanyPhoneValidCharacters === true &&
+        isCompanyPhoneValid === true
+    ) {
+
+        // True / False boolean.  If every account property has a value the account is live.
+        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyPhone');
+
+        await User.updateOne({ email }, { companyPhone: companyPhoneFormatted, live: areAllAccountPropertiesFilled });
+
+        let wasCompanyPhoneAdded = req.session.userValues.companyPhone === '' ? true : false; 
+        changeVerb = wasCompanyPhoneAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
+        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+
+        req.session.userValues.companyPhone = companyPhoneFormatted;
+
+        return res.redirect('/my-account');
+
+    } else {
+        
+        // Create and redirect the errors to changeCompanyPhone where they will be rendered and deleted.
+        let companyPhoneError = errorMessage.getCompanyPhoneError(isCompanyPhoneFilled, isCompanyPhoneValidCharacters, isCompanyPhoneValid);
+
+        req.session.transfer = {};
+        req.session.transfer.cleanedFields = cleanedFields;
+        req.session.transfer.companyPhoneError = companyPhoneError;
+
+        return res.redirect('/add-change-company-phone');
+
+    }
+
+});
+
+exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
+
+    // Sanitize and process input.
+    let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyServices, req.body);
+
+    let wereAllServiceValuesValid = checks.checkServiceValuesValid(cleanedFields);
+
+    // Grab this value before it is turned into a Boolean.
+    let { deleteProperty } = cleanedFields;
+
+    // Checks submitted values in cleanedFields and saves Boolean version in new object.
+    let cleanedFieldsBoolean = logicUserAccounts.convertStringToBoolean(formFields.addChangeCompanyServices, cleanedFields);
+
+    let { 
+        boardingSecuring,
+        debrisRemovalTrashout,
+        evictionManagement,
+        fieldInspection,
+        handymanGeneralMaintenance,
+        landscapeMaintenance,
+        lockChanges,
+        overseePropertyRehabilitation,
+        poolMaintenance,
+        propertyCleaning,
+        winterizations
+    } = cleanedFieldsBoolean;
+
+    let { email } = req.session.userValues;
+
+    let changeProperty = 'services';
+    let changeVerb;
+
+    if (deleteProperty === 'yes') {
+
+        await User.updateOne({ email }, { 
+            boardingSecuring: false,
+            debrisRemovalTrashout: false,
+            evictionManagement: false,
+            fieldInspection: false,
+            handymanGeneralMaintenance: false,
+            landscapeMaintenance: false,
+            lockChanges: false,
+            overseePropertyRehabilitation: false,
+            poolMaintenance: false,
+            propertyCleaning: false,
+            winterizations: false,
+            live: false
+        });
+
+        req.session.userValues.boardingSecuring = false;
+        req.session.userValues.debrisRemovalTrashout = false;
+        req.session.userValues.evictionManagement = false;
+        req.session.userValues.fieldInspection = false;
+        req.session.userValues.handymanGeneralMaintenance = false;
+        req.session.userValues.landscapeMaintenance = false;
+        req.session.userValues.lockChanges = false;
+        req.session.userValues.overseePropertyRehabilitation = false;
+        req.session.userValues.poolMaintenance = false;
+        req.session.userValues.propertyCleaning = false;
+        req.session.userValues.winterizations = false;
+        req.session.userValues.live = false;
+
+        changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
+        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+
+        return res.redirect('/my-account');
+
     }
 
     // Check for a change.  If nothing changed redirect to my-account.
-    let didCompanyServicesChange =
-        req.session.userValues.serviceBoardingSecuring === serviceBoardingSecuring &&
-        req.session.userValues.serviceDebrisRemovalTrashout === serviceDebrisRemovalTrashout &&
-        req.session.userValues.serviceEvictionManagement === serviceEvictionManagement &&
-        req.session.userValues.serviceFieldInspection === serviceFieldInspection &&        
-        req.session.userValues.serviceHandymanGeneralMaintenance === serviceHandymanGeneralMaintenance &&
-        req.session.userValues.serviceLandscapeMaintenance === serviceLandscapeMaintenance &&
-        req.session.userValues.serviceLockChanges === serviceLockChanges &&
-        req.session.userValues.serviceOverseePropertyRehabilitation === serviceOverseePropertyRehabilitation &&
-        req.session.userValues.servicePoolMaintenance === servicePoolMaintenance &&
-        req.session.userValues.servicePropertyCleaning === servicePropertyCleaning &&
-        req.session.userValues.serviceWinterizations === serviceWinterizations &&
-        (
-            serviceBoardingSecuring === 'yes' ||
-            serviceDebrisRemovalTrashout === 'yes' ||
-            serviceEvictionManagement === 'yes' ||
-            serviceFieldInspection === 'yes' ||
-            serviceHandymanGeneralMaintenance === 'yes' ||
-            serviceLandscapeMaintenance === 'yes' ||
-            serviceLockChanges === 'yes' ||
-            serviceOverseePropertyRehabilitation === 'yes' ||
-            servicePoolMaintenance === 'yes' ||
-            servicePropertyCleaning === 'yes' ||
-            serviceWinterizations === 'yes'
-        )
-        ? false : true;
+    let isAtLeastOneCompanyServiceFilled = 
+        boardingSecuring === true ||
+        debrisRemovalTrashout === true ||
+        evictionManagement === true ||
+        fieldInspection === true ||
+        handymanGeneralMaintenance === true ||
+        landscapeMaintenance === true ||
+        lockChanges === true ||
+        overseePropertyRehabilitation === true ||
+        poolMaintenance === true ||
+        propertyCleaning === true ||
+        winterizations === true
+        ? true : false;
 
-    if (didCompanyServicesChange === false) return res.redirect('/my-account');
+    let areCompanyServicesUnchanged =
+        req.session.userValues.boardingSecuring === boardingSecuring &&
+        req.session.userValues.debrisRemovalTrashout === debrisRemovalTrashout &&
+        req.session.userValues.evictionManagement === evictionManagement &&
+        req.session.userValues.fieldInspection === fieldInspection &&        
+        req.session.userValues.handymanGeneralMaintenance === handymanGeneralMaintenance &&
+        req.session.userValues.landscapeMaintenance === landscapeMaintenance &&
+        req.session.userValues.lockChanges === lockChanges &&
+        req.session.userValues.overseePropertyRehabilitation === overseePropertyRehabilitation &&
+        req.session.userValues.poolMaintenance === poolMaintenance &&
+        req.session.userValues.propertyCleaning === propertyCleaning &&
+        req.session.userValues.winterizations === winterizations 
+        ? true : false;
 
-    let isACompanyServiceFilled = checks.checkCompanyServicesHaveValue(
-        serviceBoardingSecuring,
-        serviceDebrisRemovalTrashout,
-        serviceEvictionManagement,
-        serviceFieldInspection,
-        serviceHandymanGeneralMaintenance,
-        serviceLandscapeMaintenance,
-        serviceLockChanges,
-        serviceOverseePropertyRehabilitation,
-        servicePoolMaintenance,
-        servicePropertyCleaning,
-        serviceWinterizations
-        );
+    if (isAtLeastOneCompanyServiceFilled === true && areCompanyServicesUnchanged === true) {
 
-    if (
-        isACompanyServiceFilled === true 
-    ) {
+        req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+        return res.redirect('/my-account');
 
-        let areAllUserValuesFilled = checks.checkAllUserValuesFilled(req.session.userValues);
+    }
 
-        if (areAllUserValuesFilled === true) {
+    if (isAtLeastOneCompanyServiceFilled === true && wereAllServiceValuesValid === true) {
 
-            await User.updateOne({ email: req.session.userValues.email },
-                {
-                    serviceBoardingSecuring: serviceBoardingSecuring,
-                    serviceDebrisRemovalTrashout: serviceDebrisRemovalTrashout,
-                    serviceDebrisRemovalTrashout: serviceDebrisRemovalTrashout,
-                    serviceEvictionManagement: serviceEvictionManagement,
-                    serviceFieldInspection: serviceFieldInspection,
-                    serviceHandymanGeneralMaintenance: serviceHandymanGeneralMaintenance,
-                    serviceLandscapeMaintenance: serviceLandscapeMaintenance,
-                    serviceLockChanges: serviceLockChanges,
-                    serviceOverseePropertyRehabilitation: serviceOverseePropertyRehabilitation,
-                    servicePoolMaintenance: servicePoolMaintenance,
-                    servicePropertyCleaning: servicePropertyCleaning,
-                    serviceWinterizations: serviceWinterizations,
-                    live: true
-                });
+        // True / False boolean.  If every account property has a value the account is live.
+        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyServices');
 
-        } else {
+        await User.updateOne({ email },
+            {
+                boardingSecuring,
+                debrisRemovalTrashout,
+                debrisRemovalTrashout,
+                evictionManagement,
+                fieldInspection,
+                handymanGeneralMaintenance,
+                landscapeMaintenance,
+                lockChanges,
+                overseePropertyRehabilitation,
+                poolMaintenance,
+                propertyCleaning,
+                winterizations,
+                live: areAllAccountPropertiesFilled
+            });
 
-            await User.updateOne({ email: req.session.userValues.email },
-                {
-                    serviceBoardingSecuring: serviceBoardingSecuring,
-                    serviceDebrisRemovalTrashout: serviceDebrisRemovalTrashout,
-                    serviceDebrisRemovalTrashout: serviceDebrisRemovalTrashout,
-                    serviceEvictionManagement: serviceEvictionManagement,
-                    serviceFieldInspection: serviceFieldInspection,
-                    serviceHandymanGeneralMaintenance: serviceHandymanGeneralMaintenance,
-                    serviceLandscapeMaintenance: serviceLandscapeMaintenance,
-                    serviceLockChanges: serviceLockChanges,
-                    serviceOverseePropertyRehabilitation: serviceOverseePropertyRehabilitation,
-                    servicePoolMaintenance: servicePoolMaintenance,
-                    servicePropertyCleaning: servicePropertyCleaning,
-                    serviceWinterizations: serviceWinterizations,
-                    live: false
-                });
-        }
+        req.session.userValues.boardingSecuring = boardingSecuring;
+        req.session.userValues.debrisRemovalTrashout = debrisRemovalTrashout;
+        req.session.userValues.evictionManagement = evictionManagement;
+        req.session.userValues.fieldInspection = fieldInspection;      
+        req.session.userValues.handymanGeneralMaintenance = handymanGeneralMaintenance;
+        req.session.userValues.landscapeMaintenance = landscapeMaintenance;
+        req.session.userValues.lockChanges = lockChanges;
+        req.session.userValues.overseePropertyRehabilitation = overseePropertyRehabilitation;
+        req.session.userValues.poolMaintenance = poolMaintenance;
+        req.session.userValues.propertyCleaning = propertyCleaning;
+        req.session.userValues.winterizations = winterizations; 
 
-        req.session.userValues.serviceBoardingSecuring = serviceBoardingSecuring;
-        req.session.userValues.serviceDebrisRemovalTrashout = serviceDebrisRemovalTrashout;
-        req.session.userValues.serviceEvictionManagement = serviceEvictionManagement;
-        req.session.userValues.serviceFieldInspection = serviceFieldInspection;      
-        req.session.userValues.serviceHandymanGeneralMaintenance = serviceHandymanGeneralMaintenance;
-        req.session.userValues.serviceLandscapeMaintenance = serviceLandscapeMaintenance;
-        req.session.userValues.serviceLockChanges = serviceLockChanges;
-        req.session.userValues.serviceOverseePropertyRehabilitation = serviceOverseePropertyRehabilitation;
-        req.session.userValues.servicePoolMaintenance = servicePoolMaintenance;
-        req.session.userValues.servicePropertyCleaning = servicePropertyCleaning;
-        req.session.userValues.serviceWinterizations = serviceWinterizations; 
+        let wereCompanyServicesAdded = checks.checkWereCompanyServicesAdded(formFields.addChangeCompanyServices, req.session.userValues);
 
-        changeVerb = didCompanyServicesChange === true ? defaultMessage.companyPropertyChangeVerb.update : defaultMessage.companyPropertyChangeVerb.add;
+        changeVerb = wereCompanyServicesAdded === true ? defaultMessage.companyPropertyChangeVerb.update : defaultMessage.companyPropertyChangeVerb.add;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
@@ -1762,14 +2047,16 @@ exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
     } else {
         
         // Create and redirect the errors to changeCompanyPhone where they will be rendered and deleted.
-        let companyServicesError = errorMessage.getCompanyServicesError(isACompanyServiceFilled);
+        let companyServicesError = errorMessage.getCompanyServicesError(isAtLeastOneCompanyServiceFilled, wereAllServiceValuesValid);
 
         req.session.transfer = {};
         req.session.transfer.companyServicesError = companyServicesError;
         req.session.transfer.cleanedFields = cleanedFields;
 
         return res.redirect('/add-change-company-services');
+
     }
+
 });
 
 exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
@@ -1777,101 +2064,138 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyWebsite, req.body);
     let { companyWebsite, deleteProperty } = cleanedFields;
-    let { email } = req.session.userValues;
+    let { email, urlNotActiveError } = req.session.userValues;
 
     let changeProperty = 'website'
     let changeVerb;
 
     if (deleteProperty === 'true') {
 
-        await User.updateOne({ email: email }, { 
-            companyWebsite: ''
-        });
+        await User.updateOne({ email }, { companyWebsite: '', urlNotActiveError: false, shouldBrowserFocusOnURLNotActiveError: false });
 
+        req.session.userValues.urlNotActiveError = false;
+        req.session.userValues.shouldBrowserFocusOnURLNotActiveError = false;
         req.session.userValues.companyWebsite = '';
+
         changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
+
     }
 
     // If nothing changed redirect to my-account.
-    let didCompanyWebsiteChange = companyWebsite === req.session.userValues.companyWebsite ? false : true;
-    let wasCompanyWebsiteAdded = req.session.userValues.companyWebsite === '' && didCompanyWebsiteChange === true ? true : false; 
     let isCompanyWebsiteFilled = companyWebsite === '' ? false : true;
+    let isCompanyWebsiteUnchanged = companyWebsite === req.session.userValues.companyWebsite ? true : false;
+    if (isCompanyWebsiteFilled === true &&
+        isCompanyWebsiteUnchanged === true &&
+        urlNotActiveError === false
+        ) {
 
-    if (didCompanyWebsiteChange === false && isCompanyWebsiteFilled === true) return res.redirect('/my-account');
+            req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
+            return res.redirect('/my-account');
 
-    let isCompanyWebsiteTooLong = companyWebsite.length <= renderValue.companyWebsiteField.maxLength ? false : true;
+    }
+
+    let regExpCompanyWebsite = new RegExp(regExpValue.companyWebsite, 'i');
+    let isCompanyWebsiteValidCharacters = regExpCompanyWebsite.test(companyWebsite);
+
     let isCompanyWebsiteValid = validator.isURL(companyWebsite);
 
-    let regExpCompanyWebsite = new RegExp(regexpValue.companyWebsite, 'gi');
-    let isCompanyWebsiteValidCharacters = regExpCompanyWebsite.test(companyWebsite);
+    let isCompanyWebsiteInsideMinLength = companyWebsite.length >= renderValue.companyWebsiteField.minLength ? true : false;
+    let isCompanyWebsiteInsideMaxLength = companyWebsite.length <= renderValue.companyWebsiteField.maxLength ? true : false;
 
     if (
         isCompanyWebsiteFilled === true &&
-        isCompanyWebsiteTooLong === false &&
-        isCompanyWebsiteValid === true
+        isCompanyWebsiteValidCharacters === true &&
+        isCompanyWebsiteValid === true &&
+        isCompanyWebsiteInsideMinLength === true &&
+        isCompanyWebsiteInsideMaxLength === true
     ) {
 
-        // This tests the URL and saves it.
-        let partiallyProcessedURL = logicUserAccounts.partiallyProcessURL(companyWebsite);
-        let processedURL = logicUserAccounts.processURL(companyWebsite);
+        let formattedURL = logicUserAccounts.formatURL(companyWebsite);
 
-        // This runs in the background so as to not slow down the client.
-        logicUserAccounts.testURLAndResave(processedURL, email, req);
+        // A new or changed website save clears out any errors in the DB.  Any new errors will have to be created in testFormattedURLAndSave.
+        await User.updateOne({ email }, { companyWebsite: formattedURL, urlNotActiveError: false, shouldBrowserFocusOnURLNotActiveError: false });
 
-        await User.updateOne({ email: email }, { companyWebsite: partiallyProcessedURL });
+        // This tests if the website is active.  If it doesn't work it stores an error in the DB and sends the client an email.
+        // It runs asynchronously in the background so that it doesn't slow down the client.
+        logicUserAccounts.testFormattedURLAndSave(formattedURL, email);
 
+        let wasCompanyWebsiteAdded = req.session.userValues.companyWebsite === '' ? true : false; 
         changeVerb = wasCompanyWebsiteAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.companyWebsite = partiallyProcessedURL;
+
+        req.session.userValues.urlNotActiveError = false;
+        req.session.userValues.shouldBrowserFocusOnURLNotActiveError = false;
+        req.session.userValues.companyWebsite = formattedURL;
 
         return res.redirect('/my-account');
+
     } else {
         
         // Create and redirect the errors to addChangeCompanyWebsite where they will be rendered and deleted.
-        let companyWebsiteError = errorMessage.getCompanyWebsiteError(isCompanyWebsiteFilled, isCompanyWebsiteTooLong, isCompanyWebsiteValid, isCompanyWebsiteValidCharacters);
+        let companyWebsiteError = errorMessage.getCompanyWebsiteError(
+            isCompanyWebsiteFilled,
+            isCompanyWebsiteValidCharacters,
+            isCompanyWebsiteValid,
+            isCompanyWebsiteInsideMaxLength,
+            isCompanyWebsiteInsideMinLength
+            );
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
         req.session.transfer.companyWebsiteError = companyWebsiteError;
 
         return res.redirect('/add-change-company-website');
+
     }
+
 });
 
 exports.postDeleteYourAccount = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.deleteYourAccount, req.body);
-    let { password } = cleanedFields;
+    let { currentPassword } = cleanedFields;
 
     let email = req.session.userValues.email || '';
     let dbPassword = req.session.userValues.password || '';
 
-    let isPasswordCorrect = await bcrypt.compare(password, dbPassword);
+    let isCurrentPasswordFilled = currentPassword === '' ? false : true;
+    let isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, dbPassword);
     
-    if (isPasswordCorrect) {
+    // If currentPassword has any errors clear it out.
+    if(isCurrentPasswordFilled === false || isCurrentPasswordCorrect === false) {
+        cleanedFields.currentPassword = '';
+    }
 
-        await User.findOneAndRemove({ email: email });
+    if (isCurrentPasswordCorrect) {
 
-        // Create a temporary key stored in the db to be used to access the account-deleted route.
+        // Delete every single Document in the db.
+        await LoginFailure.findOneAndRemove({ email });
+        await PasswordResetRequest.findOneAndRemove({ email });
+        await RecentDeletedAccount.findOneAndRemove({ email });
+        await RecentPasswordResetSuccess.findOneAndRemove({ email });
+        await StripeCancelKey.findOneAndRemove({ email });
+        await StripeCheckoutSession.findOneAndRemove({ email });
+        await StripeSuccessKey.findOneAndRemove({ email });
+        await UnverifiedUser.findOneAndRemove({ email });
+        await User.findOneAndRemove({ email });
+
+        // Create a temporary key stored in the DB to be used to access the account-deleted route.
         let recentDeletedAccount = mongooseInstance.createRecentDeletedAccount(email);
         await recentDeletedAccount.save();
 
-        // Check for and remove any login failures in the db.
-        await logicUserAccounts.removeLoginFailures(email);
+        return logoutSteps.logoutUser(req, res, `/account-deleted?email=${ email }`);
 
-        return res.redirect(`/account-deleted?email=${email}`);
     }
 
     // Create and redirect the error to deleteYourAccount where it will be rendered and deleted.
-    let whyPasswordUsed = 'delete account';
-    let deleteAccountError = errorMessage.getPasswordError(whyPasswordUsed, password, isPasswordCorrect);
+    let currentPasswordError = errorMessage.getCurrentPasswordError(isCurrentPasswordFilled, isCurrentPasswordCorrect);
 
     req.session.transfer = {};
-    req.session.transfer.deleteAccountError = deleteAccountError;
+    req.session.transfer.currentPasswordError = currentPasswordError;
 
     return res.redirect('/delete-your-account');
 });
@@ -1880,261 +2204,393 @@ exports.postLogin = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.login, req.body);
-    let { email, password } = cleanedFields;
+    let { currentEmail, currentPassword } = cleanedFields;
 
-    let isEmailValid = emailValidator.validate(email);
-    let userValues = await User.findOne({ email: email });
-    let doesLoginExist = userValues === null ? false : true;
-
-    let dbPassword = userValues ? userValues.password : '';
-    let isPasswordCorrect = await bcrypt.compare(password, dbPassword);
-
-    // Check to see if client should be locked out because of multiple failed password attempts.
-    let loginFailure = await LoginFailure.findOne({ email: email });
-    let lockedOut;
-
+    let loginFailure = await LoginFailure.findOne({ email: currentEmail });
     if (loginFailure) {
-        lockedOut = loginFailure.numberOfFailures >= defaultValue.numberOfLoginFailuresAllowed ? true : false;
-    } else {
-        lockedOut = false;
+
+        let { numberOfFailures } = loginFailure;
+        if (numberOfFailures > defaultValue.numberOfLoginFailuresAllowed) return res.redirect(`/login-failure-limit-reached?email=${ currentEmail }`); 
+
     }
     
-    // Increment login failure if needed.  This occurs even if email/account doesn't exist to stop hackers from blasting server.
-    if (password && email && isEmailValid && !isPasswordCorrect) {
+    let isCurrentEmailFilled = currentEmail === '' ? false : true;
+    let isCurrentEmailValid = emailValidator.validate(currentEmail);
 
-        if (!loginFailure) {
-            loginFailure = mongooseInstance.createLoginFailure(email);
-            await loginFailure.save();
-        } else {
-            loginFailure.numberOfFailures += 1;
-            await LoginFailure.updateOne({ email: email }, { numberOfFailures: loginFailure.numberOfFailures });
-        }
-        
-        if (loginFailure.numberOfFailures >= defaultValue.numberOfLoginFailuresAllowed) {
-            lockedOut = true;
-        }
+    // Without stringify userValues comes out as a model which in at least one instance created weird behavior.
+    let unprocessedUserValues = await User.findOne({ email: currentEmail });
+    let userValues = JSON.parse(JSON.stringify(unprocessedUserValues));
+
+    let doesUserExist = userValues === null ? false : true;
+
+    // If there are any email errors clear out the password.
+    if (isCurrentEmailFilled === false || isCurrentEmailValid === false) {
+
+        currentPassword = '';
+        cleanedFields.currentPassword = '';
+
     }
 
-    if (lockedOut) {
-        
-        return res.redirect(`/login-failure-limit-reached?email=${email}`);
+    let isPasswordFilled = currentPassword === '' ? false : true;
+    let dbPassword = doesUserExist === true ? userValues.password : '';
+    let isPasswordCorrect = await bcrypt.compare(currentPassword, dbPassword);
+
+    // Increment login failure if needed.  This occurs even if email/account doesn't exist to stop hackers from blasting server.
+    if (
+        isCurrentEmailFilled === true &&
+        isCurrentEmailValid  === true &&
+        isPasswordFilled === true &&
+        isPasswordCorrect === false
+        ) {
+
+        if (!loginFailure) {
+
+            loginFailure = mongooseInstance.createLoginFailure(currentEmail);
+            await loginFailure.save();
+
+        } else {
+
+            let { numberOfFailures } = loginFailure;
+            numberOfFailures += 1;
+
+            if (numberOfFailures > defaultValue.numberOfLoginFailuresAllowed) {
+
+                // If locked out set numberOfFailures to max + 1
+                await LoginFailure.updateOne({ email: currentEmail }, { numberOfFailures: defaultValue.numberOfLoginFailuresAllowed + 1 });
+                return res.redirect(`/login-failure-limit-reached?email=${ currentEmail }`);
+
+            } else {
+                await LoginFailure.updateOne({ email: currentEmail }, { numberOfFailures });
+            }
+
+        }
+
     }
 
     if (
-        doesLoginExist === true &&
-        isPasswordCorrect === true &&
-        lockedOut === false
+        doesUserExist === true &&
+        isPasswordCorrect === true 
         ) {    
 
         // Check for and remove any login failures in the db.
-        await logicUserAccounts.removeLoginFailures(email);
+        await LoginFailure.findOneAndRemove({ email: currentEmail });
 
         req.session.userValues = userValues;
+
         return res.redirect('/my-account');
+
     } else {
 
         // Create and redirect the errors to login where they will be rendered and deleted.
-        let emailError = errorMessage.getLoginEmailError(email, isEmailValid);
-        let whyPasswordUsed = 'login';
-        let passwordError = errorMessage.getPasswordError(whyPasswordUsed, password, isPasswordCorrect);
+        let currentEmailError = errorMessage.getCurrentEmailError(isCurrentEmailFilled, isCurrentEmailValid);
+        let currentPasswordError = errorMessage.getLoginPasswordError(isPasswordFilled, doesUserExist, isPasswordCorrect);
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.emailError = emailError;
-        req.session.transfer.passwordError = passwordError;
+        req.session.transfer.currentEmailError = currentEmailError;
+        req.session.transfer.currentPasswordError = currentPasswordError;
 
         return res.redirect('/login');
+
     }
+
 });
 
 exports.postPasswordReset = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.passwordReset, req.body);
-    let { password, passwordConfirm } = cleanedFields;
+    let { changedPassword, confirmationPassword } = cleanedFields;
+
+    // Reject if an empty hash is posted.
     let hash = req.query.hash ? req.query.hash : '';
+    if (hash === '') return res.status(404).redirect('/page-not-found');
 
-    let areAllFieldsFilled = checks.checkAllFieldsFilled(formFields.passwordReset, cleanedFields);
-    let isPasswordTooLong = checks.checkIfInputTooLong(password, renderValue.passwordField.maxLength);
-    let doesPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(password);
-    let doPasswordsMatch = password === passwordConfirm ? true : false;
+    // Reject if a fake hash is posted.
+    let passwordResetRequest = await PasswordResetRequest.findOne({ confirmationHash: hash });
+    if (!passwordResetRequest) return res.status(404).redirect('/page-not-found');
 
-    let regExpPassword = new RegExp(regexpValue.password, 'gi');
-    let isPasswordValidCharacters = regExpPassword.test(password);
+    let isChangedPasswordFilled = changedPassword === '' ? false : true;
+    let isChangedPasswordInsideMaxLength = checks.checkIfInputInsideMaxLength(changedPassword, renderValue.passwordField.maxLength);
+    let regExpPassword = new RegExp(regExpValue.password, 'i');
+    let isChangedPasswordValidCharacters = regExpPassword.test(changedPassword);
+    let doesChangedPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(changedPassword);
+
+    let isConfirmationPasswordFilled = confirmationPassword === '' ? false : true;
+    let doPasswordsMatch = changedPassword === confirmationPassword ? true : false;
 
     if (
-        areAllFieldsFilled === true &&
-        doPasswordsMatch === true &&
-        doesPasswordMeetRequirements === true &&
-        isPasswordTooLong === false &&
-        isPasswordValidCharacters === true
+        isChangedPasswordFilled === true &&
+        isChangedPasswordInsideMaxLength === true &&
+        isChangedPasswordValidCharacters === true &&
+        doesChangedPasswordMeetRequirements === true &&
+        isConfirmationPasswordFilled === true &&
+        doPasswordsMatch === true
         ) {
 
-            let passwordResetRequest = await PasswordResetRequest.findOne({ confirmationHash: hash });
             let { email } = passwordResetRequest;
-            let passwordHashed = await logicUserAccounts.hashPassword(password);
-            await User.updateOne({ email: email }, { password: passwordHashed });
+            let passwordHashed = await logicUserAccounts.hashPassword(changedPassword);
+            await User.updateOne({ email }, { password: passwordHashed });
             await PasswordResetRequest.findOneAndRemove({ confirmationHash: hash });
+
+            // Check for and remove any LoginFailure or old RecentPasswordResetSuccess in the db.
+            await LoginFailure.findOneAndRemove({ email });
+            await RecentPasswordResetSuccess.findOneAndRemove({ email });
 
             let recentPasswordResetSuccess = mongooseInstance.createRecentPasswordResetSuccess(email);
             await recentPasswordResetSuccess.save();
 
-            // Check for and remove any login failures in the db.
-            await logicUserAccounts.removeLoginFailures(email);
-
             return res.redirect(`/password-reset-success?email=${ email }`);
+
         } else {
 
             // Create and send the error to passwordReset where it will be used and deleted.
-            let whyPasswordUsed = 'passwordChange';
-            let passwordError = errorMessage.getPasswordNewError(whyPasswordUsed, password, isPasswordTooLong, doesPasswordMeetRequirements, isPasswordValidCharacters);
-            let passwordConfirmError = errorMessage.getPasswordConfirmError(whyPasswordUsed, passwordError, passwordConfirm, doPasswordsMatch);
+            let changedPasswordError = errorMessage.getChangedPasswordError(isChangedPasswordFilled, isChangedPasswordInsideMaxLength, isChangedPasswordValidCharacters, doesChangedPasswordMeetRequirements);
+            let confirmationPasswordError = errorMessage.getChangedConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
 
             req.session.transfer = {};
             req.session.transfer.cleanedFields = cleanedFields;
-            req.session.transfer.passwordError = passwordError;
-            req.session.transfer.passwordConfirmError = passwordConfirmError;
+            req.session.transfer.changedPasswordError = changedPasswordError;
+            req.session.transfer.confirmationPasswordError = confirmationPasswordError;
 
             return res.redirect(`/password-reset?hash=${ hash }`);
+
         }
+
 });
 
 exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.passwordResetRequest, req.body);
-    let { email } = cleanedFields;
+    let { currentEmail } = cleanedFields;
 
-    let isEmailValid = emailValidator.validate(email);
-    let isEmailTooLong = checks.checkIfInputTooLong(email, renderValue.emailField.maxLength);
+    let isCurrentEmailFilled = currentEmail === '' ? false : true;
+    let isCurrentEmailValid = emailValidator.validate(currentEmail);
 
-    if (
-        email === '' ||
-        isEmailValid === false ||
-        isEmailTooLong === true
-        ) {
+    // These checks don't test to see if the email corresponds to an actual user.
+    // If the email passes the checks and no user exists send the client to passwordResetRequestSent anyway.
+    // This way hackers won't know if an email exists in the db.  
+    if (isCurrentEmailFilled === false || isCurrentEmailValid === false) {
 
         // Create and send the error to passwordResetRequest where it will be used and deleted.
-        let emailError = errorMessage.getEmailError(email, isEmailValid, isEmailTooLong);
+        let currentEmailError = errorMessage.getCurrentEmailError(isCurrentEmailFilled, isCurrentEmailValid);
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.emailError = emailError;
+        req.session.transfer.currentEmailError = currentEmailError;
 
         return res.redirect('/password-reset-request');
+
     } 
 
     // If client attempts to reset password of an unverified account make him verify first.
-    let unverifiedUser = await UnverifiedUser.findOne({ email: email });
+    let unverifiedUser = await UnverifiedUser.findOne({ email: currentEmail });
     
     if (unverifiedUser) {
 
-        return res.redirect(`/confirmation-resent?email=${ email }&resetattempt=true`);
+        let numberOfConfirmations = unverifiedUser.numberOfConfirmations;
+
+        if (numberOfConfirmations >= defaultValue.numberOfEmailConfirmationsAllowed) {
+
+            await UnverifiedUser.updateOne({ currentEmail }, { numberOfConfirmations: defaultValue.numberOfEmailConfirmationsAllowed + 1 });
+            return res.redirect(`/confirmation-limit-reached?email=${ currentEmail }&resetattempt=true`);
+
+        } else {
+            return res.redirect(`/confirmation-sent?email=${ currentEmail }&resetattempt=true`);
+        }  
     }
 
-    let confirmationHash = await logicUserAccounts.getOrCreateConfirmationHash(email);
-    let wasConfirmationLimitReached = await logicUserAccounts.incrementExistingPasswordResetOrCreateNew(email, confirmationHash);
-    if (wasConfirmationLimitReached) return res.redirect(`/password-reset-limit-reached?email=${ email }`);
+    // If a recent success occurred remove it before a new request is started.
+    await RecentPasswordResetSuccess.findOneAndRemove({ email: currentEmail });
 
-    let emailSubject = emailMessage.passwordResetRequestEmailSubject();
-    let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
-    await logicUserAccounts.sendEmailIfNecessary(email, confirmationHash, emailSubject, expirationTime); 
+    let passwordResetRequest = await PasswordResetRequest.findOne({ email: currentEmail });
 
-    // If the email passes the checks and no unverified user exists send the client to passwordResetRequestSent.
-    // Notify client that the request for that email was received whether or not the user exists.  This way hackers won't know if an email exists in the db.  
-    return res.redirect(`/password-reset-request-sent?email=${ email }&forward=true`);
+    let confirmationHash, numberOfRequests;
+
+    if (passwordResetRequest) {
+
+        confirmationHash = passwordResetRequest.confirmationHash;
+        numberOfRequests = passwordResetRequest.numberOfRequests += 1;
+
+        if (numberOfRequests > defaultValue.numberOfPasswordResetRequestsAllowed) {
+
+            numberOfRequests = defaultValue.numberOfPasswordResetRequestsAllowed + 1;
+            await PasswordResetRequest.updateOne({ email: currentEmail }, { numberOfRequests });
+            return res.redirect(`/password-reset-limit-reached?email=${ currentEmail }`);
+
+        } else {
+
+            await PasswordResetRequest.updateOne({ email: currentEmail }, { numberOfRequests });
+
+        }
+
+    } else {
+
+        confirmationHash = logicUserAccounts.createConfirmationHash(currentEmail);
+        passwordResetRequest = await mongooseInstance.createPasswordResetRequest(currentEmail, confirmationHash);
+        numberOfRequests = passwordResetRequest.numberOfRequests;
+        await passwordResetRequest.save();
+
+    }
+
+    let doesUserExist = await User.exists({ email: currentEmail });
+
+    if (doesUserExist === true) {
+
+        let emailSubject = emailMessage.passwordResetRequestEmailSubject();
+        let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
+        let emailBody = emailMessage.passwordResetRequestEmailBody(confirmationHash, expirationTime);
+        communication.sendEmail(currentEmail, emailSubject, emailBody);
+
+    }
+
+    return res.redirect(`/password-reset-request-sent?email=${ currentEmail }`);
+
 });
 
 exports.postRegister = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.register, req.body);
-    let { email, password, passwordConfirm } = cleanedFields;
-    let termsOfUse = logicUserAccounts.setCheckInputYesNo(cleanedFields.termsOfUse);
-    
-    let areAllFieldsFilled = checks.checkAllFieldsFilled(formFields.register, cleanedFields);
-    let isEmailValid = emailValidator.validate(email);
-    let isEmailTooLong = checks.checkIfInputTooLong(email, renderValue.emailField.maxLength);
+    let { newEmail, newPassword, confirmationPassword } = cleanedFields;
+    let termsOfUse = logicUserAccounts.convertCheckboxToBoolean(cleanedFields.termsOfUse);
 
-    let doesUnverifiedUserAlreadyExist = await UnverifiedUser.exists({ email: email });
-    let doesUserAlreadyExist = await User.exists({ email: email });
+    let isNewEmailFilled = newEmail ? true : false;
+    let isNewEmailInsideMaxLength = checks.checkIfInputInsideMaxLength(newEmail, renderValue.emailField.maxLength);
+    let regExpEmail = new RegExp(regExpValue.email, 'i');
+    let isNewEmailValidCharacters = regExpEmail.test(newEmail);
+    let isNewEmailValid = emailValidator.validate(newEmail);
+    let isNewEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: newEmail }));
+    let isNewEmailAvailableInUsers = !(await User.exists({ email: newEmail }));
 
-    let doesPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(password);
-    let doPasswordsMatch = password === passwordConfirm ? true : false;
-    let isPasswordTooLong = checks.checkIfInputTooLong(password, renderValue.passwordField.maxLength);
+    let isNewPasswordFilled = newPassword === '' ? false : true;
+    let isNewPasswordInsideMaxLength = checks.checkIfInputInsideMaxLength(newPassword, renderValue.passwordField.maxLength);
+    let regExpPassword = new RegExp(regExpValue.password, 'i');
+    let isNewPasswordValidCharacters = regExpPassword.test(newPassword);
+    let doesNewPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(newPassword);
 
-    let regExpPassword = new RegExp(regexpValue.password, 'gi');
-    let isPasswordValidCharacters = regExpPassword.test(password);
+    // If there is any newPassword error clear out newPassword and confirmationPassword.
+    if (
+        isNewPasswordFilled === false ||
+        isNewPasswordInsideMaxLength === false ||
+        isNewPasswordValidCharacters === false ||
+        doesNewPasswordMeetRequirements === false
+    ) {
+        newPassword = '';
+        cleanedFields.newPassword = '';
+        confirmationPassword = '';
+        cleanedFields.confirmationPassword = '';
+    }
 
-    let isTermsOfUseChecked = termsOfUse === 'yes' ? true : false;
+    let isConfirmationPasswordFilled = confirmationPassword === '' ? false : true;
+    let doPasswordsMatch = newPassword === confirmationPassword ? true : false;
+
+    // If there is any confirmationPassword error clear it out.
+    if (
+        isConfirmationPasswordFilled === false ||
+        doPasswordsMatch === false
+    ) {
+        confirmationPassword = '';
+        cleanedFields.confirmationPassword = '';
+    }
+
+    let isTermsOfUseChecked = termsOfUse === true ? true : false;
+
+    // If there are any errors uncheck termsOfUse.  However it only needs an error message if the user forgot to check it.
+    if (
+        isNewEmailFilled === false ||
+        isNewEmailInsideMaxLength === false ||
+        isNewEmailValidCharacters === false ||
+        isNewEmailValid === false ||
+        isNewEmailAvailableInUsers === false ||
+        isNewPasswordFilled === false ||
+        isNewPasswordInsideMaxLength === false ||
+        isNewPasswordValidCharacters === false ||
+        doesNewPasswordMeetRequirements ||
+        isConfirmationPasswordFilled === false ||
+        doPasswordsMatch === false ||
+        isTermsOfUseChecked === false
+
+    ) {
+        termsOfUse = false;
+        cleanedFields.termsOfUse = undefined;
+    }
 
     if (
-        areAllFieldsFilled === true &&
-        isEmailValid === true &&
-        isEmailTooLong === false &&
-        doesUserAlreadyExist === false &&
-        doesPasswordMeetRequirements === true &&
+        isNewEmailFilled === true &&
+        isNewEmailInsideMaxLength === true &&
+        isNewEmailValidCharacters === true &&
+        isNewEmailValid === true &&
+        isNewEmailAvailableInUsers === true &&
+        isNewPasswordFilled === true &&
+        isNewPasswordInsideMaxLength  === true &&
+        isNewPasswordValidCharacters === true &&
+        doesNewPasswordMeetRequirements === true &&
+        isConfirmationPasswordFilled === true &&
         doPasswordsMatch === true &&
-        isPasswordTooLong === false &&
-        isTermsOfUseChecked === true &&
-        isPasswordValidCharacters
+        isTermsOfUseChecked === true
     ) {
 
-        // If an unverified user already exists save over it with new values but update the confirmation counter so that a hacker can't blast the server with same email an unlimited number of times.
-        if (doesUnverifiedUserAlreadyExist === true) {
+        // The numberOfConfirmations counter is incremented in the registration-sent route.  This is used as a query to avoid doubling the increment if the client comes from this route.
+        let newRegister = '';
+        let unverifiedMultipleRegisters = '';
 
-            var unverifiedUser = await UnverifiedUser.findOne({ email: email });
+        // If an unverified user already exists save over it with new values but update the confirmation counter so that a hacker can't blast the server with same email an unlimited number of times.
+        if (isNewEmailAvailableInUnverifiedUsers === false) {
+
+            var unverifiedUser = await UnverifiedUser.findOne({ email: newEmail });
 
             let { numberOfConfirmations } = unverifiedUser;
 
             if (numberOfConfirmations >= defaultValue.numberOfEmailConfirmationsAllowed) {
+
                 req.session.tooManyConfirmations = true;
-                return res.redirect('/confirmation-limit-reached');
+                return res.redirect(`/confirmation-limit-reached?email=${ newEmail }`);
+
             }
 
-            let hashedPassword = await logicUserAccounts.hashPassword(password);
-            await UnverifiedUser.updateOne({ email: email}, {password: hashedPassword, numberOfConfirmations: numberOfConfirmations += 1 });
+            let hashedPassword = await logicUserAccounts.hashPassword(newPassword);
+            await UnverifiedUser.updateOne({ email: newEmail }, { password: hashedPassword });
+            unverifiedMultipleRegisters = '&unverifiedmultipleregisters=true';
+
         } else {
 
-            // If one of these is stored in the db delete it.  It is no longer needed.
-            await FalseEmailConfirmationRequest.findOneAndRemove({ email: email });
-            await RecentDeletedAccount.findOneAndRemove({ email: email });
+            // If for some reason there is anything in the DB delete it.  It is no longer needed.
+            await LoginFailure.findOneAndRemove({ email: newEmail });
+            await PasswordResetRequest.findOneAndRemove({ email: newEmail });
+            await RecentDeletedAccount.findOneAndRemove({ email: newEmail });
+            await RecentPasswordResetSuccess.findOneAndRemove({ email: newEmail });
+            await StripeCancelKey.findOneAndRemove({ email: newEmail });
+            await StripeCheckoutSession.findOneAndRemove({ email: newEmail });
+            await StripeSuccessKey.findOneAndRemove({ email: newEmail });
+            await UnverifiedUser.findOneAndRemove({ email: newEmail });
+            await User.findOneAndRemove({ email: newEmail });
 
-            var unverifiedUser = mongooseInstance.createUnverifiedUser(email);
+            let unverifiedUser = mongooseInstance.createUnverifiedUser(newEmail);
             let salt = cryptoRandomString({ length: 10 });
-            unverifiedUser.confirmationHash = objectHash(email + salt);
-            unverifiedUser.password = await logicUserAccounts.hashPassword(password);
+            unverifiedUser.confirmationHash = objectHash(newEmail + salt);
+            unverifiedUser.password = await logicUserAccounts.hashPassword(newPassword);
             await unverifiedUser.save();
+            newRegister = '&newregister=true';
+
         }
 
-        let emailSubject = emailMessage.emailVerificationEmailSubject();
-        let htmlMessage = emailMessage.emailVerificationEmailBody(unverifiedUser.confirmationHash);
-        communication.sendEmail(email, emailSubject, htmlMessage);
-
-        return res.redirect(`/registration-sent?email=${email}`);
+        return res.redirect(`/confirmation-sent?email=${ newEmail }${ newRegister }${ unverifiedMultipleRegisters }`);
 
     } else {
 
         // Create and send the errors to register where they will be used and deleted.
-        let whyEmailUsed = 'register';
-        let emailError = errorMessage.getNewEmailError(email, whyEmailUsed, isEmailTooLong, isEmailValid, doesUserAlreadyExist);
-        let whyPasswordUsed = 'register';
-        let passwordError = errorMessage.getPasswordNewError(whyPasswordUsed, password, isPasswordTooLong, doesPasswordMeetRequirements, isPasswordValidCharacters);
-        let passwordConfirmError = errorMessage.getPasswordConfirmError(whyPasswordUsed, passwordError, passwordConfirm, doPasswordsMatch);
-        let termsOfUseError = isTermsOfUseChecked === true ? undefined : 'Please agree to the terms of use and read the privacy policy.';
-
-        // If there is a password error change the password and confirmation to an empty string for rendering at register.
-        if (passwordError) {
-            cleanedFields.password = '';
-            cleanedFields.passwordConfirm = '';
-            cleanedFields.termsOfUse = termsOfUse;
-        }
+        let newEmailError = errorMessage.getNewEmailError(isNewEmailFilled, isNewEmailInsideMaxLength, isNewEmailValidCharacters, isNewEmailValid, isNewEmailAvailableInUnverifiedUsers, isNewEmailAvailableInUsers);
+        let newPasswordError = errorMessage.getNewPasswordError(isNewPasswordFilled, isNewPasswordInsideMaxLength, isNewPasswordValidCharacters, doesNewPasswordMeetRequirements);
+        let confirmationPasswordError = errorMessage.getNewConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
+        let termsOfUseError = isTermsOfUseChecked === true ? undefined : errorMessage.getTermsOfUseError;
 
         req.session.transfer = {};
         req.session.transfer.cleanedFields = cleanedFields;
-        req.session.transfer.emailError = emailError;
-        req.session.transfer.passwordError = passwordError;
-        req.session.transfer.passwordConfirmError = passwordConfirmError;
+        req.session.transfer.newEmailError = newEmailError;
+        req.session.transfer.newPasswordError = newPasswordError;
+        req.session.transfer.confirmationPasswordError = confirmationPasswordError;
         req.session.transfer.termsOfUseError = termsOfUseError;
 
         return res.redirect('/register');
@@ -2145,21 +2601,21 @@ exports.postRegister = wrapAsync(async function(req, res) {
 exports.redirectMyAccount = wrapAsync(async function(req, res, next) {
 
     if (req.session.userValues) {
-
         return res.redirect('/my-account');
     }
 
     return next();
+
 });
 
 exports.redirectLogin = wrapAsync(async function(req, res, next) {
 
     if (!req.session.userValues) {
-
         return res.redirect('/login');
     }
     
     return next();
+    
 });
 
 exports.register = wrapAsync(async function(req, res) {
@@ -2167,22 +2623,12 @@ exports.register = wrapAsync(async function(req, res) {
     // If there is data available from previous postRegister gather it from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, emailError, passwordError, passwordConfirmError, termsOfUseError } = req.session.transfer;
-
-        if (passwordError) {
-            var passwordErrorMessage = passwordError.message;
-            var passwordErrorType = passwordError.errorType;
-        }
-        
-        if (passwordConfirmError) {
-            var passwordConfirmErrorMessage = passwordConfirmError.message;
-            var passwordConfirmErrorType = passwordConfirmError.errorType;
-        }
-
-        delete req.session.transfer;
+        var { cleanedFields, newEmailError, newPasswordError, confirmationPasswordError, termsOfUseError } = req.session.transfer;
 
         // Set object to previous form input.
         var inputFields = cleanedFields;
+
+        delete req.session.transfer;
 
     } else {
         // If req.session data isn't used set every property to an empty string.
@@ -2193,49 +2639,24 @@ exports.register = wrapAsync(async function(req, res) {
     let activeLink = 'register';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
+
     let emailAttributes = renderValue.emailField.attributes;
-    let passwordAttributes = renderValue.passwordField.attributes(passwordErrorType);
-    let passwordConfirmAttributes = renderValue.passwordField.attributes(passwordConfirmErrorType);
-    let patternEmail = regexpValue.email;
-    let patternPassword = regexpValue.password;
+    let passwordAttributes = renderValue.passwordField.attributes;
+    let patternNewEmail = regExpValue.email;
+    let patternNewPassword = regExpValue.password;
 
-    res.render('register', { userInput: inputFields, activeLink, contactEmail, loggedIn, emailAttributes, passwordAttributes, passwordConfirmAttributes, emailError, passwordErrorMessage, passwordConfirmErrorMessage, termsOfUseError, patternEmail, patternPassword });
-});
+    res.render('register', { userInput: inputFields, activeLink, contactEmail, loggedIn, emailAttributes, passwordAttributes, newEmailError, newPasswordError, confirmationPasswordError, termsOfUseError, patternNewEmail, patternNewPassword });
 
-exports.registrationSent = wrapAsync(async function(req, res) {
-
-    let email = req.query.email ? req.query.email : '';
-
-    // If the hash matches an unverified user grab it.
-    let unverifiedUser = await UnverifiedUser.findOne({ email: email });
-
-    // If the hash is wrong or not present redirect to the home page.
-    if (email === '' || unverifiedUser === null) {
-        return res.status(404).redirect('/page-not-found');
-    }
-
-    await UnverifiedUser.updateOne({ email: email }, { numberOfConfirmations: unverifiedUser.numberOfConfirmations += 1 });
-
-    // For rendering.
-    let activeLink = 'registration-sent';
-    let contactEmail = siteValue.contactEmail;
-    let loggedIn = req.session.userValues ? true : false;
-    let emailSubject = emailMessage.emailVerificationEmailSubject();
-
-    res.render('registration-sent', { activeLink, contactEmail, loggedIn, email, emailSubject });
 });
 
 exports.verified = wrapAsync(async function(req, res) {
 
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
     let hash = req.query.hash ? req.query.hash : '';
+    if (hash === '') return res.status(404).redirect('/page-not-found');
 
-    // If the hash matches an unverified user grab it.
     let unverifiedUser = await UnverifiedUser.findOne({ confirmationHash: hash });
-
-    // If the hash is wrong or not present redirect to the home page.
-    if (hash === '' || unverifiedUser === null) {
-        return res.status(404).redirect('/page-not-found');
-    }
+    if (!unverifiedUser) return res.status(404).redirect('/page-not-found');
 
     let { email } = unverifiedUser;
 
@@ -2244,11 +2665,11 @@ exports.verified = wrapAsync(async function(req, res) {
     await newUser.save();
 
     // Delete the unverifiedUser from the db.
-    await UnverifiedUser.findOneAndRemove({ email: email });
+    await UnverifiedUser.findOneAndRemove({ email });
 
-    // If any of these are stored in the db delete them.  They are no longer needed.
-    await LoginFailure.findOneAndRemove({ email: email });
-    await PasswordResetRequest.findOneAndRemove({ email: email });
+    // If any of these are stored in the DB delete them.  They are no longer needed.
+    await LoginFailure.findOneAndRemove({ email });
+    await PasswordResetRequest.findOneAndRemove({ email });
 
     // For rendering.
     let activeLink = 'verified';
@@ -2256,4 +2677,5 @@ exports.verified = wrapAsync(async function(req, res) {
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('verified', { activeLink, contactEmail, loggedIn });
+
 });

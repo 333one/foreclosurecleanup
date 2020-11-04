@@ -2,7 +2,7 @@
 
 const nodemailer = require('nodemailer');
 
-const siteValue = require('../models/values-site');
+const siteValue = require('../models/site-values');
 
 exports.sendEmail = async function(emailRecipient, emailSubject, htmlMessage) {
 

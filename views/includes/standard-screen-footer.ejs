@@ -32,14 +32,20 @@
                 <% } else { %>
                     <p class="footerNavigation__unit">
                 <% } %>
-                    <a href="mailto:<%= contactEmail %>">CONTACT</a></p>
+                    <a href="mailto:<%- contactEmail %>">CONTACT</a></p>
 
                 </div>
 
                 <div class="footer__logo"><a href="/"><img src="images/foreclosure-cleanup-logo-bw.svg" alt="Foreclosure Cleanup logo"></a></div>
             </div>
 
-            <p class="footerLink -bottomMarginLarge"><a href="/privacy-policy-terms-service">Privacy Policy</a> | <a href="/privacy-policy-terms-service">Terms Of Service</a></p>
+            <% if (activeLink === 'privacy-policy-terms-service') { %>
+                <p class="footerLink__active -bottomMarginLarge">
+            <% } else { %>
+                <p class="footerLink -bottomMarginLarge">
+            <% } %>
+                    <a href="/privacy-policy-terms-service">Privacy Policy</a> | <a href="/privacy-policy-terms-service#termsOfService">Terms Of Service</a>
+                </p>
             <p id="copyright">© Foreclosure Cleanup.org - All Rights Reserved</p>
         </div>
         

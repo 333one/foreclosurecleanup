@@ -6,14 +6,11 @@
 </head>
 <body>
 
-    <%- include('includes/narrowScreen-top-boilerplate.ejs') %>
+    <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
 
-                <h3 class="narrowScreen__headline -bottomMarginMedium">Confirmation Limit Reached</h3>
-                <%- body %>
-                <p class="textLarge -bottomMarginMedium">If you don't see these emails in your main inbox please check your Promotions or Junk folders.</p>
-                <p class="textLarge -bottomMarginLarge">If you cannot find a confirmation email please register again in <%= expirationTime %>.</p>
+                <%- htmlBody %>
 
-    <%- include('includes/narrowScreen-bottom-boilerplate.ejs') %>
+    <%- include('includes/narrow-screen-bottom-boilerplate.ejs') %>
 
 </body>
 </html>

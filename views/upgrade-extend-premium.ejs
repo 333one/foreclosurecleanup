@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%= title %></title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+    <script>var stripePublicKey = '<%- stripePublicKey %>';</script>
+    <script defer src="https://js.stripe.com/v3/"></script>
+    <script defer src="js/checkout.js"></script>
+</head>
+<body>
+
+    <%- include('includes/dashboard-header.ejs') %>
+
+    <main>
+
+        <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+
+            <p class="dashboard__headline"><%= headline %></p>
+            <div class="upgradeExtendContainer -centerObject">
+                <p class="textLarge -rightLeftMarginMedium -topBottomMarginMedium"><%= bodyText %></p>
+                <div class="-rightLeftMarginMedium"><img class="upgradeExtendImage" src="images/junk-graphic.jpg"></div>
+            </div>
+            <div class="upgradeExtendContainer -centerAlign -centerObject -bottomMarginLarge">
+                <button id="checkout-button" class="upgradePremium__button -topMarginLarge -bottomMarginSmall"><%= buttonText %></button> 
+            </div>
+
+        </div>
+
+    </main>
+
+    <%- include('includes/standard-screen-footer.ejs') %>
+
+</body>
+</html>

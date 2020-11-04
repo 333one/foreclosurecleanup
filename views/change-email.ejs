@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Change Email</title>
+    <title>Change Login Email</title>
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
+
     <script defer src="js/password-toggle.js"></script>
-    <script>let patternEmail = "<%- patternEmail %>"</script>
-    <script defer src="js/character-format.js"></script>
+    <script defer src="js/connect/change-email-password-toggle.js"></script>
+
+    <script>
+        let patternChangedEmail = <%- patternChangedEmail %>;
+    </script>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/change-email-character-blocker.js"></script>
+
 </head>
 <body>
 
@@ -16,7 +23,7 @@
 
         <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
-            <p class="dashboard__headline">Change Email</p>
+            <p class="dashboard__headline">Change Your Login Email</p>
 
             <div class="dashboard__unit -bottomBorder">
                 <div>
@@ -28,50 +35,43 @@
             <form action="/change-email" method="POST">
             
                 <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="newEmail" id="targetEmailLabel" class="input__label
-                        <% if (typeof newEmailError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        ">New Email Address:</label>
-                    <input id="newEmail" class="input__field
-                        <% if (typeof newEmailError != "undefined") { %>
+                    <label for="changedEmail" id="targetChangedEmailLabel" class="input__label">New Email Address:</label>
+                    <input id="changedEmail" class="input__field
+                        <% if (typeof changedEmailError != "undefined") { %>
                             -errorBorder
                         <% } %>
-                        " name="newEmail" <%= emailAttributes %> value="<%= userInput.email %>" autocomplete="new-password" autofocus>
-                    <% if (typeof newEmailError != "undefined") { %>
-                    <div id="targetEmailErrorMessage" class="input__errorMessage"><%= newEmailError %></div>
+                        " name="changedEmail" <%= emailAttributes %> value="<%= userInput.changedEmail %>" autocomplete="new-password" autofocus>
+                        
+                    <% if (typeof changedEmailError != "undefined") { %>
+                    <div id="targetChangedEmailError" class="input__error"><%= changedEmailError %></div>
                     <% } %> 
                 </div>
 
                 <div class="input__unit -bottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="emailConfirmation" id="targetEmailConfirmationLabel" class="input__label
-                        <% if (typeof emailConfirmationError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        ">Confirm New Email Address:</label>
-                    <input id="emailConfirmation" class="input__field
-                        <% if (typeof emailConfirmationError != "undefined") { %>
+                    <label for="confirmationEmail" id="targetConfirmationEmailLabel" class="input__label">Confirm New Email Address:</label>
+                    <input id="confirmationEmail" class="input__field
+                        <% if (typeof confirmationEmailError != "undefined") { %>
                             -errorBorder
                         <% } %>
-                        " name="emailConfirmation" <%= emailAttributes %> value="<%= userInput.emailConfirmation %>" autocomplete="new-password">
-                    <% if (typeof emailConfirmationError != "undefined") { %>
-                    <div id="targetEmailConfirmationErrorMessage" class="input__errorMessage"><%= emailConfirmationError %></div>
+                        " name="confirmationEmail" <%= emailAttributes %> value="<%= userInput.confirmationEmail %>" autocomplete="new-password">
+                    <% if (typeof confirmationEmailError != "undefined") { %>
+                    <div id="targetConfirmationEmailError" class="input__error"><%= confirmationEmailError %></div>
                     <% } %> 
                 </div>
 
                 <div class="input__unit -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="passwordCheck" id="targetPasswordLabel" class="input__label">Password:</label>
-                    <div id="targetPasswordContainer" class="password__container 
-                        <% if (typeof passwordError != "undefined") { %>
+                    <label for="currentPassword" id="targetPasswordLabel" class="input__label">Password:</label>
+                    <div id="targetCurrentPasswordContainer" class="password__container 
+                        <% if (typeof currentPasswordError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         ">
-                        <input id="passwordCheck" class="input__passwordField" name="passwordCheck" <%= passwordAttributes %> value="<%= userInput.passwordCheck %>" autocomplete="new-password">
-                        <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                        <input id="currentPassword" class="input__passwordField" name="currentPassword" <%= passwordAttributes %> value="<%= userInput.currentPassword %>" autocomplete="new-password">
+                        <div class="password__toggle"><img id="currentPasswordEye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
                     </div>
 
-                    <% if (typeof passwordError != "undefined") { %>
-                    <div id="targetPasswordErrorMessage" class="input__errorMessage"><%= passwordError %></div>
+                    <% if (typeof currentPasswordError != "undefined") { %>
+                    <div id="targetCurrentPasswordError" class="input__error"><%= currentPasswordError %></div>
                     <% } %> 
                 </div>
 

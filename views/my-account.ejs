@@ -1,33 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <title>My Account</title>
+
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
+
     <script defer src="js/message-x-close-button.js"></script>
-    <script defer>
-        <% if (typeof URLNotActiveMessage === 'string') { %>
-            window.location.hash = '#company-website'
-        <% } %>
-    </script> 
+    <script defer src="js/enable-success-cancel-bar.js"></script>
+
+    <%# If there is a urlNotActiveMessage start client at the company-website location. %>
+    <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
+        <script defer src="js/start-at-url-not-active-message.js"></script>
+    <% } %>
+    
 </head>
 <body>
     
-    <% if (typeof successMessage === 'string' || typeof failMessage === 'string') { %>
+    <% if (typeof failMessage === 'string' || typeof noChangeMessage === 'string' || typeof successMessage === 'string') { %>
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('messageContainer').style.display = 'flex';
+            });
+        </script>
         <div id="messageContainer"
             <% if (typeof successMessage === 'string') { %> 
                 class="successBar"
+            <% } else if (typeof noChangeMessage === 'string') { %>
+                class="noChangeBar"
             <% } else { %>
                 class="cancelBar"
             <% } %>
         >
+            <%# This empty div is used for centering %>
             <div class="xClose"></div>
             <div class="standardWidthVanish">
                 <p class="textLarge -centerAlign">
                     <% if (typeof successMessage === 'string') { %> 
-                        <%= successMessage %>
+                        <%- successMessage %>
+                    <% } else if (typeof noChangeMessage === 'string') { %>
+                        <%- noChangeMessage %>
                     <% } else { %>
-                        <%= failMessage %>
+                        <%- failMessage %>
                     <% } %>
                 </p>
             </div>
@@ -49,7 +64,7 @@
                     <p class="dashboard__key -rightLeftMarginMedium">Member Since:</p>
                     <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= memberSince %></p>
                     <% if (isAccountUpgraded === false) { %>
-                        <p class="textSmall -rightLeftMarginMedium"><a href="upgrade-premium">Upgrade your company to a <%= upgradedProfileName %></a>. <%= upgradeSalesPitch %></p>
+                        <p class="textSmall -rightLeftMarginMedium"><a href="upgrade-extend-premium">Upgrade your company to a <%= upgradedProfileName %></a>. <%= upgradeSalesPitch %></p>
                     <% } else if (isAccountUpgraded === true) { %>
                     <p class="dashboard__key -rightLeftMarginMedium">Premium Company Profile Active Until:</p>
                     <p class="textLarge -rightLeftMarginMedium
@@ -57,11 +72,11 @@
                         "><%= premiumExpirationDate %></p>
                         <% if (isUpgradeExpirationSoon === true) { %>
                             <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall">Your Premium account will expire in <span class="-errorColor"><strong><%= numberOfDaysUntilExpiration %> days</strong></span>.</p>
-                            <p class="textSmall -rightLeftMarginMedium"><a href="renew-extend-premium">Renew Your Premium Account</a>: Renew your premium account for 12 months for just <%= costInDollarsProduct_1 %>.</p>
+                            <p class="textSmall -rightLeftMarginMedium"><a href="upgrade-extend-premium">Renew Your Premium Account</a>: Renew your premium account for 12 months for just <%= costInDollarsProduct_1 %>.</p>
                         <% } %>
                     <p class="textSmall -rightLeftMarginMedium">
                         <% if (isUpgradeExpirationSoon === false && premiumAccountExtendsAvailable === true) { %>
-                            <a href="renew-extend-premium">Extend Your Premium Account</a>: Extend your premium account for another 12 months for just <%= costInDollarsProduct_1 %>.
+                            <a href="upgrade-extend-premium">Extend Your Premium Account</a>: Extend your premium account for another 12 months for just <%= costInDollarsProduct_1 %>.
                         <% } else { %>
                             Great! Your <%= companyProfileType %> account duration is maxed out. No renewals or extensions are needed at this time.
                         <% } %>
@@ -117,6 +132,9 @@
                     <p class="dashboard__key -rightLeftMarginMedium">Company Address:</p>
                     <% if (isCompanyAddressAdded) { %>
                         <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
+                        <% if (typeof companyStreetMyAccountValue === 'string') { %>
+                            <p class="textLarge -rightLeftMarginMedium"><%= companyStreetTwoMyAccountValue %></p>
+                        <% } %>
                         <p class="textLarge -rightLeftMarginMedium"><%= companyRegionMyAccountValue %></p>
                     <% } else { %>
                     <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
@@ -155,14 +173,14 @@
 
             <% if (isAccountUpgraded === false) { %>
             <div class="dashboard__unitCovered -bottomBorder">
-                <a href="upgrade-premium" class="dashboard__unitCoveredLink">
+                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
                     <p class="dashboard__key -rightLeftMarginMedium">Website Or Social Media Page:</p>
                     <p class="textSmall -rightLeftMarginMedium">Upgrade to a <%= upgradedProfileName %>.</p>
                 </a>
             </div>
 
             <div class="dashboard__unitCovered -bottomBorder -bottomMarginHuge">
-                <a href="upgrade-premium" class="dashboard__unitCoveredLink">
+                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
                     <p class="dashboard__key -rightLeftMarginMedium">Company Description:</p>
                     <p class="textSmall -rightLeftMarginMedium">Upgrade to a <%= upgradedProfileName %>.</p>
                 </a>
@@ -172,10 +190,10 @@
             <a id="company-website"></a>
 
             <div class="dashboard__errorFeatureUnit -topMarginMedium
-            <% if (typeof URLNotActiveMessage !== 'string') { %>
+            <% if (typeof urlNotActiveMessage === 'undefined') { %>
                 -bottomBorder
             <% } %>
-            <% if (typeof URLNotActiveMessage === 'string') { %>
+            <% if (typeof urlNotActiveMessage === 'string') { %>
                 -errorBorderVanish
             <% } %>
             ">
@@ -191,8 +209,8 @@
                     <% } %>
                 </div>
             </div>
-            <% if (typeof URLNotActiveMessage === 'string') { %>
-                <p class="textLarge -topPaddingSmall -bottomPaddingLarge -rightLeftPaddingMedium -errorColor -bottomBorder"><%= URLNotActiveMessage %></p>
+            <% if (typeof urlNotActiveMessage === 'string') { %>
+                <p class="textLarge -topPaddingSmall -bottomPaddingLarge -rightLeftPaddingMedium -errorColor -bottomBorder"><%= urlNotActiveMessage %></p>
             <% } %>
 
             <div class="dashboard__unit -bottomBorder -bottomMarginHuge">

@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Company Website</title>
+
+    <title><%= htmlTitle %></title>
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
-    <script>let patternCompanyWebsite= "<%- patternCompanyWebsite %>"</script>
-    <script defer src="js/character-format.js"></script>
+
+    <script>
+        let patternCompanyWebsite= <%- patternCompanyWebsite %>;
+    </script>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/company-website-character-blocker.js"></script>
+
 </head>
 <body>
 
@@ -32,14 +38,14 @@
 
                 <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
                     <label for="companyWebsite" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Website:</label>
-                    <p class="textSmall -bottomMarginSmall">Add your company's main website or social media page that customers can find you at.</p>
+                    <p class="textSmall -bottomMarginSmall">Add your company's website or main social media page that customers can find you at.</p>
                     <input id="companyWebsite" class="input__field
                         <% if (typeof companyWebsiteError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         " name="companyWebsite" <%= companyWebsiteAttributes %> value="<%= userInput.companyWebsite %>" autofocus>
                     <% if (typeof companyWebsiteError != "undefined") { %>
-                    <div class="input__errorMessage"><%- companyWebsiteError %></div>
+                    <div class="input__error"><%- companyWebsiteError %></div>
                     <% } %> 
                 </div>
 
@@ -52,7 +58,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-website" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete your company's website.</button>
+                    <button class="button_fauxLink">Delete Your Company's Website</button>
                 </div>
                 <input type="hidden" name="companyWebsite" value="">
                 <input type="hidden" name="deleteProperty" value="true">

@@ -6,7 +6,7 @@
 </head>
 <body>
 
-    <%- include('includes/narrowScreen-top-boilerplate.ejs') %>
+    <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
 
                 <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Delete Your Account</h3>
                 <p class="textLarge -bottomMarginMedium">If you would like to delete your account fill in your password below and click "Delete Account"</p>
@@ -14,21 +14,17 @@
                 <form action="/delete-your-account" method="POST">
 
                     <div class="input__unit -bottomMarginLarge"> 
-                        <label for="password" class="input__label
-                            <% if (typeof deleteAccountError != "undefined") { %>
-                                -errorColor
-                            <% } %>               
-                            ">Password:</label>
+                        <label for="currentPassword" class="input__label">Password:</label>
                         <div class="password__container 
-                        <% if (typeof deleteAccountError != "undefined") { %>
+                        <% if (typeof currentPasswordError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         ">
-                            <input id="password" class="input__passwordField" name="password" <%= passwordAttributes %>>
-                            <div class="password__toggle"><img id="password__eye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                            <input id="currentPassword" class="input__passwordField" name="currentPassword" <%= passwordAttributes %>>
+                            <div class="password__toggle"><img id="currentPasswordEye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
                         </div>
-                        <% if (typeof deleteAccountError != "undefined") { %>
-                        <div class="input__errorMessage"><%= deleteAccountError %></div>
+                        <% if (typeof currentPasswordError != "undefined") { %>
+                        <div class="input__error"><%= currentPasswordError %></div>
                         <% } %> 
                     </div>
 
@@ -38,7 +34,9 @@
 
                 </form>
 
-    <%- include('includes/narrowScreen-bottom-boilerplate.ejs') %>
+                <div class="textMedium -rightAlign -bottomMarginLarge"><a href="/my-account">Back To My Account ></a></div>
+
+    <%- include('includes/narrow-screen-bottom-boilerplate.ejs') %>
 
 </body>
 </html>

@@ -3,8 +3,8 @@
 const phoneNormalizer = require('phone');
 const zxcvbn = require('zxcvbn');
 
-const formFields = require('../models/values-form-fields.js');
-const timeValue = require('../models/values-time');
+const formFields = require('../models/forms-default-fields.js');
+const timeValue = require('../models/time-values');
 
 exports.checkAllFieldsFilled = function(formFields, userInputFields) {
 
@@ -17,31 +17,41 @@ exports.checkAllFieldsFilled = function(formFields, userInputFields) {
     return true;
 }
 
-exports.checkAllUserValuesFilled = function(sessionUserValues) {
+exports.checkAllAccountPropertiesFilled = function(sessionUserValues, currentProperty) {
 
     let userProperties = JSON.parse(JSON.stringify(sessionUserValues));
-    // companyStreetTwo is allowed to be empty so delete that.
+
+    // These 3 are allowed to be empty so delete them.
     delete userProperties.companyStreetTwo;
+    delete userProperties.companyDescription;
+    delete userProperties.companyWebsite;
 
+    // The current property has a value or you wouldn't get here.  However it hasn't been updated on the session so it is allowed to be empty.  Delete that property.
+    delete userProperties[currentProperty];
+
+    // Company services have to be checked separately so create an array of them.
     let companyServiceProperties = [...formFields.addChangeCompanyServices];
-    // Remove deleteProperty because it isn't needed for this test.
-    companyServiceProperties.pop();
 
-    // If any companyService property is 'no' return false.
-    let isAServicePropertyYes = false;
+    // Remove deleteProperty because it isn't needed for this test.
+    let indexOfDeleteProperty = companyServiceProperties.indexOf('deleteProperty');
+    companyServiceProperties.splice(indexOfDeleteProperty, 1);
+
+    // Check to see if any services have been added.  
+    let haveAnyServicesBeenAdded = false;
     companyServiceProperties.forEach(function(element) {
-        if (userProperties[element] === 'yes') isAServicePropertyYes = true;
+        if (userProperties[element] === true) haveAnyServicesBeenAdded = true;
     })
 
-    if (isAServicePropertyYes === false) return false;
+    // if (haveAnyServicesBeenAdded === false) return false;
 
-    // If any property is empty return false.
+    // If any remaining property is empty return false.
     for (var key in userProperties) {
-        if (userProperties[key] === null && userProperties[key] === undefined && userProperties[key] === "")
+        if (userProperties[key] === "")
             return false;
     }
 
     return true;
+
 }
 
 exports.checkArePremiumAccountExtendsAvailable = function(expirationDate, isUpgradeExpirationSoon) {
@@ -73,6 +83,7 @@ exports.checkCompanyAddressNormalized = function(companyStreet, companyStreetTwo
     ) return true;
 
     return false;
+    
 }
 
 exports.checkIfRouteBeatWebhook = function(expirationDateSessionValue, expirationDateDBValue) {
@@ -89,9 +100,14 @@ exports.checkForPreviousErrors = function(emailError, firstNameError, lastNameEr
     return false;
 }
 
-exports.checkIfInputTooLong = function(field, maxLength) {
+exports.checkIfInputInsideMaxLength = function(field, maxLength) {
 
-    return field.length > maxLength ? true : false;
+    return field.length > maxLength ? false : true;
+}
+
+exports.checkIfInputTooShort = function(field, minLength) {
+
+    return field.length < minLength ? true : false;
 }
 
 exports.checkIsUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
@@ -99,11 +115,12 @@ exports.checkIsUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
     // A negative number indicates this is a free account.
     if (numberOfDaysUntilExpiration < 0) {
         return false;
-    } else if (numberOfDaysUntilExpiration >= timeValue.upgradeExpirationAlarmTime) {
+    } else if (numberOfDaysUntilExpiration > timeValue.upgradeExpirationAlarmTime) {
         return false;
     } else {
         return true;
     }
+    
 }
 
 exports.checkPasswordMeetsRequirements = function(password) {
@@ -134,32 +151,55 @@ exports.checkCompanyStateValid = function(companyState) {
 }
 
 exports.checkCompanyServicesHaveValue = function (
-    serviceBoardingSecuring,
-    serviceDebrisRemovalTrashout,
-    serviceEvictionManagement,
-    serviceFieldInspection,
-    serviceHandymanGeneralMaintenance,
-    serviceLandscapeMaintenance,
-    serviceLockChanges,
-    serviceOverseePropertyRehabilitation,
-    servicePoolMaintenance,
-    servicePropertyCleaning,
-    serviceWinterizations
+    boardingSecuring,
+    debrisRemovalTrashout,
+    evictionManagement,
+    fieldInspection,
+    handymanGeneralMaintenance,
+    landscapeMaintenance,
+    lockChanges,
+    overseePropertyRehabilitation,
+    poolMaintenance,
+    propertyCleaning,
+    winterizations
     ) {
 
-    if (
-        serviceBoardingSecuring === 'yes' ||
-        serviceDebrisRemovalTrashout === 'yes' ||
-        serviceEvictionManagement === 'yes' ||
-        serviceFieldInspection === 'yes' ||
-        serviceHandymanGeneralMaintenance === 'yes' ||
-        serviceLandscapeMaintenance === 'yes' ||
-        serviceLockChanges === 'yes' ||
-        serviceOverseePropertyRehabilitation === 'yes' ||
-        servicePoolMaintenance === 'yes' ||
-        servicePropertyCleaning === 'yes' ||
-        serviceWinterizations === 'yes'
-    ) return true;
+    for (const element of arguments) {
+        if (element === true) return true;
+    }
 
     return false;
+
 }
+
+exports.checkServiceValuesValid = function(cleanedFields) {
+
+    let cleanedFieldsArray = Object.entries(cleanedFields);
+
+    // cleanedFieldsArray.push(['cat', 'abc123']);
+
+    let areAllServiceValuesValid = true;
+
+    cleanedFieldsArray.forEach(function([key, value]) {
+
+        if (key !== 'deleteProperty' && value !== 'true' && value !== '') {
+            areAllServiceValuesValid = false;
+        }
+
+    });
+
+    return areAllServiceValuesValid;
+
+}
+
+exports.checkWereCompanyServicesAdded = function(companyServices, userValues) {
+
+    let wereCompanyServicesAdded = false;
+
+    companyServices.forEach(function(element) {
+        if (userValues[element] === true) wereCompanyServicesAdded = true;
+    });
+
+    return wereCompanyServicesAdded;
+
+};

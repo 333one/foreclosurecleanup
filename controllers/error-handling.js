@@ -3,13 +3,14 @@
 const winston = require('winston');
 
 const logger = winston.createLogger({
+    level: 'info',
     format: winston.format.json(),
     transports: [
         new winston.transports.File({ filename: 'logs/error.log' })
     ]
 });
 
-const siteValue = require('../models/values-site');
+const siteValue = require('../models/site-values');
 
 exports.customExpressErrorHandler = function(error, req, res, next) {
 
@@ -25,7 +26,7 @@ exports.customExpressErrorHandler = function(error, req, res, next) {
 
 exports.logErrorMessage = function(error) {
 
-    sendToLogger(error)
+    sendToLogger(error);
 }
 
 function sendToLogger(error) {

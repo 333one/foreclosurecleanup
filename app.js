@@ -14,7 +14,7 @@ const endpointsUserAccounts = require('./controllers/endpoints-user-accounts');
 const endpointsStripe = require('./controllers/endpoints-stripe');
 const endpointsDefault = require('./controllers/endpoints-default');
 const { customExpressErrorHandler, logErrorMessage } = require('./controllers/error-handling');
-const siteValue = require('./models/values-site');
+const siteValue = require('./models/site-values');
 
 // Custom path to .env file.
 require('dotenv').config({ path: path.join(__dirname, '/models/.env')});

@@ -23,7 +23,7 @@ router.get('/add-change-company-website', redirectLogin, middlewareUserAccounts.
 router.get('/change-email', redirectLogin, middlewareUserAccounts.changeEmail);
 router.get('/change-password', redirectLogin, middlewareUserAccounts.changePassword);
 router.get('/confirmation-limit-reached', middlewareUserAccounts.confirmationLimitReached);
-router.get('/confirmation-resent', middlewareUserAccounts.confirmationResent);
+router.get('/confirmation-sent', middlewareUserAccounts.confirmationSent);
 router.get('/delete-your-account', redirectLogin, middlewareUserAccounts.deleteYourAccount);
 router.get('/login', redirectMyAccount, middlewareUserAccounts.login);
 router.get('/login-failure-limit-reached', redirectMyAccount, middlewareUserAccounts.loginFailureLimitReached);
@@ -35,7 +35,6 @@ router.get('/password-reset-request', middlewareUserAccounts.passwordResetReques
 router.get('/password-reset-request-sent', middlewareUserAccounts.passwordResetRequestSent); 
 router.get('/password-reset-success', middlewareUserAccounts.passwordResetSuccess);
 router.get('/register', middlewareUserAccounts.register);
-router.get('/registration-sent', middlewareUserAccounts.registrationSent);
 router.get('/verified', redirectMyAccount, middlewareUserAccounts.verified);
 
 router.post('/add-change-company-address', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyAddress);

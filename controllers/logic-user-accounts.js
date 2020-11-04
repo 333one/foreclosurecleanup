@@ -8,11 +8,14 @@ const objectHash = require('object-hash');
 const path = require('path');
 
 const communication = require('./communication');
-const defaultValue = require('../models/values-default');
-const emailMessage = require('../models/messages-email');
+const defaultMessage = require('../models/default-messages');
+const defaultValue = require('../models/default-values');
+const emailMessage = require('../models/email-messages');
+const logoutSteps = require('./logout-steps');
 const mongooseInstance = require('./mongoose-create-instances');
-const renderValue = require('../models/values-rendering');
-const timeValue = require('../models/values-time');
+const regExpValue = require('../models/regexp-values');
+const renderValue = require('../models/rendering-values');
+const timeValue = require('../models/time-values');
 
 const { 
     LoginFailure,
@@ -24,38 +27,57 @@ const {
 // Custom path to .env file.
 require('dotenv').config({ path: path.join(__dirname, '../models/.env') });
 
+exports.addCompanyServices = function(formFields, userValues) {
+
+    let serviceProperties = {};
+
+    formFields.forEach(function(element) {
+        serviceProperties[element] = userValues[element];
+    });
+
+    return serviceProperties;
+
+}
+
 exports.assembleCompanyServices = function (
-    serviceBoardingSecuring,
-    serviceDebrisRemovalTrashout,
-    serviceEvictionManagement,
-    serviceFieldInspection,
-    serviceHandymanGeneralMaintenance,
-    serviceLandscapeMaintenance,
-    serviceLockChanges,
-    serviceOverseePropertyRehabilitation,
-    servicePoolMaintenance,
-    servicePropertyCleaning,
-    serviceWinterizations
+    boardingSecuring,
+    debrisRemovalTrashout,
+    evictionManagement,
+    fieldInspection,
+    handymanGeneralMaintenance,
+    landscapeMaintenance,
+    lockChanges,
+    overseePropertyRehabilitation,
+    poolMaintenance,
+    propertyCleaning,
+    winterizations
     ) {
+
+    let parameterObject = {
+        boardingSecuring,
+        debrisRemovalTrashout,
+        evictionManagement,
+        fieldInspection,
+        handymanGeneralMaintenance,
+        landscapeMaintenance,
+        lockChanges,
+        overseePropertyRehabilitation,
+        poolMaintenance,
+        propertyCleaning,
+        winterizations
+    }
 
     let assembledServices = '';
 
-    if (serviceBoardingSecuring === 'yes') assembledServices += `${ renderValue.serviceBoardingSecuring }, `;
-    if (serviceDebrisRemovalTrashout === 'yes') assembledServices += `${ renderValue.serviceDebrisRemovalTrashout }, `;
-    if (serviceEvictionManagement === 'yes') assembledServices += `${ renderValue.serviceEvictionManagement }, `;
-    if (serviceFieldInspection === 'yes') assembledServices += `${ renderValue.serviceFieldInspection }, `;
-    if (serviceHandymanGeneralMaintenance === 'yes') assembledServices += `${ renderValue.serviceHandymanGeneralMaintenance }, `;
-    if (serviceLandscapeMaintenance === 'yes') assembledServices += `${ renderValue.serviceLandscapeMaintenance }, `;
-    if (serviceLockChanges === 'yes') assembledServices += `${ renderValue.serviceLockChanges }, `;
-    if (serviceOverseePropertyRehabilitation === 'yes') assembledServices += `${ renderValue.serviceOverseePropertyRehabilitation }, `;
-    if (servicePoolMaintenance === 'yes') assembledServices += `${ renderValue.servicePoolMaintenance }, `;
-    if (servicePropertyCleaning === 'yes') assembledServices += `${ renderValue.servicePropertyCleaning }, `;
-    if (serviceWinterizations === 'yes') assembledServices += `${ renderValue.serviceWinterizations }, `;
+    for (const element in parameterObject) {
+        if (parameterObject[element] === true) assembledServices += `${ renderValue[element] }, `;
+    }
 
     // remove the last coma and space.
     let trimmedAssembledServices = assembledServices.slice(0, -2);
 
     return trimmedAssembledServices;
+
 }
 
 exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompanyPhoneAdded, isCompanyAddressAdded, isCompanyServicesAdded) {
@@ -110,39 +132,44 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
 
 exports.cleanCompanyDescription = function(companyDescription) {
 
-
-    let cleanedCompanyDescription = companyDescription.replace(/<|\/>|>|href=/gi, '');
+    let regExpRemoveCode = new RegExp(regExpValue.removeCode, 'gi');
+    let cleanedCompanyDescription = companyDescription.replace(regExpRemoveCode, '');
 
     return cleanedCompanyDescription;
+    
 }
 
 exports.cleanFields = function(formFields, reqBody) {
 
     //TODO: remove all characters over the maximum number of characters for each field.
 
-    let isReqBodyKeyGenuine;
-    let wereAllKeysGenuine;
-
     // This checks to see if the keys on req.body are different from those in the form.
     // If a key is fake the value false is stored and that key is deleted from req.body.
-    for(let property in reqBody) {
-        isReqBodyKeyGenuine = formFields.includes(property);
+    for (const element in reqBody) {
+
+        var isReqBodyKeyGenuine = formFields.includes(element);
+
         if (isReqBodyKeyGenuine === false) {
-            delete reqBody[property];
-            wereAllKeysGenuine = false;
+
+            delete reqBody[element];
+            var wereAllKeysGenuine = false;
+
         }
+
     }
 
-    let isReqBodyKeyDuplicate;
-    let wereThereDuplicateKeys;
+    // This checks to see that no key was sent twice.  This can happen if a client finds a way to give 2 fields the same name.
+    for (const element in reqBody) {
 
-    // This checks to see that no key was sent twice.  This can happen if a client finds a way to name 2 fields the same name.
-    for(let property in reqBody) {
-        isReqBodyKeyDuplicate = Array.isArray(reqBody[property]);
+        var isReqBodyKeyDuplicate = Array.isArray(reqBody[element]);
+
         if (isReqBodyKeyDuplicate === true) {
-            delete reqBody[property];
-            wereThereDuplicateKeys = true;
+
+            delete reqBody[element];
+            var wereThereDuplicateKeys = true;
+
         }
+
     }
 
     // If a key was not included in req.body add the key with a value of empty string ''.
@@ -152,42 +179,71 @@ exports.cleanFields = function(formFields, reqBody) {
 
     // If there were any fake or duplicate keys the value of every property is changed to an empty string to eliminate the possibility of malicious data.
     if (wereAllKeysGenuine === false || wereThereDuplicateKeys === true) {
-        for(let property in reqBody) {
-            reqBody[property] = '';
-        }
 
-        //TODO: If the user is logged in log them out and send them to the home page.
+        for (const element in reqBody) {
+            reqBody[element] = '';
+        }
         
     }
 
     // Trim white space from each property.
-    for(let property in reqBody) {
-        reqBody[property] = reqBody[property].trim();
+    for (const element in reqBody) {
+        reqBody[element] = reqBody[element].trim();
     }
 
     return reqBody;
+
 }
 
-function createNewExpirationDate(upgradeRenewalDate, expirationDate) {
+exports.convertCheckboxToBoolean = function(checkInputValue) {
 
-    let newExpirationStartPoint = String(expirationDate) === String(timeValue.freeAccountExpiration) ? new Date(upgradeRenewalDate) : new Date(expirationDate);
-    let newExpirationYear = newExpirationStartPoint.getFullYear() + 1;
-    newExpirationStartPoint.setFullYear(newExpirationYear);
+    if (checkInputValue === 'isChecked') return true;
+    return false;
 
-    return newExpirationStartPoint;
 }
 
-function filterOnlyOneAllowed(string, character) {
+exports.convertBooleanToString = function(inputFields) {
 
-    let first = true;
+    let serviceProperties = {};
 
-    return string.replace(new RegExp(character, 'g'), function(value) {
-        if (first) {
-            first = false;
-            return value;
+    for (const element in inputFields) {
+
+        if (inputFields[element] === true) {
+            serviceProperties[element] = 'true';
+        } else if (inputFields[element] === false) {
+            serviceProperties[element] = 'false';
         }
-        return '';
+
+    };
+
+    return serviceProperties;
+
+}
+
+exports.convertStringToBoolean = function(companyServicesArray, inputFields) {
+
+    let serviceProperties = {};
+
+    companyServicesArray.forEach( function(element) {
+
+        if (inputFields[element] === 'true') {
+            serviceProperties[element] = true;
+        } else {
+            serviceProperties[element] = false;
+        }
+        
     });
+
+    return serviceProperties;
+
+}
+
+exports.createConfirmationHash = function(email) {
+
+    let salt = cryptoRandomString({ length: 16 });
+    let confirmationHash = objectHash(email + salt);
+    
+    return confirmationHash;
 }
 
 exports.formatName = function(name) {
@@ -227,6 +283,74 @@ exports.formatCompanyPhone = function(companyPhone) {
     return phonePrefixRemoved.slice(0, 3) + '-' + phonePrefixRemoved.slice(3, 6) + '-' + phonePrefixRemoved.slice(6);
 }
 
+exports.formatURL = function(companyWebsite) {
+
+    // This removes trailing slashes and default.php.  # has already been disallowed by a test before this.
+    let formattedURL = normalizeUrl(companyWebsite, { stripWWW: false, removeDirectoryIndex: [regExpValue.directoryIndex], removeTrailingSlash: true });
+
+    // If no protocol is present normalizeURL adds an http.  Remove http if user didn't include it originally.
+    let regExpHttp = new RegExp(regExpValue.httpProtocol, 'i');
+    let regExpHttps = new RegExp(regExpValue.httpsProtocol, 'i');
+
+    let didCompanyWebsiteStartWithHttp = regExpHttp.test(companyWebsite) === true ? true : false;
+    let didCompanyWebsiteStartWithHttps = regExpHttps.test(companyWebsite) === true ? true : false;
+
+    if (didCompanyWebsiteStartWithHttp === false) {
+
+        if (didCompanyWebsiteStartWithHttps === false) {
+            formattedURL = formattedURL.slice(7);
+        }
+
+    }
+
+    return formattedURL;
+
+}
+
+exports.testFormattedURLAndSave = async function(formattedURL, email) {
+
+    // If a protocol isn't present this adds the http and doesn't strip the www if it exists.
+    let normalizedURL = normalizeUrl(formattedURL, { stripWWW: false });
+
+    // For testing purposes check an http:// and https:// version.  The following block of code sets that up.
+    let regExpHttp = new RegExp(regExpValue.httpProtocol, 'i');
+    let regExpHttps = new RegExp(regExpValue.httpsProtocol, 'i');
+
+    let doesNormalizedURLStartWithHttp = regExpHttp.test(normalizedURL) === true ? true : false;
+    let doesNormalizedURLStartWithHttps = regExpHttps.test(normalizedURL) === true ? true : false;
+
+    let httpVersion, httpsVersion;
+
+    if (doesNormalizedURLStartWithHttp === true) {
+
+        httpVersion = normalizedURL;
+        httpsVersion = 'https://' + normalizedURL.slice(7);
+
+    }
+
+    if (doesNormalizedURLStartWithHttps === true) {
+
+        httpsVersion = normalizedURL;
+        httpVersion = 'http://' + normalizedURL.slice(8);
+
+    }
+
+    // If the URL works on http or https the DB is updated and it returns.
+    let isHttpsURLActive = await testIfURLActive(httpsVersion);  
+    if (isHttpsURLActive === true) return;
+    
+    let isHttpURLActive = await testIfURLActive(httpVersion);
+    if (isHttpURLActive === true) return;
+
+    // No version of the website worked.  Save to the DB, send the user an email and return.
+    await User.updateOne({ email }, { urlNotActiveError: true, shouldBrowserFocusOnURLNotActiveError: true });
+
+    let emailSubject = emailMessage.urlNotActiveSubject;
+    let emailBody = emailMessage.urlNotActiveBody(formattedURL);
+    communication.sendEmail(email, emailSubject, emailBody);
+
+}
+
 exports.getDeleteAddChange = function(deleteProperty, companyProperty) {
 
     let deleteAddChange;
@@ -240,20 +364,7 @@ exports.getDeleteAddChange = function(deleteProperty, companyProperty) {
     }
 
     return deleteAddChange;
-}
 
-exports.hashPassword = function(password) {
-
-    return new Promise( function(resolve, reject) {
-        bcrypt.genSalt(10, function(error, salt) {
-            bcrypt.hash(password, salt, function(error, hash) {
-                if (error) {
-                    reject(error);
-                }
-                resolve(hash);
-            });
-        });
-    });
 }
 
 exports.getCompanyRegionFull = function(companyCity, companyState, companyZip) {
@@ -263,6 +374,7 @@ exports.getCompanyRegionFull = function(companyCity, companyState, companyZip) {
     } else {
         return null;
     }
+
 }
 
 exports.getCompanyStreetFull = function(companyStreet, companyStreetTwo) {
@@ -289,7 +401,7 @@ exports.getNumberOfDaysUntilExpiration = function(expirationDate) {
 exports.getOrCreateConfirmationHash = async function(email) {
 
     // Determine if a password reset request already exists.
-    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email: email });
+    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email });
 
     if (retrievedPasswordResetRequest) {
         return retrievedPasswordResetRequest.confirmationHash;
@@ -298,23 +410,6 @@ exports.getOrCreateConfirmationHash = async function(email) {
     let salt = cryptoRandomString({ length: 16 });
     let confirmationHash = objectHash(email + salt);
     return confirmationHash;
-}
-
-function getOrdinal(day) {
-
-    let firstDigit = day % 10;
-    let lastDigits = day % 100;
-
-    if (firstDigit == 1 && lastDigits != 11) {
-        return day + "st";
-    }
-    if (firstDigit == 2 && lastDigits != 12) {
-        return day + "nd";
-    }
-    if (firstDigit == 3 && lastDigits != 13) {
-        return day + "rd";
-    }
-    return day + "th";
 }
 
 exports.getPremiumExpirationDate = function(expirationDate) {
@@ -328,10 +423,24 @@ exports.getPremiumExpirationDate = function(expirationDate) {
     return `${ month } ${ dayWithOrdinal }, ${year}`;
 }
 
+exports.hashPassword = function(password) {
+
+    return new Promise( function(resolve, reject) {
+        bcrypt.genSalt(10, function(error, salt) {
+            bcrypt.hash(password, salt, function(error, hash) {
+                if (error) {
+                    reject(error);
+                }
+                resolve(hash);
+            });
+        });
+    });
+}
+
 exports.incrementExistingPasswordResetOrCreateNew = async function(email, confirmationHash, forward) {
 
     // Determine if a password reset request already exists.
-    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email: email });
+    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email });
 
     // If a request exists increment numberOfRequests.
     // Create the request whether a real user exists or not.  The upper limit on requests will stop spammers from repeatedly requesting a reset for a non user.
@@ -343,7 +452,7 @@ exports.incrementExistingPasswordResetOrCreateNew = async function(email, confir
             return true;
         } else {
 
-            if (forward != "true") await PasswordResetRequest.updateOne({ email: email }, { numberOfRequests: retrievedPasswordResetRequest.numberOfRequests += 1 });
+            if (forward != "true") await PasswordResetRequest.updateOne({ email }, { numberOfRequests: retrievedPasswordResetRequest.numberOfRequests += 1 });
         } 
 
     // Because the request didn't exist create a new one.
@@ -356,74 +465,64 @@ exports.incrementExistingPasswordResetOrCreateNew = async function(email, confir
     return false;
 }
 
-exports.logoutSteps = function(req, res) {
+// exports.logoutSteps = function(req, res) {
 
-    req.session.destroy( function(error) {
+//     req.session.destroy( function(error) {
 
-        if (error) {
-            res.clearCookie(process.env.SESSION_NAME);
-        }
-        return res.redirect('/login');
-    });
-}
+//         if (error) res.clearCookie(process.env.SESSION_NAME);
+//         return res.redirect('/login');
 
-exports.makeFieldsEmpty = function(formFields) {
+//     });
+
+// }
+
+// exports.logoutStepsNoRedirect = function(req, res) {
+
+//     req.session.destroy( function(error) {
+//         if (error) res.clearCookie(process.env.SESSION_NAME);
+//     });
+
+// }
+
+exports.makeFieldsEmpty = function(formFields, empty = '') {
 
     let emptyFields = {};
 
     formFields.forEach(function(element) {
-        emptyFields[element] = '';
+        emptyFields[element] = empty;
     });
 
     return emptyFields;
+
 }
 
-exports.partiallyProcessURL = function(websiteURL) {
+exports.processCompanyDescription = function(companyDescription) {
 
-    let queryIndex = websiteURL.indexOf('?');
-    if (queryIndex === -1) queryIndex = websiteURL.length;
-    let noQueriesURL = websiteURL.slice(0, queryIndex);
+    // Add punctuation if needed before you test for max length.
+    let companyDescriptionLength = companyDescription.length;
 
-    // normalizeProtocol: false should stop http:// from being automatically added to the URL but it doesn't seem to work so have to process that separately below.
-    let processedURL = normalizeUrl(noQueriesURL, { normalizeProtocol: false, stripWWW: false, stripHash: true, removeDirectoryIndex: [/^default\.[a-z]+$/], removeTrailingSlash: true });
+    let isPunctuationAtEndOfCompanyDescription = 
+    companyDescription.charAt(companyDescriptionLength -1) === '.' ||
+    companyDescription.charAt(companyDescriptionLength -1) === '!' ||
+    companyDescription.charAt(companyDescriptionLength -1) === '?' 
+    ? true : false;
 
-    let didWebsiteURLStartWithProtocol = websiteURL.match(/^http:\/\//) === true ? true : false;
-    if (didWebsiteURLStartWithProtocol === false) processedURL = processedURL.slice(7);
-
-    return processedURL;
-}
-
-exports.processURL = function(websiteURL) {
-
-    let queryIndex = websiteURL.indexOf('?');
-    if (queryIndex === -1) queryIndex = websiteURL.length;
-    let noQueriesURL = websiteURL.slice(0, queryIndex);
-
-    let processedURL = normalizeUrl(noQueriesURL, { stripProtocol: true, stripWWW: true, stripHash: true, removeDirectoryIndex: [/^default\.[a-z]+$/], removeTrailingSlash: true });
-
-    return processedURL;
-}
-
-exports.removeLoginFailures = async function(email) {
-
-    let doesLoginFailureExist = await LoginFailure.exists({ email: email });
-
-    if (doesLoginFailureExist) {
-        await LoginFailure.findOneAndRemove({ email: email });
+    if (
+        isPunctuationAtEndOfCompanyDescription === false
+        ) {
+        companyDescription = companyDescription + '.';
     }
-}
 
-async function saveActiveURL(activeURL, email, req) {
+    let capitalizedCompanyDescription = companyDescription.charAt(0).toUpperCase() + companyDescription.slice(1);
 
-    await User.updateOne({ email: email }, { companyWebsite: activeURL });
-    req.session.userValues.companyWebsite = activeURL;
-    req.session.save();
+    return capitalizedCompanyDescription;
+
 }
 
 exports.sendEmailIfNecessary = async function(email, confirmationHash, emailSubject, expirationTime, forward) {
 
     // If User exists create and send the email
-    let retrievedUser = await User.findOne({ email: email });
+    let retrievedUser = await User.findOne({ email });
     
     if (retrievedUser && forward != 'true') {
 
@@ -433,35 +532,46 @@ exports.sendEmailIfNecessary = async function(email, confirmationHash, emailSubj
     }  
 }
 
-exports.setCheckInputYesNo = function(checkInputValue) {
+function filterOnlyOneAllowed(string, character) {
 
-    if (checkInputValue === 'yes') return 'yes';
-    return 'no';
+    let first = true;
+
+    return string.replace(new RegExp(character, 'g'), function(value) {
+        if (first) {
+            first = false;
+            return value;
+        }
+        return '';
+    });
 }
 
-exports.stripeSuccessUpdateDB = async function(eventDataObjectId) {
+function getOrdinal(day) {
 
-    // event.data.object.id should be equal to session.payment_intent
-    let stripeCheckoutSession = await StripeCheckoutSession.findOne({ paymentIntent: eventDataObjectId });
+    let firstDigit = day % 10;
+    let lastDigits = day % 100;
 
-    // myAccount route uses this value, webhookPremiumUpgrade doesn't need it.
-    if (!stripeCheckoutSession) return;
+    if (firstDigit == 1 && lastDigits != 11) {
+        return day + "st";
+    }
 
-    let { email } = stripeCheckoutSession;
+    if (firstDigit == 2 && lastDigits != 12) {
+        return day + "nd";
+    }
 
-    let { expirationDate } = await User.findOne({ email: email });
+    if (firstDigit == 3 && lastDigits != 13) {
+        return day + "rd";
+    }
 
-    let upgradeRenewalDate = new Date();
+    return day + "th";
 
-    let updatedExpirationDate = createNewExpirationDate(upgradeRenewalDate, expirationDate);
+}
 
-    await User.updateOne({ email: email },
-        { companyProfileType: defaultValue.accountUpgrade,
-            expirationDate: updatedExpirationDate,
-            $push: {'upgradeRenewalDates': upgradeRenewalDate } }
-    );
+async function saveActiveURL(activeURL, email, req) {
 
-    await StripeCheckoutSession.findOneAndRemove({ paymentIntent: eventDataObjectId });
+    await User.updateOne({ email }, { companyWebsite: activeURL });
+    req.session.userValues.companyWebsite = activeURL;
+    req.session.save();
+
 }
 
 async function testIfURLActive(possiblyActiveURL) {
@@ -471,52 +581,19 @@ async function testIfURLActive(possiblyActiveURL) {
 
     await axios.get(possiblyActiveURL)
         .then(function(response) {
-            if (String(response.status).includes('2')) axiosResult = true;
-            if (response.statusText.match(okResult)) axiosResult = true;
+
+            let doesResponseInclude2 = String(response.status).includes('2');
+            let doesResponseIncludeOk = okResult.test(response.statusText); 
+
+            if (doesResponseInclude2 === true || doesResponseIncludeOk === true) axiosResult = true;
+
         })
         .catch(function(error) {
             if (error.response !== undefined) axiosResult = true;
         });
 
     if (axiosResult === true) return true;
+
     return false;
-}
-
-exports.testURLAndResave = async function(processedURL, email, req) {
-
-    // try in this order of importance
-    let httpsWwwURL = `https://www.${ processedURL }`;
-    let httpsURL = `https://${ processedURL }`;
-    let httpWwwURL = `http://www.${ processedURL }`;
-    let httpURL = `http://${ processedURL }`;
-
-    let isHttpsWwwURLActive = await testIfURLActive(httpsWwwURL);
-    if (isHttpsWwwURLActive === true) {
-        saveActiveURL(httpsWwwURL, email, req);
-        return;
-    }
-
-    let isHttpsURLActive = await testIfURLActive(httpsURL);
-    if (isHttpsURLActive === true) {
-        saveActiveURL(httpsURL, email, req);
-        return;
-    }
-    
-    let isHttpWwwURLActive = await testIfURLActive(httpWwwURL);
-    if (isHttpWwwURLActive === true) {
-        saveActiveURL(httpWwwURL, email, req);
-        return;
-    }
-
-    let isHttpURLActive = await testIfURLActive(httpURL);
-    if (isHttpURLActive === true) {
-        saveActiveURL(httpURL, email, req);
-        return;
-    }
-
-    await User.updateOne({ email: email }, { URLNotActiveError: true });
-    req.session.userValues.URLNotActiveError = true;
-
-    // TODO: I would prefer to use an array but unfortunately any exception thrown in a loop seems to break it.  Check into how to do this later.
 
 }

@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Company Phone</title>
+
+    <title><%= htmlTitle %></title>
+    
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
+
     <script defer src="js/cleave.min.js"></script>
     <script defer src="js/cleave-phone.us.js"></script>
-    <script defer src="js/cleave-connection.js"></script>
+    <script defer src="js/connect/cleave-connection.js"></script>
+
 </head>
 <body>
 
@@ -40,7 +44,7 @@
                         <% } %>
                         " name="companyPhone" <%= companyPhoneAttributes %> value="<%= userInput.companyPhone %>" autofocus>
                     <% if (typeof companyPhoneError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyPhoneError %></div>
+                    <div class="input__error"><%= companyPhoneError %></div>
                     <% } %> 
                 </div>
 
@@ -53,7 +57,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-phone" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete your company's phone number.</button>
+                    <button class="button_fauxLink">Delete Your Company's Phone Number</button>
                 </div>
                 <input type="hidden" name="companyPhone" value="">
                 <input type="hidden" name="deleteProperty" value="true">

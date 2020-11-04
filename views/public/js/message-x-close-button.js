@@ -1,17 +1,14 @@
 'use strict';
 
 function overXButton() {
-    console.log('over');
     document.getElementById('xButton').setAttribute('src', 'images/x-white.svg');
 }
 
 function outXButton() {
-    console.log('out');
     document.getElementById('xButton').setAttribute('src', 'images/x-black.svg');
 }
 
 function shutMessage() {
-    console.log('shut');
     document.getElementById('messageContainer').style.display = 'none';
 }
 

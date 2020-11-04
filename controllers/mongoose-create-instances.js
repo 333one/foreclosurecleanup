@@ -46,7 +46,7 @@ exports.createRecentPasswordResetSuccess = function(email) {
     return recentPasswordResetSuccess;
 }
 
-exports.createPasswordResetRequest = function(confirmationHash, email) {
+exports.createPasswordResetRequest = function(email, confirmationHash) {
 
     const passwordResetRequest = new PasswordResetRequest({
         confirmationHash,

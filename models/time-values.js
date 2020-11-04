@@ -30,7 +30,7 @@ exports.premiumUserExpiration = 365 * 24 * 60 * 60;
 exports.passwordResetRequestExpiration = 1 * 60 * 60;
 
 // 5 minutes
-exports.recentRequestExpiration = 5 * 60;
+exports.shortTermActivityExpiration = 5 * 60;
 
 // 30 days
 exports.upgradeExpirationAlarmTime = 30;

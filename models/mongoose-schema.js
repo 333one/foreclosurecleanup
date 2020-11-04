@@ -1,27 +1,10 @@
 "use strict";
 
-const defaultValue = require('../models/values-default');
-const stripeValue = require('../models/values-messages-stripe');
-const timeValue = require('../models/values-time');
+const defaultValue = require('../models/default-values');
+const stripeValue = require('../models/stripe-values');
+const timeValue = require('../models/time-values');
 
 const mongoose = require('mongoose');
-
-const FalseEmailConfirmationRequestSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: true
-    },
-    numberOfConfirmations: {
-        type: Number,
-        default: 0,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: timeValue.falseEmailConfirmationRequestExpiration
-    }
-});
 
 const LoginFailureSchema = new mongoose.Schema({
     email: {
@@ -65,7 +48,7 @@ const RecentDeletedAccountSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: timeValue.recentRequestExpiration
+        expires: timeValue.shortTermActivityExpiration
     },
     email: {
         type: String,
@@ -77,7 +60,7 @@ const RecentPasswordResetSuccessSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: timeValue.recentRequestExpiration
+        expires: timeValue.shortTermActivityExpiration
     },
     email: {
         type: String,
@@ -235,72 +218,76 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    serviceBoardingSecuring: {
-        type: String,
-        default: 'no',
-        required: true
-    },   
-    serviceDebrisRemovalTrashout: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceEvictionManagement: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceFieldInspection: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceHandymanGeneralMaintenance: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceLandscapeMaintenance: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceLockChanges: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceOverseePropertyRehabilitation: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    servicePoolMaintenance: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    servicePropertyCleaning: {
-        type: String,
-        default: 'no',
-        required: true
-    },
-    serviceWinterizations: {
-        type: String,
-        default: 'no',
+    shouldBrowserFocusOnURLNotActiveError: {
+        type: Boolean,
+        default: false,
         required: true
     },
     upgradeRenewalDates: {
         type: Array
     },
-    URLNotActiveError: {
+    urlNotActiveError: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    boardingSecuring: {
+        type: Boolean,
+        default: false,
+        required: true
+    },   
+    debrisRemovalTrashout: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    evictionManagement: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    fieldInspection: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    handymanGeneralMaintenance: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    landscapeMaintenance: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    lockChanges: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    overseePropertyRehabilitation: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    poolMaintenance: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    propertyCleaning: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    winterizations: {
         type: Boolean,
         default: false,
         required: true
     }
 });
 
-const FalseEmailConfirmationRequest = mongoose.model('falseEmailConfirmationRequest', FalseEmailConfirmationRequestSchema);
 const LoginFailure = mongoose.model('loginFailure', LoginFailureSchema);
 const PasswordResetRequest = mongoose.model('passwordResetRequest', PasswordResetRequestSchema);
 const RecentDeletedAccount = mongoose.model('recentDeletedAccount', RecentDeletedAccountSchema);
@@ -311,4 +298,4 @@ const StripeSuccessKey = mongoose.model('stripeSuccessKey', StripeSuccessKeySche
 const UnverifiedUser = mongoose.model('unverifiedUser', UnverifiedUserSchema);
 const User = mongoose.model('user', UserSchema);
 
-module.exports = { FalseEmailConfirmationRequest, LoginFailure, PasswordResetRequest, RecentDeletedAccount, RecentPasswordResetSuccess, StripeCancelKey, StripeCheckoutSession, StripeSuccessKey, UnverifiedUser, User };
+module.exports = { LoginFailure, PasswordResetRequest, RecentDeletedAccount, RecentPasswordResetSuccess, StripeCancelKey, StripeCheckoutSession, StripeSuccessKey, UnverifiedUser, User };

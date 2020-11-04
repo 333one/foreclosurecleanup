@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Company Address</title>
+
+    <title><%= htmlTitle %></title>
+
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
+    
     <script>
-        let patternCompanyCity = "<%- patternCompanyCity %>";
-        let patternCompanyStreet = "<%- patternCompanyStreet %>";
-        let patternCompanyStreetTwo = "<%- patternCompanyStreetTwo %>";
-        let patternCompanyZip = "<%- patternCompanyZip %>";
+        let patternCompanyCity = <%- patternCompanyCity %>;
+        let patternCompanyStreet = <%- patternCompanyStreet %>;
+        let patternCompanyStreetTwo = <%- patternCompanyStreetTwo %>;
+        let patternCompanyZip = <%- patternCompanyZip %>;
     </script>
-    <script defer src="js/character-format.js"></script>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/company-address-character-blocker.js"></script>
+    
 </head>
 <body>
 
@@ -20,59 +25,78 @@
 
         <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
-            <% if (typeof normalize != "undefined") { %>
+            <% if (showUspsNormalizedVsOriginal === true) { %>
 
-            <p class="dashboard__headline -rightLeftPaddingMedium">Address Normalization</p>
-            <p class="dashboard__subText -rightLeftMarginMedium">If the top address is correct we recommend that you normalize your company's address using US Postal Service format.</p>
+            <p class="dashboard__headline -bottomMarginLarge -rightLeftPaddingMedium">Address Normalization</p>
+            <p class="textMedium -bottomMarginMedium -rightLeftMarginMedium">If the top address is correct we recommend that you use <span class="-noWrap">US Postal Service</span> format to maximize search performance.</p>
             <div class="addressNormalizationBox -rightLeftMarginMedium">
-                <p class="addressNormalization -topMarginMedium"><%- normalize.uspsStreet %><% if (normalize.uspsStreetTwo != "") { %>, <%- normalize.uspsStreetTwo %><% } %></p>
-                <p class="addressNormalization -bottomMarginMedium"><%- normalize.uspsCity %>, <%- normalize.uspsState %> <%- normalize.uspsZip %></p>
+                <p class="addressNormalization -topMarginMedium"><%= uspsNormalized.companyStreet %></p>
+                <% if (typeof uspsNormalized.companyStreetTwo === "string") { %>
+                    <p class="addressNormalization"><%= uspsNormalized.companyStreetTwo %></p>
+                <% } %>
+                <p class="addressNormalization -bottomMarginMedium"><%= uspsNormalized.companyCity %>, <%= uspsNormalized.companyState %> <%= uspsNormalized.companyZip %></p>
 
                 <form action="/add-change-company-address" method="POST">
                     <div class="-bottomMarginMedium -rightLeftMarginMedium">
                         <button class="uspsFormat__button">Use US Postal Service format</button>
                     </div>
-                    <input type="hidden" name="companyStreet" value="<%= normalize.uspsStreet %>">
-                    <input type="hidden" name="companyStreetTwo" value="<%= normalize.uspsStreetTwo %>">
-                    <input type="hidden" name="companyCity" value="<%= normalize.uspsCity %>">
-                    <input type="hidden" name="companyState" value="<%= normalize.uspsState %>">
-                    <input type="hidden" name="companyZip" value="<%= normalize.uspsZip %>">
-                    <input type="hidden" name="overrideUsps" value="false">
+                    <input type="hidden" name="companyStreet" value="<%= uspsNormalized.companyStreet %>">
+                    <input type="hidden" name="companyStreetTwo" value="<%= uspsNormalized.companyStreetTwo %>">
+                    <input type="hidden" name="companyCity" value="<%= uspsNormalized.companyCity %>">
+                    <input type="hidden" name="companyState" value="<%= uspsNormalized.companyState %>">
+                    <input type="hidden" name="companyZip" value="<%= uspsNormalized.companyZip %>">
+                    <input type="hidden" name="useOriginalInput" value="false">
                     <input type="hidden" name="deleteProperty" value="false">
                 </form> 
 
             </div>
 
-            <div class="addressNormalizationBox -rightLeftMarginMedium">
-                <p class="addressNormalization -topMarginMedium"><%= normalize.userInputStreet %><% if (normalize.userInputStreetTwo != "") { %>, <%= normalize.userInputStreetTwo %><% } %></p>
-                <p class="addressNormalization -bottomMarginMedium"><%= normalize.userInputCity %>, <%= normalize.userInputState %> <%= normalize.userInputZip %></p>
+            <div class="addressNormalizationBox -bottomMarginLarge -rightLeftMarginMedium">
+                <p class="addressNormalization -topMarginMedium"><%= originalInput.companyStreet %></p>
+                <% if (typeof originalInput.companyStreetTwo === "string") { %>
+                    <p class="addressNormalization"><%= originalInput.companyStreetTwo %></p>
+                <% } %>
+                <p class="addressNormalization -bottomMarginMedium"><%= originalInput.companyCity %>, <%= originalInput.companyState %> <%= originalInput.companyZip %></p>
 
                 <form action="/add-change-company-address" method="POST">
                     <div class="-bottomMarginMedium -rightLeftMarginMedium">
                         <button class="originalFormat__button">Keep original</button>
                     </div>
-                    <input type="hidden" name="companyStreet" value="<%= normalize.userInputStreet %>">
-                    <input type="hidden" name="companyStreetTwo" value="<%= normalize.userInputStreetTwo %>">
-                    <input type="hidden" name="companyCity" value="<%= normalize.userInputCity %>">
-                    <input type="hidden" name="companyState" value="<%= normalize.userInputState %>">
-                    <input type="hidden" name="companyZip" value="<%= normalize.userInputZip %>">
-                    <input type="hidden" name="overrideUsps" value="true">
+                    <input type="hidden" name="companyStreet" value="<%= originalInput.companyStreet %>">
+                    <input type="hidden" name="companyStreetTwo" value="<%= originalInput.companyStreetTwo %>">
+                    <input type="hidden" name="companyCity" value="<%= originalInput.companyCity %>">
+                    <input type="hidden" name="companyState" value="<%= originalInput.companyState %>">
+                    <input type="hidden" name="companyZip" value="<%= originalInput.companyZip %>">
+                    <input type="hidden" name="useOriginalInput" value="true">
                     <input type="hidden" name="deleteProperty" value="false">
                 </form> 
             
             </div>
 
-            <%- include('includes/back-to-my-account.ejs') %>
+            <div class="textMedium -rightAlign -rightLeftMarginMedium -bottomMarginLarge"><a href="/add-change-company-address">Use Neither ></a></div>
 
             <% } else { %>            
 
             <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Your Company's Address</p>
 
+            <% if (addOrChangeProperty === "change") { %>
+                <div class="dashboard__unit -bottomBorder">
+                    <div>
+                        <p class="dashboard__key -rightLeftMarginMedium">Current Company Address:</p>
+                        <p class="dashboard__value -rightLeftMarginMedium"><%= companyStreet %></p>
+                        <% if (typeof companyStreetTwo === "string") { %>
+                            <p class="dashboard__value -rightLeftMarginMedium"><%= companyStreetTwo %></p>
+                        <% } %>
+                        <p class="dashboard__value -rightLeftMarginMedium"><%= companyCity %>, <%= companyState %> <%= companyZip %></p>
+                    </div>
+                </div>
+            <% } %>
+
             <form action="/add-change-company-address" method="POST">
 
                 <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Company Address:</p>
-                <p class="textSmall  -rightLeftPaddingMedium">This address is used on the <a href="/foreclosure-cleanup-vendor-list">vendor list search page</a>.  It allows customers to search for vendors near their location.</p>
-                <input type="hidden" name="overrideUsps" value="false">
+                <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">This address is used on the <a href="/foreclosure-cleanup-vendor-list">vendor list search page</a> to help customers search for vendors near their location.</p>
+                <input type="hidden" name="useOriginalInput" value="false">
                 <input type="hidden" name="deleteProperty" value="false">
 
                 <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
@@ -83,48 +107,36 @@
                         <% } %>
                         " name="companyStreet" <%= companyStreetAttributes %> value="<%= userInput.companyStreet %>" autofocus>
                     <% if (typeof companyStreetError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyStreetError %></div>
+                    <div class="input__error"><%= companyStreetError %></div>
                     <% } %> 
                 </div>
 
                 <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyStreetTwo" class="input__label
-                        <% if (typeof companyStreetTwoError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        ">Street Address Line Two:</label>
+                    <label for="companyStreetTwo" class="input__label">Street Address Line Two:</label>
                     <input id="companyStreetTwo" class="input__field
                         <% if (typeof companyStreetTwoError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         " name="companyStreetTwo" <%= companyStreetTwoAttributes %> value="<%= userInput.companyStreetTwo %>">
                     <% if (typeof companyStreetTwoError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyStreetTwoError %></div>
+                    <div class="input__error"><%= companyStreetTwoError %></div>
                     <% } %> 
                 </div>
 
                 <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyCity" class="input__label
-                        <% if (typeof companyCityError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        ">City:</label>
+                    <label for="companyCity" class="input__label">City:</label>
                     <input id="companyCity" class="input__field
                         <% if (typeof companyCityError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         " name="companyCity" <%= companyCityAttributes %> value="<%= userInput.companyCity %>">
                     <% if (typeof companyCityError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyCityError %></div>
+                    <div class="input__error"><%= companyCityError %></div>
                     <% } %> 
                 </div>
 
                 <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyState" class="input__label
-                        <% if (typeof companyStateError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        ">State:</label>
+                    <label for="companyState" class="input__label">State:</label>
                     <select id="companyState" class="input__field
                         <% if (typeof companyStateError != "undefined") { %>
                             -errorBorder
@@ -185,23 +197,19 @@
                     </select>
 
                     <% if (typeof companyStateError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyStateError %></div>
+                    <div class="input__error"><%= companyStateError %></div>
                     <% } %> 
                 </div>
 
                 <div class="input__unit -topMarginMedium -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="companyZip" class="input__label
-                        <% if (typeof companyZipError != "undefined") { %>
-                            -errorColor
-                        <% } %>   
-                        ">Zip Code:</label>
+                    <label for="companyZip" class="input__label">Zip Code:</label>
                     <input id="companyZip" class="input__field
                         <% if (typeof companyZipError != "undefined") { %>
                             -errorBorder
                         <% } %>
                         " name="companyZip" <%= companyZipAttributes %> value="<%= userInput.companyZip %>">
                     <% if (typeof companyZipError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyZipError %></div>
+                    <div class="input__error"><%= companyZipError %></div>
                     <% } %> 
                 </div>
 
@@ -214,14 +222,14 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-address" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete your company's address.</button>
+                    <button class="button_fauxLink">Delete Your Company's Address</button>
                 </div>
                 <input type="hidden" name="companyStreet" value="">
                 <input type="hidden" name="companyStreetTwo" value="">
                 <input type="hidden" name="companyCity" value="">
                 <input type="hidden" name="companyState" value="">
                 <input type="hidden" name="companyZip" value="">
-                <input type="hidden" name="overrideUsps" value="false">
+                <input type="hidden" name="useOriginalInput" value="false">
                 <input type="hidden" name="deleteProperty" value="true">
             </form>
             <% } %>  

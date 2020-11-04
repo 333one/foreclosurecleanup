@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Company Description</title>
+
+    <title><%= htmlTitle %></title>
+    
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
-    <script>let patternCompanyDescription = "<%- patternCompanyDescription %>"</script>
-    <script defer src="js/character-format.js"></script>
+
+    <script>
+        let patternCompanyDescription = <%- patternCompanyDescription %>;
+    </script>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/company-description-character-blocker.js"></script>
+
 </head>
 <body>
 
@@ -37,9 +44,9 @@
                         <% if (typeof companyDescriptionError != "undefined") { %>
                             -errorBorder
                         <% } %>
-                        " name="companyDescription" <%= companyDescriptionAttributes %> value="<%= userInput.companyDescription %>" autofocus></textarea>
+                        " name="companyDescription" <%= companyDescriptionAttributes %> autofocus><%= userInput.companyDescription %></textarea>
                     <% if (typeof companyDescriptionError != "undefined") { %>
-                    <div class="input__errorMessage"><%= companyDescriptionError %></div>
+                    <div class="input__error"><%= companyDescriptionError %></div>
                     <% } %> 
                 </div>
 
@@ -52,7 +59,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-description" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete your company's description.</button>
+                    <button class="button_fauxLink">Delete Your Company's Description</button>
                 </div>
                 <input type="hidden" name="companyDescription" value="">
                 <input type="hidden" name="deleteProperty" value="true">
