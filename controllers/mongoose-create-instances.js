@@ -1,24 +1,13 @@
 "use strict";
 
 const { 
-    FalseEmailConfirmationRequest,
     LoginFailure,
     PasswordResetRequest,
     RecentDeletedAccount,
-    RecentPasswordResetSuccess,
     StripeCheckoutSession,
     UnverifiedUser,
     User
 } = require('../models/mongoose-schema');
-
-exports.createFalseEmailConfirmationRequest = function(email) {
-
-    const fakeEmailRequest = new FalseEmailConfirmationRequest({
-        email
-    });
-
-    return fakeEmailRequest;
-}
 
 exports.createLoginFailure = function(email) {
 
@@ -27,6 +16,7 @@ exports.createLoginFailure = function(email) {
     });
 
     return loginFailure;
+
 }
 
 exports.createRecentDeletedAccount = function(email) {
@@ -36,45 +26,32 @@ exports.createRecentDeletedAccount = function(email) {
     });
 
     return recentDeletedAccount;
+
 }
 
-exports.createRecentPasswordResetSuccess = function(email) {
-    const recentPasswordResetSuccess = new RecentPasswordResetSuccess({
-        email
-    });
-
-    return recentPasswordResetSuccess;
-}
-
-exports.createPasswordResetRequest = function(email, confirmationHash) {
+exports.createPasswordResetRequest = function(email, confirmationHash, successHash) {
 
     const passwordResetRequest = new PasswordResetRequest({
         confirmationHash,
-        email        
+        email, 
+        successHash        
     });
 
     return passwordResetRequest;
+
 }
 
-exports.createStripeCheckoutSession = function(email, paymentIntent) {
+exports.createStripeCheckoutSession = function(email, paymentIntent, stripeCancelKey, stripeSuccessKey) {
 
     const stripeCheckoutSession = new StripeCheckoutSession({
         email,
-        paymentIntent
+        paymentIntent,
+        stripeCancelKey,
+        stripeSuccessKey
     });
 
     return stripeCheckoutSession;
-}
 
-exports.createStripeCancelSuccessKey = function(email, entryKey, paymentIntent, StripeEntryKeyConstructor) {
-
-    const stripeCancelSuccessKey = new StripeEntryKeyConstructor({
-        email,
-        entryKey,
-        paymentIntent
-    });
-
-    return stripeCancelSuccessKey;
 }
 
 exports.createUnverifiedUser = function(email) {
@@ -86,6 +63,7 @@ exports.createUnverifiedUser = function(email) {
     });
 
     return unverifiedUser;
+
 }
 
 exports.createUser = function(unverifiedUser) {
@@ -96,4 +74,5 @@ exports.createUser = function(unverifiedUser) {
     });
 
     return user;
+    
 }

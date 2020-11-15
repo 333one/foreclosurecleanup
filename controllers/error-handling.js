@@ -1,7 +1,8 @@
 "use strict";
 
-const winston = require('winston');
+const path = require('path');
 
+const winston = require('winston');
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
@@ -11,6 +12,16 @@ const logger = winston.createLogger({
 });
 
 const siteValue = require('../models/site-values');
+
+function sendToLogger(error) {
+
+    logger.log({
+        time: new Date().toLocaleString("en-US", { timeZone: "America/Phoenix" }),
+        level: 'error',
+        message: error.message
+    });
+    
+}
 
 exports.customExpressErrorHandler = function(error, req, res, next) {
 
@@ -22,24 +33,19 @@ exports.customExpressErrorHandler = function(error, req, res, next) {
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('error500', { activeLink, contactEmail, loggedIn });
+
 };
 
 exports.logErrorMessage = function(error) {
 
     sendToLogger(error);
+
 }
 
-function sendToLogger(error) {
+exports.wrapAsync = function(wrappedFunction) {
 
-    logger.log({
-        time: new Date().toLocaleString("en-US", { timeZone: "America/Phoenix" }),
-        level: 'error',
-        message: error.message
-    });
-}
-
-exports.wrapAsync = function(fn) {
     return function(req, res, next) {
-        fn(req, res, next).catch(next);
+        wrappedFunction(req, res, next).catch(next);
     }
+
 }

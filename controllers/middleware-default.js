@@ -1,6 +1,6 @@
 "use strict";
 
-const { logErrorMessage, wrapAsync } = require('./error-handling');
+const { wrapAsync } = require('./error-handling');
 const siteValue = require('../models/site-values');
 
 exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res) {

@@ -71,12 +71,13 @@
                         <% if (isAccountUpgraded === true) { %> -bottomMarginMedium <% } %>
                         "><%= premiumExpirationDate %></p>
                         <% if (isUpgradeExpirationSoon === true) { %>
-                            <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall">Your Premium account will expire in <span class="-errorColor"><strong><%= numberOfDaysUntilExpiration %> days</strong></span>.</p>
-                            <p class="textSmall -rightLeftMarginMedium"><a href="upgrade-extend-premium">Renew Your Premium Account</a>: Renew your premium account for 12 months for just <%= costInDollarsProduct_1 %>.</p>
+                            <p class="textLarge -errorColor -rightLeftMarginMedium -bottomMarginSmall">Your Premium account will expire <%= numberOfDaysUntilExpirationFragment %></span>.</p>
                         <% } %>
                     <p class="textSmall -rightLeftMarginMedium">
-                        <% if (isUpgradeExpirationSoon === false && premiumAccountExtendsAvailable === true) { %>
-                            <a href="upgrade-extend-premium">Extend Your Premium Account</a>: Extend your premium account for another 12 months for just <%= costInDollarsProduct_1 %>.
+                        <% if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === true) { %>
+                            <a href="upgrade-extend-premium">Renew Your Premium Account</a>: Renew your premium account for another 12 months for just <%= costInDollarsProduct_1 %>.
+                        <% } else if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === false) { %>
+                            <a href="upgrade-extend-premium">Extend Your Premium Account</a>: Extend your premium account for an additional 12 months for just <%= costInDollarsProduct_1 %>.
                         <% } else { %>
                             Great! Your <%= companyProfileType %> account duration is maxed out. No renewals or extensions are needed at this time.
                         <% } %>
@@ -130,12 +131,12 @@
             <div class="dashboard__unit -bottomBorder">
                 <div>
                     <p class="dashboard__key -rightLeftMarginMedium">Company Address:</p>
-                    <% if (isCompanyAddressAdded) { %>
+                    <% if (isCompanyAddressAdded === true) { %>
                         <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
-                        <% if (typeof companyStreetMyAccountValue === 'string') { %>
+                        <% if (typeof companyStreetTwoMyAccountValue === 'string') { %>
                             <p class="textLarge -rightLeftMarginMedium"><%= companyStreetTwoMyAccountValue %></p>
                         <% } %>
-                        <p class="textLarge -rightLeftMarginMedium"><%= companyRegionMyAccountValue %></p>
+                        <p class="textLarge -rightLeftMarginMedium"><%= companyCityMyAccountValue %>, <%= companyStateMyAccountValue %> <%= companyZipMyAccountValue %></p>
                     <% } else { %>
                     <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
                     <% } %>

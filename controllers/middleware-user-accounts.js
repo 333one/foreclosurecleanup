@@ -3,13 +3,20 @@
 const bcrypt = require('bcryptjs');
 const cryptoRandomString = require('crypto-random-string');
 const emailValidator = require('email-validator');
-const Filter = require('bad-words');
-const objectHash = require('object-hash');
-const path = require('path');
-const USPS = require('usps-webtools-promise').default;
-const validator = require('validator');
 
-require('dotenv').config({ path: path.join(__dirname, '../models/.env') });
+const Filter = require('bad-words');
+const filter = new Filter();
+
+const objectHash = require('object-hash');
+
+const USPS = require('usps-webtools-promise').default;
+const usps = new USPS({
+    userId: process.env.USPS_USER_ID,
+    // USPS returns ALL CAPS, this boolean turns on Proper Caps for both Street lines and City. This is an optional item.
+    properCase: Boolean
+});
+
+const validator = require('validator');
 
 const checks = require('./checks');
 const communication = require('./communication');
@@ -29,22 +36,11 @@ const stripeValue = require('../models/stripe-values');
 const timeValue = require('../models/time-values');
 const { wrapAsync } = require('./error-handling');
 
-const filter = new Filter();
-
-const usps = new USPS({
-    userId: process.env.USPS_USER_ID,
-    // USPS returns ALL CAPS, this boolean turns on Proper Caps for both Street lines and City. This is an optional item.
-    properCase: Boolean
-});
-
 const {
     LoginFailure,
     PasswordResetRequest,
     RecentDeletedAccount,
-    RecentPasswordResetSuccess,
-    StripeCancelKey,
     StripeCheckoutSession,
-    StripeSuccessKey,
     User,
     UnverifiedUser
     } = require('../models/mongoose-schema');
@@ -64,6 +60,35 @@ exports.accountDeleted = wrapAsync(async function(req, res) {
     let loggedIn = false;
     
     res.render('account-deleted', { activeLink, contactEmail, loggedIn });
+
+});
+
+exports.accountSuspended = wrapAsync(async function(req, res) {
+
+    // Initial checks.  If queries were absent or fake forward to page-not-found.
+    let email = req.query.email ? req.query.email : '';
+    if (email === '') return res.status(404).redirect('/page-not-found');
+
+    let userValues = await User.findOne({ email });
+
+    if (userValues) {
+
+        let { accountSuspended } = userValues;
+        if (accountSuspended !== true) return res.redirect('/');
+
+    } else {
+
+        return res.redirect('/');
+
+    }
+
+    // For rendering.
+    let activeLink = 'account-suspended';
+    let contactEmail = siteValue.contactEmail;
+    let loggedIn = false;
+    
+    res.render('account-suspended', { activeLink, contactEmail, loggedIn });
+    
 });
 
 exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
@@ -111,26 +136,36 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
 
         var originalInput = {};
 
-        originalInput.companyStreet = req.session.originalInput.companyStreet;
-        originalInput.companyStreetTwo = req.session.originalInput.companyStreetTwo;
-        originalInput.companyCity = req.session.originalInput.companyCity;
-        originalInput.companyState = req.session.originalInput.companyState;
-        originalInput.companyZip = req.session.originalInput.companyZip;
+        let setOriginalInputArray = formFields.addChangeCompanyAddress.filter(function(element) {
+            return element !== 'deleteProperty' || element !== 'useOriginalInput';
+        });
+
+        setOriginalInputArray.forEach(function(element) {
+            originalInput[element] = req.session.originalInput[element];
+        });
 
         var uspsNormalized = {};
 
-        uspsNormalized.companyStreet = req.session.uspsNormalized.companyStreet;
-        uspsNormalized.companyStreetTwo = req.session.uspsNormalized.companyStreetTwo;
-        uspsNormalized.companyCity = req.session.uspsNormalized.companyCity;
-        uspsNormalized.companyState = req.session.uspsNormalized.companyState;
-        uspsNormalized.companyZip = req.session.uspsNormalized.companyZip;
+        let setUspsNormalizedArray = formFields.addChangeCompanyAddress.filter(function(element) {
+            return element !== 'deleteProperty' || element !== 'useOriginalInput';
+        });
+
+        setUspsNormalizedArray.forEach(function(element) {
+            uspsNormalized[element] = req.session.uspsNormalized[element];
+        });
 
         delete req.session.originalInput;
         delete req.session.uspsNormalized;
 
     }
 
-    let { companyCity, companyState, companyStreet, companyStreetTwo, companyZip } = req.session.userValues;
+    let {
+        companyCity,
+        companyState,
+        companyStreet,
+        companyStreetTwo,
+        companyZip
+    } = req.session.userValues;
 
     // For rendering.
     let activeLink = 'add-change-company-address';
@@ -174,6 +209,7 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
         originalInput,
         uspsNormalized
     });
+
 });
 
 exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
@@ -208,6 +244,7 @@ exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
     let companyDescription = req.session.userValues.companyDescription;
     let companyDescriptionAttributes = renderValue.companyDescriptionField.attributes;
     let patternCompanyDescription = regExpValue.companyDescription;
+    let companyDescriptionMaxLength = renderValue.companyDescriptionField.maxLength;
 
     res.render('add-change-company-description', {
         userInput: inputFields,
@@ -218,6 +255,7 @@ exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
         companyDescription,
         companyDescriptionAttributes,
         patternCompanyDescription,
+        companyDescriptionMaxLength,
         companyDescriptionError,
         htmlTitle
     });
@@ -321,6 +359,7 @@ exports.addChangeCompanyPhone = wrapAsync(async function(req, res) {
 exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
 
     let inputFields = {}, inputFieldsBoolean = {};
+    let { companyProfileType } = req.session.userValues;
     let addOrChangeProperty = 
         req.session.userValues.boardingSecuring === false &&
         req.session.userValues.debrisRemovalTrashout === false &&
@@ -346,7 +385,7 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
 
     } else {
 
-        inputFieldsBoolean = logicUserAccounts.addCompanyServices(formFields.addChangeCompanyServices, req.session.userValues);
+        inputFieldsBoolean = logicUserAccounts.getCompanyServicesFromUserValues(formFields.addChangeCompanyServices, req.session.userValues);
         inputFields = logicUserAccounts.convertBooleanToString(inputFieldsBoolean);
 
     }
@@ -358,6 +397,7 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
     let activeLink = 'add-change-company-services';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
+    let isAccountUpgraded = companyProfileType === defaultValue.accountUpgrade ? true : false;
 
     let labelBoardingSecuring = renderValue.boardingSecuring;
     let labelDebrisRemovalTrashout = renderValue.debrisRemovalTrashout;
@@ -377,6 +417,7 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
             activeLink,
             contactEmail,
             loggedIn,
+            isAccountUpgraded,
             addOrChangeProperty,
             loggedIn,
             htmlTitle,
@@ -393,6 +434,7 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
             labelWinterizations,
             companyServicesError
         });
+
 });
 
 exports.addChangeCompanyWebsite = wrapAsync(async function(req, res) {
@@ -450,7 +492,13 @@ exports.changeEmail = wrapAsync(async function(req, res) {
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, changedEmailError, confirmationEmailError, currentPasswordError } = req.session.transfer;
+        var {
+            cleanedFields,
+            changedEmailError,
+            confirmationEmailError,
+            currentPasswordError
+        } = req.session.transfer;
+
         delete req.session.transfer;
 
         // Set object to previous form input.
@@ -494,7 +542,12 @@ exports.changePassword = wrapAsync(async function(req, res) {
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, currentPasswordError, changedPasswordError, confirmationPasswordError } = req.session.transfer;
+        var {
+            cleanedFields,
+            currentPasswordError,
+            changedPasswordError,
+            confirmationPasswordError
+        } = req.session.transfer;
 
         delete req.session.transfer;
 
@@ -544,11 +597,13 @@ exports.confirmationLimitReached = wrapAsync(async function(req, res) {
 
     let emailSubject = emailMessage.verificationEmailSubject();
     let expirationTime = timeValue.getExpirationTime(timeValue.unverifiedUserExpiration);
-    let emailBody = emailMessage.verificationEmailBody(confirmationHash, isResetAttemptBeforeVerified);
-    
-    communication.sendEmail(email, emailSubject, emailBody);
 
-    let htmlBody = defaultMessage.confirmationLimitReachedBody(email, emailSubject, expirationTime, isResetAttemptBeforeVerified);
+    let htmlBody = defaultMessage.confirmationLimitReachedBody(
+        email,
+        emailSubject,
+        expirationTime,
+        isResetAttemptBeforeVerified
+        );
 
     // For rendering.
     let activeLink = 'confirmation-limit-reached';
@@ -576,23 +631,18 @@ exports.confirmationSent = wrapAsync(async function(req, res) {
         isUnverifiedMultipleRegisters === false &&
         isConfirmationResent === false &&
         isResetAttemptBeforeVerified === false
-        ) {
-            return res.status(404).redirect('/page-not-found'); 
-        }
+        ) return res.status(404).redirect('/page-not-found'); 
 
     // If no user exists redirect to page-not-found.
     let unverifiedUser = await UnverifiedUser.findOne({ email });
     if (!unverifiedUser) return res.status(404).redirect('/page-not-found');
 
     let numberOfConfirmations = unverifiedUser.numberOfConfirmations += 1;
-
-    // If the user has equaled or exceeded the maximum number of confirmations redirect them to the confirmation limit reached page.
     if (numberOfConfirmations > defaultValue.numberOfEmailConfirmationsAllowed) {
 
         await UnverifiedUser.updateOne({ email }, { numberOfConfirmations: defaultValue.numberOfEmailConfirmationsAllowed + 1 });
-
         return res.redirect(`/confirmation-limit-reached?email=${ email }`);
-
+        
     } 
 
     await UnverifiedUser.updateOne({ email }, { numberOfConfirmations });
@@ -603,14 +653,29 @@ exports.confirmationSent = wrapAsync(async function(req, res) {
         
     communication.sendEmail(email, emailSubject, emailBody);
 
-    let htmlBody = defaultMessage.confirmationSentBody(email, emailSubject, isNewRegister, isUnverifiedMultipleRegisters, isConfirmationResent, isResetAttemptBeforeVerified);
+    let htmlBody = defaultMessage.confirmationSentBody(
+        email,
+        emailSubject,
+        isNewRegister,
+        isUnverifiedMultipleRegisters,
+        isConfirmationResent,
+        isResetAttemptBeforeVerified
+        );
 
     // For rendering.
     let activeLink = 'confirmation-sent';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
-    res.render('confirmation-sent', { activeLink, contactEmail, loggedIn, htmlBody, email, emailSubject });
+    res.render('confirmation-sent', {
+        activeLink,
+        contactEmail,
+        loggedIn,
+        htmlBody,
+        email,
+        emailSubject
+    });
+
 });
 
 exports.deleteYourAccount = wrapAsync(async function(req, res) {
@@ -635,7 +700,15 @@ exports.deleteYourAccount = wrapAsync(async function(req, res) {
     let loggedIn = req.session.userValues ? true : false;
     let passwordAttributes = renderValue.passwordField.attributes;
 
-    res.render('delete-your-account', { userInput: inputFields, activeLink, contactEmail, loggedIn, passwordAttributes, currentPasswordError });
+    res.render('delete-your-account', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        passwordAttributes,
+        currentPasswordError
+    });
+
 });
 
 exports.login = wrapAsync( async function(req, res) {
@@ -653,8 +726,10 @@ exports.login = wrapAsync( async function(req, res) {
         inputFields.currentPassword = '';
 
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.login);
+
     }
 
     // For rendering.
@@ -744,36 +819,36 @@ exports.myAccount = wrapAsync(async function(req, res) {
 
     let isAccountUpgraded = companyProfileType === defaultValue.accountUpgrade ? true : false;
 
-    // Start the Message / Stripe section.
-    let failMessage, noChangeMessage, successMessage;
+    // Session values are stored as strings.  In this route expirationDate is used multiple times and only useful as a Date object.
+    expirationDate = new Date(expirationDate);
 
-    // Both queries should never exist in the same response.  If they do this indicates shenanigans.  Log out the user.
-    if (req.query.success && req.query.cancel) {
-        return logoutSteps.logoutUser(req, res, '/index');
-    }
+    // Start the Message / Stripe section.
+    // Both queries should never exist in the same response.  If they do this indicates shenanigans.  Log out the user and redirect them to the home page.
+    if (req.query.success && req.query.cancel) return logoutSteps.logoutUser(req, res, '/');
+
+    let successMessage, noChangeMessage, failMessage;
 
     // The success query string, success=${ stripeSuccessString } is set up in middlewareStripe.postCreateCheckoutSession.  
-    // If the success query exists it is because Stripe sent the user here.    
+    // If req.query.success exists it is because Stripe sent the user here after a successful purchase.    
     if (req.query.success) {
 
-        // Get the data from the DB to make sure the query string was real.  Below use paymentIntent as a key to update the db.
-        // If stripeSuccessKey doesn't exist there are 2 reasons.  1) webhookPremiumUpgrade got there first and already deleted it after use.  2) success was a fake key.
-        let stripeSuccessKey = await StripeSuccessKey.findOne({ entryKey: req.query.success });
+        let stripeCheckoutSession = await StripeCheckoutSession.findOne({ stripeSuccessKey: req.query.success });
+        if (stripeCheckoutSession) {
 
-        let paymentIntent = stripeSuccessKey ? stripeSuccessKey.paymentIntent : null;
-
-        if (paymentIntent) {
+            let todaysDate = new Date();
+            let updatedExpirationDate = logicUserAccounts.createNewExpirationDate(todaysDate, expirationDate);
 
             // Both webhookPremiumUpgrade and myAccount can update the DB.  Whichever is faster does the job.
             // This redundancy from webhookPremiumUpgrade ensures that the DB update always happens even if the session is lost because the client or server crashed.
-            await logicStripe.stripeSuccessUpdateDB(paymentIntent);
+            await logicStripe.stripeSuccessUpdateDB(stripeCheckoutSession.paymentIntent, stripeCheckoutSession, todaysDate, updatedExpirationDate);
 
-            // Update the session values and other variables to reflect the upgrade that took place in stripeSuccessUpdateDB(paymentIntent).
-            let userValues = await User.findOne({ email });
-            req.session.userValues = userValues;
+            await StripeCheckoutSession.findOneAndRemove({ stripeSuccessKey: req.query.success });
 
-            companyProfileType = req.session.userValues.companyProfileType;
-            expirationDate = req.session.userValues.expirationDate;
+            req.session.userValues.companyProfileType = defaultValue.accountUpgrade;
+            companyProfileType = defaultValue.accountUpgrade;
+
+            req.session.userValues.expirationDate = updatedExpirationDate;
+            expirationDate = updatedExpirationDate;
         
             isAccountUpgraded = true;
             successMessage = stripeValue.successMessage; 
@@ -782,20 +857,17 @@ exports.myAccount = wrapAsync(async function(req, res) {
         
     } 
 
-    // my-acccount is used as the Stripe cancel route.  my-account?cancel=${ stripeCancelString }
+    // If req.query.cancel exists it is because Stripe sent the user here after a failed purchase.   
     if (req.query.cancel) {
 
-        let doesStripeCancelKeyExist = await StripeCancelKey.exists({ entryKey: req.query.cancel });
-        if (doesStripeCancelKeyExist) failMessage = stripeValue.cancelMessage;
+        let stripeCheckoutSession = await StripeCheckoutSession.findOne({ stripeCancelKey: req.query.cancel });
+        if (stripeCheckoutSession) {
 
-    }
+            failMessage = stripeValue.cancelMessage;
+            await StripeCheckoutSession.findOneAndRemove({ stripeCancelKey: req.query.cancel });
 
-    // Both keys are always created in middlewareStripe.postCreateCheckoutSession.  Just to be careful if either exists delete them both.
-    if (req.query.success || req.query.cancel) {
+        }
 
-        await StripeSuccessKey.findOneAndRemove({ email });
-        await StripeCancelKey.findOneAndRemove({ email });  
-        
     }
 
     // A successMessage is created whenever there is a successful addChange on the account properties.
@@ -806,7 +878,7 @@ exports.myAccount = wrapAsync(async function(req, res) {
 
     }
 
-    // A successMessage is created whenever there is a successful addChange on the account properties.
+    // A noChangeMessage is created whenever there is a successful addChange on the account properties.
     if (req.session.userValues.noChangeMessage) {
 
         noChangeMessage = req.session.userValues.noChangeMessage;
@@ -834,22 +906,18 @@ exports.myAccount = wrapAsync(async function(req, res) {
     // Prepare Date information for rendering.
     let memberSince = `${ new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(createdAt)) } ${ new Date(createdAt).getFullYear() }`;
 
-    let numberOfDaysUntilExpiration, isUpgradeExpirationSoon, premiumAccountExtendsAvailable, premiumExpirationDate;
-
     if (isAccountUpgraded === true) {
-        
-        numberOfDaysUntilExpiration = logicUserAccounts.getNumberOfDaysUntilExpiration(new Date(expirationDate));
-        isUpgradeExpirationSoon = checks.checkIsUpgradeExpirationSoon(numberOfDaysUntilExpiration);
-        premiumAccountExtendsAvailable = checks.checkArePremiumAccountExtendsAvailable(new Date(expirationDate), isUpgradeExpirationSoon);
-        premiumExpirationDate = logicUserAccounts.getPremiumExpirationDate(new Date(expirationDate));
+
+        var numberOfDaysUntilExpiration = logicUserAccounts.getNumberOfDaysUntilExpiration(expirationDate);
+        var isUpgradeExpirationSoon = checks.checkIfUpgradeExpirationSoon(numberOfDaysUntilExpiration);
+        var numberOfDaysUntilExpirationFragment = isUpgradeExpirationSoon === true ? timeValue.getNumberOfDaysUntilExpirationFragment(numberOfDaysUntilExpiration) : undefined;
+        var arePremiumAccountExtendsAvailable = numberOfDaysUntilExpiration < timeValue.premiumAccountExtendsCutoff ? true : false;
+        var premiumExpirationDate = logicUserAccounts.getPremiumExpirationDateString(expirationDate);
 
     }
-    
-    // let companyStreetAssembled = logicUserAccounts.getCompanyStreetFull(companyStreet, companyStreetTwo);
-    let companyRegionAssembled = logicUserAccounts.getCompanyRegionFull(companyCity, companyState, companyZip);
 
     // These next steps are used determine the rendering value for company services.
-    let doCompanyServicesHaveValue = checks.checkCompanyServicesHaveValue (
+    let doCompanyServicesHaveValue = checks.checkDoAnyCompanyServicesHaveValue (
         boardingSecuring,
         debrisRemovalTrashout,
         evictionManagement,
@@ -881,7 +949,9 @@ exports.myAccount = wrapAsync(async function(req, res) {
         );
 
     } else {
+
         companyServicesMyAccountValue = defaultMessage.myAccountInformationEmpty;
+        
     }
 
     // The next steps are used to determine if the account is Live and for rendering.
@@ -890,16 +960,21 @@ exports.myAccount = wrapAsync(async function(req, res) {
     let companyPhoneMyAccountValue = companyPhone ? companyPhone : defaultMessage.myAccountInformationEmpty;
     let companyWebsiteMyAccountValue = companyWebsite ? companyWebsite : defaultMessage.myAccountInformationEmpty;
 
-    // The account value for address has to be processed separately.
-    let companyStreetMyAccountValue, companyStreetTwoMyAccountValue, companyRegionMyAccountValue;
-    if (companyStreet && companyRegionAssembled) {
 
-        companyStreetMyAccountValue = companyStreet;
-        if (companyStreetTwo) companyStreetTwoMyAccountValue = companyStreetTwo;
-        companyRegionMyAccountValue = companyRegionAssembled;
+    // If Company City exists in req.session.userValues all address fields exist.
+    if (companyCity) {
+
+        var companyCityMyAccountValue = companyCity;
+        var companyStateMyAccountValue = companyState;
+        var companyStreetMyAccountValue = companyStreet;
+        var companyZipMyAccountValue = companyZip;
+
+        if (companyStreetTwo) var companyStreetTwoMyAccountValue = companyStreetTwo;
 
     } else {
+
         companyStreetMyAccountValue = defaultMessage.myAccountInformationEmpty;
+
     }
 
     // Check to see if properties were added.  During rendering, typeof === string check won't work because all accountValues store a string even if empty.
@@ -918,7 +993,12 @@ exports.myAccount = wrapAsync(async function(req, res) {
         ? true : false;
 
     // This tells the user which properties he needs to add to make his account live.
-    let companyPropertiesUnfilled = logicUserAccounts.assembleCompanyPropertiesUnfilled(isCompanyNameAdded, isCompanyPhoneAdded, isCompanyAddressAdded, isCompanyServicesAdded);
+    let companyPropertiesUnfilled = logicUserAccounts.assembleCompanyPropertiesUnfilled(
+        isCompanyNameAdded,
+        isCompanyPhoneAdded,
+        isCompanyAddressAdded,
+        isCompanyServicesAdded
+        );
 
     // For rendering.
     let activeLink = 'my-account';
@@ -929,16 +1009,19 @@ exports.myAccount = wrapAsync(async function(req, res) {
         activeLink,
         contactEmail,
         loggedIn,
+        arePremiumAccountExtendsAvailable,
+        companyCityMyAccountValue,
         companyDescriptionMyAccountValue,
         companyNameMyAccountValue,
         companyPhoneMyAccountValue,
         companyProfileType,
         companyPropertiesUnfilled,
-        companyRegionMyAccountValue,
         companyServicesMyAccountValue,
+        companyStateMyAccountValue,
         companyStreetMyAccountValue,
         companyStreetTwoMyAccountValue,
         companyWebsiteMyAccountValue,
+        companyZipMyAccountValue,
         contactEmail,
         costInDollarsProduct_1: stripeValue.costInDollarsProduct_1,
         email,
@@ -954,9 +1037,8 @@ exports.myAccount = wrapAsync(async function(req, res) {
         isUpgradeExpirationSoon,
         memberSince,
         noChangeMessage,
-        numberOfDaysUntilExpiration,
+        numberOfDaysUntilExpirationFragment,
         password,
-        premiumAccountExtendsAvailable,
         premiumExpirationDate,
         shouldBrowserFocusOnURLNotActiveError,
         successMessage,
@@ -975,6 +1057,7 @@ exports.pageNotFound = wrapAsync(async function(req, res) {
     let loggedIn = req.session.userValues ? true : false;
 
     res.status(404).render('page-not-found', { activeLink, contactEmail, loggedIn });
+
 });
 
 exports.passwordReset = wrapAsync(async function(req, res) {
@@ -988,15 +1071,19 @@ exports.passwordReset = wrapAsync(async function(req, res) {
 
     // If there is an error available from previous postPasswordReset grab it from req.session and then delete it.
     if (req.session.transfer) {
+
         var { cleanedFields, changedPasswordError, confirmationPasswordError } = req.session.transfer;
 
         delete req.session.transfer;
 
         // Set object to previous form input.
         var inputFields = cleanedFields;
+
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.passwordReset);
+
     }
 
     // For rendering.
@@ -1006,7 +1093,18 @@ exports.passwordReset = wrapAsync(async function(req, res) {
     let passwordAttributes = renderValue.passwordField.attributes;
     let patternChangedPassword = regExpValue.password;
 
-    res.render('password-reset', { userInput: inputFields, activeLink, contactEmail, loggedIn, hash, changedPasswordError, confirmationPasswordError, passwordAttributes, patternChangedPassword });
+    res.render('password-reset', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        hash,
+        changedPasswordError,
+        confirmationPasswordError,
+        passwordAttributes,
+        patternChangedPassword
+    });
+
 });
 
 exports.passwordResetRequest = wrapAsync(async function(req, res) {
@@ -1034,7 +1132,15 @@ exports.passwordResetRequest = wrapAsync(async function(req, res) {
     let emailAttributes = renderValue.emailField.attributes;
     let patternCurrentEmail = regExpValue.email;
 
-    res.render('password-reset-request', { userInput: inputFields, activeLink, contactEmail, loggedIn, currentEmailError, emailAttributes, patternCurrentEmail });
+    res.render('password-reset-request', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        currentEmailError,
+        emailAttributes,
+        patternCurrentEmail
+    });
 
 });
 
@@ -1055,7 +1161,14 @@ exports.passwordResetRequestSent = wrapAsync(async function(req, res) {
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
     
-    res.render('password-reset-request-sent', { activeLink, contactEmail, loggedIn, email, emailSubject, expirationTime });
+    res.render('password-reset-request-sent', {
+        activeLink,
+        contactEmail,
+        loggedIn,
+        email,
+        emailSubject,
+        expirationTime
+    });
 
 });
 
@@ -1078,18 +1191,25 @@ exports.passwordResetLimitReached = wrapAsync(async function(req, res) {
     let emailSubject = emailMessage.passwordResetRequestEmailSubject();
     let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
 
-    res.render('password-reset-limit-reached', { activeLink, contactEmail, loggedIn, email, emailSubject, expirationTime });
+    res.render('password-reset-limit-reached', {
+        activeLink,
+        contactEmail,
+        loggedIn,
+        email,
+        emailSubject,
+        expirationTime
+    });
 
 });
 
 exports.passwordResetSuccess = wrapAsync(async function(req, res) {
 
     // Initial checks.  If queries were absent or fake forward to page-not-found.
-    let email = req.query.email ? req.query.email : '';
-    if (email === '') return res.status(404).redirect('/page-not-found');
+    let successHash = req.query.hash ? req.query.hash : '';
+    if (successHash=== '') return res.status(404).redirect('/page-not-found');
 
-    let doesRecentPasswordResetSuccessExist = await RecentPasswordResetSuccess.exists({ email });
-    if (doesRecentPasswordResetSuccessExist === false) return res.status(404).redirect('/page-not-found');
+    let doesPasswordResetRequestExist = await PasswordResetRequest.exists({ successHash });
+    if (doesPasswordResetRequestExist === false) return res.status(404).redirect('/page-not-found');
 
     // For rendering.
     let activeLink = 'password-reset-success';
@@ -1120,14 +1240,14 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
 
     }
 
-    let isChangedEmailInsideMaxLength = checks.checkIfInputInsideMaxLength(changedEmail, renderValue.emailField.maxLength);
+    let isChangedEmailInsideMaxLength = changedEmail.length <= renderValue.emailField.maxLength ? true : false;  
     let regExpChangedEmail = new RegExp(regExpValue.email, 'i');
     let isChangedEmailValidCharacters = regExpChangedEmail.test(changedEmail);
     let isChangedEmailValid = emailValidator.validate(changedEmail);
     let isChangedEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: changedEmail }));
     let isChangedEmailAvailableInUsers = !(await User.exists({ email: changedEmail }));
 
-    // If changedEmail has any errors clear out confirmationEmail & currentPassword which will trigger an error for confirmationEmail & currentPassword as well.
+    // If changedEmail has any errors clear out confirmationEmail which will trigger an error for confirmationEmail as well.
     if (
         isChangedEmailFilled === false ||
         isChangedEmailInsideMaxLength === false ||
@@ -1139,24 +1259,17 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
 
         confirmationEmail = '';
         cleanedFields.confirmationEmail = '';
-        currentPassword = '';
-        cleanedFields.currentPassword = '';
 
     }
 
     let isConfirmationEmailFilled = confirmationEmail === '' ? false : true;
     let doEmailsMatch = changedEmail === confirmationEmail ? true : false; 
 
-    // If confirmationEmail has any errors clear out confirmationEmail & currentPassword.  This will trigger an error for currentPassword as well.
-    if (
-        isConfirmationEmailFilled === false ||
-        confirmationEmail === false
-        ) {
+    // If confirmationEmail has any errors clear it out.  
+    if (isConfirmationEmailFilled === false || confirmationEmail === false) {
 
         confirmationEmail = '';
         cleanedFields.confirmationEmail = '';
-        currentPassword = '';
-        cleanedFields.currentPassword = '';
 
     }
 
@@ -1201,7 +1314,14 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
     } else {
 
         // Create and redirect the errors to changeEmail where they will be rendered and deleted.
-        let changedEmailError = errorMessage.getChangedEmailError(isChangedEmailFilled, isChangedEmailInsideMaxLength, isChangedEmailValidCharacters, isChangedEmailValid, isChangedEmailAvailableInUnverifiedUsers, isChangedEmailAvailableInUsers);
+        let changedEmailError = errorMessage.getChangedEmailError(
+            isChangedEmailFilled,
+            isChangedEmailInsideMaxLength,
+            isChangedEmailValidCharacters,
+            isChangedEmailValid,
+            isChangedEmailAvailableInUnverifiedUsers,
+            isChangedEmailAvailableInUsers
+            );
         let confirmationEmailError = errorMessage.getChangedEmailConfirmationError(isConfirmationEmailFilled, doEmailsMatch);
         let currentPasswordError = errorMessage.getCurrentPasswordError(isCurrentPasswordFilled, isCurrentPasswordCorrect);
 
@@ -1229,8 +1349,48 @@ exports.postChangePassword = wrapAsync(async function(req, res) {
     let isCurrentPasswordFilled = currentPassword === '' ? false : true;
     let isCurrentPasswordCorrect = await bcrypt.compare(currentPassword, req.session.userValues.password);
 
+    // If currentPassword has any errors clear it out for rendering.
+    if (isCurrentPasswordFilled === false || isCurrentPasswordCorrect === false) {
+
+        currentPassword = '';
+        cleanedFields.currentPassword = '';
+
+    }
+
+    let isChangedPasswordFilled = changedPassword === '' ? false : true;
+    let isChangedPasswordInsideMaxLength = changedPassword.length <= renderValue.passwordField.maxLength ? true : false; 
+    let regExpPassword = new RegExp(regExpValue.password, 'i');
+    let isChangedPasswordValidCharacters = regExpPassword.test(changedPassword);
+    let doesChangedPasswordMeetRequirements = checks.checkIfPasswordMeetsRequirements(changedPassword);
+
+    // If changedPassword has any errors clear it out and confirmationPassword which will trigger an error for it as well.
+    if (
+        isChangedPasswordFilled === false ||
+        isChangedPasswordInsideMaxLength === false ||
+        isChangedPasswordValidCharacters === false ||
+        doesChangedPasswordMeetRequirements === false
+        ) {
+
+        changedPassword = '';
+        cleanedFields.changedPassword = '';
+        confirmationPassword = '';
+        cleanedFields.confirmationPassword = '';
+
+    }
+
+    let isConfirmationPasswordFilled = confirmationPassword === '' ? false : true;
+    let doPasswordsMatch = changedPassword === confirmationPassword ? true : false;
+
+    // If confirmationPassword has any errors clear it out for rendering.
+    if (isConfirmationPasswordFilled === false || doPasswordsMatch === false) {
+
+        confirmationPassword = '';
+        cleanedFields.confirmationPassword = '';
+
+    }
+
     // If nothing changed send user back to my-account.  Don't check unless isCurrentPasswordCorrect is true.
-    if (isCurrentPasswordCorrect === true) {
+    if (isCurrentPasswordCorrect === true && doPasswordsMatch === true) {
 
         let isPasswordUnchanged = await bcrypt.compare(changedPassword, req.session.userValues.password);
 
@@ -1241,40 +1401,6 @@ exports.postChangePassword = wrapAsync(async function(req, res) {
 
         }
 
-    }
-
-    // If currentPassword has any errors clear it out for rendering.
-    if (isCurrentPasswordFilled === false || isCurrentPasswordCorrect === false) {
-        currentPassword = '';
-        cleanedFields.currentPassword = '';
-    }
-
-    let isChangedPasswordFilled = changedPassword === '' ? false : true;
-    let isChangedPasswordInsideMaxLength = checks.checkIfInputInsideMaxLength(changedPassword, renderValue.passwordField.maxLength);
-    let regExpPassword = new RegExp(regExpValue.password, 'i');
-    let isChangedPasswordValidCharacters = regExpPassword.test(changedPassword);
-    let doesChangedPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(changedPassword);
-
-    // If changedPassword has any errors clear it out and confirmationPassword which will trigger an error for it as well.
-    if (
-        isChangedPasswordFilled === false ||
-        isChangedPasswordInsideMaxLength === false ||
-        isChangedPasswordValidCharacters === false ||
-        doesChangedPasswordMeetRequirements === false
-        ) {
-        changedPassword = '';
-        cleanedFields.changedPassword = '';
-        confirmationPassword = '';
-        cleanedFields.confirmationPassword = '';
-    }
-
-    let isConfirmationPasswordFilled = confirmationPassword === '' ? false : true;
-    let doPasswordsMatch = changedPassword === confirmationPassword ? true : false;
-
-    // If confirmationPassword has any errors clear it out for rendering.
-    if (isConfirmationPasswordFilled === false || doPasswordsMatch === false) {
-        confirmationPassword = '';
-        cleanedFields.confirmationPassword = '';
     }
 
     if (
@@ -1312,7 +1438,12 @@ exports.postChangePassword = wrapAsync(async function(req, res) {
 
         // Create and redirect the errors to changePassword where they will be rendered and deleted.
         let currentPasswordError = errorMessage.getCurrentPasswordError(isCurrentPasswordFilled, isCurrentPasswordCorrect);
-        let changedPasswordError = errorMessage.getChangedPasswordError(isChangedPasswordFilled, isChangedPasswordInsideMaxLength, isChangedPasswordValidCharacters, doesChangedPasswordMeetRequirements);
+        let changedPasswordError = errorMessage.getChangedPasswordError(
+            isChangedPasswordFilled,
+            isChangedPasswordInsideMaxLength,
+            isChangedPasswordValidCharacters,
+            doesChangedPasswordMeetRequirements
+            );
         let confirmationPasswordError = errorMessage.getChangedConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
 
         req.session.transfer = {};
@@ -1331,7 +1462,15 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyAddress, req.body);
-    let { companyCity, companyState, companyStreet, companyStreetTwo, companyZip, useOriginalInput, deleteProperty } = cleanedFields;
+    let {
+        companyCity,
+        companyState,
+        companyStreet,
+        companyStreetTwo,
+        companyZip,
+        useOriginalInput,
+        deleteProperty
+    } = cleanedFields;
     let { email } = req.session.userValues;
 
     let changeProperty = 'address';
@@ -1348,11 +1487,15 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
             live: false
         });
 
-        req.session.userValues.companyStreet = '';
-        req.session.userValues.companyStreetTwo = '';
-        req.session.userValues.companyCity = '';
-        req.session.userValues.companyState = '';
-        req.session.userValues.companyZip = '';
+        // Set all of the userValues with these property names to ''.
+        let setToEmptyStringArray = formFields.addChangeCompanyAddress.filter(function(element) {
+            return element !== 'deleteProperty' || element !== 'useOriginalInput';
+        });
+
+        setToEmptyStringArray.forEach(function(element) {
+            req.session.userValues[element] = '';
+        });
+
         req.session.userValues.live = false;
 
         changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
@@ -1433,7 +1576,7 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
     let isCompanyCityInsideMinLength = companyCity.length >= renderValue.companyCityField.minLength ? true : false;
     let isCompanyCityInsideMaxLength = companyCity.length <= renderValue.companyCityField.maxLength ? true : false;
 
-    let isCompanyStateValid = checks.checkCompanyStateValid(companyState);
+    let isCompanyStateValid = checks.checkIfCompanyStateValid(companyState);
     
     let isCompanyZipFiveDigits = companyZip.length === 5 ? true : false;
 
@@ -1469,7 +1612,14 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
             zip: companyZip
         });
 
-        isCompanyAddressNormalized = checks.checkCompanyAddressNormalized(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, uspsNormalized);
+        isCompanyAddressNormalized = checks.checkIfCompanyAddressNormalized(
+            companyStreet,
+            companyStreetTwo,
+            companyCity,
+            companyState,
+            companyZip,
+            uspsNormalized
+            );
 
         // If USPS can't normalize the address it returns a .name property that holds the value 'USPS Webtools Error'.
         // If there is no error .name is not returned.
@@ -1477,6 +1627,7 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
 
     }
 
+    // If the client selects use original input this check lets that address through.
     if (
         isCompanyStreetFilled === true &&
         isCompanyStreetInsideMinLength === true &&
@@ -1499,7 +1650,7 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
     ) {
 
         // True / False boolean.  If every account property has a value the account is live.
-        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyAddress');
+        let areAllAccountPropertiesFilled = checks.checkAreAllAccountPropertiesFilled(req.session.userValues, 'companyAddress');
 
         await User.updateOne({ email }, { 
             companyStreet: companyStreet,
@@ -1528,6 +1679,7 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
 
         return res.redirect('/my-account');
 
+    // During this check everything works but the address isn't normalized so they are sent to a screen that asks them if they want normalized or original.
     } else if (
         isCompanyStreetFilled === true &&
         isCompanyStreetInsideMinLength === true &&
@@ -1568,9 +1720,24 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
     } else {
         
         // Create and redirect the errors to changeCompanyAddress where they will be rendered and deleted from the session.
-        let companyStreetError = errorMessage.getCompanyStreetError(isCompanyStreetFilled, isCompanyStreetValidCharacters, isCompanyStreetInsideMinLength, isCompanyStreetInsideMaxLength, isCompanyAddressValid);
-        let companyStreetTwoError = errorMessage.getCompanyStreetTwoError(isCompanyStreetTwoValidCharacters, isCompanyStreetTwoInsideMinLength, isCompanyStreetTwoInsideMaxLength);
-        let companyCityError = errorMessage.getCompanyCityError(isCompanyCityFilled, isCompanyCityValidCharacters, isCompanyCityInsideMinLength, isCompanyCityInsideMaxLength);
+        let companyStreetError = errorMessage.getCompanyStreetError(
+            isCompanyStreetFilled,
+            isCompanyStreetValidCharacters,
+            isCompanyStreetInsideMinLength,
+            isCompanyStreetInsideMaxLength,
+            isCompanyAddressValid
+            );
+        let companyStreetTwoError = errorMessage.getCompanyStreetTwoError(
+            isCompanyStreetTwoValidCharacters,
+            isCompanyStreetTwoInsideMinLength,
+            isCompanyStreetTwoInsideMaxLength
+            );
+        let companyCityError = errorMessage.getCompanyCityError(
+            isCompanyCityFilled,
+            isCompanyCityValidCharacters,
+            isCompanyCityInsideMinLength,
+            isCompanyCityInsideMaxLength
+            );
         let companyStateError = errorMessage.getCompanyStateError(isCompanyStateFilled, isCompanyStateValid);
         let companyZipError = errorMessage.getCompanyZipError(isCompanyZipFilled, isCompanyZipValidCharacters, isCompanyZipFiveDigits);
 
@@ -1613,7 +1780,6 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
         await User.updateOne({ email }, { companyDescription: '', live: false });
 
         req.session.userValues.companyDescription = '';
-        req.session.userValues.live = false;
 
         changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
@@ -1625,12 +1791,7 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
     // In this route the tests are done a little out of normal order.
     let isCompanyDescriptionFilled = companyDescription === '' ? false : true;
 
-    // If company description is profane it is immediately cleared out.
     let isCompanyDescriptionFamilyFriendly = !filter.isProfane(companyDescription);
-    if (isCompanyDescriptionFamilyFriendly === false ) {
-        cleanedFields.companyDescription = '';
-        companyDescription = '';
-    } 
 
     let regExpCompanyDescription = new RegExp(regExpValue.companyDescription, 'i');
     let isCompanyDescriptionValidCharacters = regExpCompanyDescription.test(companyDescription);
@@ -1640,10 +1801,9 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
         isCompanyDescriptionFilled === true &&
         isCompanyDescriptionValidCharacters === true &&
         isCompanyDescriptionFamilyFriendly === true 
-    ) {
-        var processedCompanyDescription = logicUserAccounts.processCompanyDescription(companyDescription);
-    }
+    ) var processedCompanyDescription = logicUserAccounts.formatCompanyDescription(companyDescription);
 
+    // If there are errors processedCompanyDescription will be undefined so don't do this.
     if (processedCompanyDescription) {
 
         cleanedFields.companyDescription = processedCompanyDescription;
@@ -1661,7 +1821,15 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
     }
 
     let isCompanyDescriptionInsideMinLength = companyDescription.length >= renderValue.companyDescriptionField.minLength ? true : false;
-    let isCompanyDescriptionInsideMaxLength = companyDescription.length <= renderValue.companyDescriptionField.maxLength ? true : false;    
+    let isCompanyDescriptionInsideMaxLength = companyDescription.length <= renderValue.companyDescriptionField.maxLength ? true : false;  
+    
+    // If company description is profane the value is cleared out.  This can't be done until all checks are done on value.
+    if (isCompanyDescriptionFamilyFriendly === false ) {
+
+        cleanedFields.companyDescription = '';
+        companyDescription = '';
+
+    } 
 
     if (
         isCompanyDescriptionFilled === true &&
@@ -1672,7 +1840,7 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
     ) {
 
         // True / False boolean.  If every account property has a value the account is live.
-        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyDescription');
+        let areAllAccountPropertiesFilled = checks.checkAreAllAccountPropertiesFilled(req.session.userValues, 'companyDescription');
 
         await User.updateOne({ email }, { companyDescription, live: areAllAccountPropertiesFilled });
 
@@ -1751,12 +1919,7 @@ exports.postAddChangeCompanyName = wrapAsync(async function(req, res) {
 
     }
 
-    // If company name is profane it is immediately cleared out.
     let isCompanyNameFamilyFriendly = !filter.isProfane(companyName);
-    if (isCompanyNameFamilyFriendly === false ) {
-        cleanedFields.companyName = '';
-        companyName = '';
-    } 
 
     let regExpCompanyName = new RegExp(regExpValue.companyName, 'i');
     let isCompanyNameValidCharacters = regExpCompanyName.test(companyName);
@@ -1766,6 +1929,14 @@ exports.postAddChangeCompanyName = wrapAsync(async function(req, res) {
 
     let isCompanyNameInsideMinLength = companyName.length >= renderValue.companyNameField.minLength ? true : false;
     let isCompanyNameInsideMaxLength = companyName.length <= renderValue.companyNameField.maxLength ? true : false;
+
+    // If company Name is profane the value is cleared out.  This can't be done until all checks are done.
+    if (isCompanyNameFamilyFriendly === false) {
+
+        cleanedFields.companyName = '';
+        companyName = '';
+
+    } 
 
     if (
         isCompanyNameFilled === true &&
@@ -1777,7 +1948,7 @@ exports.postAddChangeCompanyName = wrapAsync(async function(req, res) {
     ) {
         
         // True / False boolean.  If every account property has a value the account is live.
-        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyName');
+        let areAllAccountPropertiesFilled = checks.checkAreAllAccountPropertiesFilled(req.session.userValues, 'companyName');
 
         await User.updateOne({ email }, { companyName, live: areAllAccountPropertiesFilled }); 
 
@@ -1840,7 +2011,9 @@ exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
     }
 
     // Dismantle and rebuild companyPhone.  formatPhone strips out all characters that aren't numbers and returns companyPhone in E.164 format.  
+    // Send this formatted version back on cleanedFields if there is an error.
     let companyPhoneFormatted = logicUserAccounts.formatCompanyPhone(companyPhone);
+    cleanedFields.companyPhone = companyPhoneFormatted;
 
     // If nothing changed redirect to my-account.
     let isCompanyPhoneFilled = companyPhone === '' ? false : true;
@@ -1854,7 +2027,7 @@ exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
 
     // Although bad characters are processed out in formatCompanyPhone this check lets the user know they entered a bad character.
     // This stops the user from entering 6%0%2%5%5%5%5%5%5%5%, the % get processed out and removed and it comes back as a valid phone number.
-    // The test is on companyPhone not companyPhoneFormatted like the other tests.
+    // The test must be done on companyPhone not companyPhoneFormatted like the other tests.
     let regExpCompanyPhone = new RegExp(regExpValue.companyPhone, 'i');
     let isCompanyPhoneValidCharacters = regExpCompanyPhone.test(companyPhone);
 
@@ -1862,7 +2035,7 @@ exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
     if (isCompanyPhoneValidCharacters === false) cleanedFields.companyPhone = '';
 
     // Checks the format as well.  Most of the time this spots incomplete numbers.
-    let isCompanyPhoneValid = checks.checkCompanyPhoneValid(companyPhoneFormatted);
+    let isCompanyPhoneValid = checks.checkIfCompanyPhoneValid(companyPhoneFormatted);
 
     if (
         isCompanyPhoneFilled === true &&
@@ -1871,7 +2044,7 @@ exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
     ) {
 
         // True / False boolean.  If every account property has a value the account is live.
-        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyPhone');
+        let areAllAccountPropertiesFilled = checks.checkAreAllAccountPropertiesFilled(req.session.userValues, 'companyPhone');
 
         await User.updateOne({ email }, { companyPhone: companyPhoneFormatted, live: areAllAccountPropertiesFilled });
 
@@ -1900,13 +2073,17 @@ exports.postAddChangeCompanyPhone = wrapAsync(async function(req, res) {
 
 exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
 
+    let { email } = req.session.userValues;
+
+    //  You have to add the missing keys before this can be cleaned in cleanFields.
+    let reqBodyWithMissingServicesAdded = logicUserAccounts.addMissingServicesToReqBody(formFields.addChangeCompanyServices, req.body);
+
     // Sanitize and process input.
-    let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyServices, req.body);
+    let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyServices, reqBodyWithMissingServicesAdded);
 
-    let wereAllServiceValuesValid = checks.checkServiceValuesValid(cleanedFields);
-
-    // Grab this value before it is turned into a Boolean.
     let { deleteProperty } = cleanedFields;
+
+    let wereAllServiceValuesValid = checks.checkIfServiceValuesValid(cleanedFields);
 
     // Checks submitted values in cleanedFields and saves Boolean version in new object.
     let cleanedFieldsBoolean = logicUserAccounts.convertStringToBoolean(formFields.addChangeCompanyServices, cleanedFields);
@@ -1925,12 +2102,10 @@ exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
         winterizations
     } = cleanedFieldsBoolean;
 
-    let { email } = req.session.userValues;
-
     let changeProperty = 'services';
     let changeVerb;
 
-    if (deleteProperty === 'yes') {
+    if (deleteProperty === 'true') {
 
         await User.updateOne({ email }, { 
             boardingSecuring: false,
@@ -1947,18 +2122,14 @@ exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
             live: false
         });
 
-        req.session.userValues.boardingSecuring = false;
-        req.session.userValues.debrisRemovalTrashout = false;
-        req.session.userValues.evictionManagement = false;
-        req.session.userValues.fieldInspection = false;
-        req.session.userValues.handymanGeneralMaintenance = false;
-        req.session.userValues.landscapeMaintenance = false;
-        req.session.userValues.lockChanges = false;
-        req.session.userValues.overseePropertyRehabilitation = false;
-        req.session.userValues.poolMaintenance = false;
-        req.session.userValues.propertyCleaning = false;
-        req.session.userValues.winterizations = false;
-        req.session.userValues.live = false;
+        // Set all of the userValues with these property names to false.
+        let setToFalseArray = formFields.addChangeCompanyServices.filter(function(element) {
+            return element !== 'deleteProperty';
+        }).concat(['live']);
+
+        setToFalseArray.forEach(function(element) {
+            req.session.userValues[element] = false;
+        });
 
         changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
@@ -2006,7 +2177,7 @@ exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
     if (isAtLeastOneCompanyServiceFilled === true && wereAllServiceValuesValid === true) {
 
         // True / False boolean.  If every account property has a value the account is live.
-        let areAllAccountPropertiesFilled = checks.checkAllAccountPropertiesFilled(req.session.userValues, 'companyServices');
+        let areAllAccountPropertiesFilled = checks.checkAreAllAccountPropertiesFilled(req.session.userValues, 'companyServices');
 
         await User.updateOne({ email },
             {
@@ -2025,6 +2196,11 @@ exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
                 live: areAllAccountPropertiesFilled
             });
 
+        let wereCompanyServicesAdded = checks.checkWereCompanyServicesAdded(formFields.addChangeCompanyServices, req.session.userValues);
+
+        changeVerb = wereCompanyServicesAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
+        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+
         req.session.userValues.boardingSecuring = boardingSecuring;
         req.session.userValues.debrisRemovalTrashout = debrisRemovalTrashout;
         req.session.userValues.evictionManagement = evictionManagement;
@@ -2036,11 +2212,6 @@ exports.postAddChangeCompanyServices = wrapAsync(async function(req, res) {
         req.session.userValues.poolMaintenance = poolMaintenance;
         req.session.userValues.propertyCleaning = propertyCleaning;
         req.session.userValues.winterizations = winterizations; 
-
-        let wereCompanyServicesAdded = checks.checkWereCompanyServicesAdded(formFields.addChangeCompanyServices, req.session.userValues);
-
-        changeVerb = wereCompanyServicesAdded === true ? defaultMessage.companyPropertyChangeVerb.update : defaultMessage.companyPropertyChangeVerb.add;
-        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
 
         return res.redirect('/my-account');
 
@@ -2064,7 +2235,7 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
     // Sanitize and process input.
     let cleanedFields = logicUserAccounts.cleanFields(formFields.addChangeCompanyWebsite, req.body);
     let { companyWebsite, deleteProperty } = cleanedFields;
-    let { email, urlNotActiveError } = req.session.userValues;
+    let { email } = req.session.userValues;
 
     let changeProperty = 'website'
     let changeVerb;
@@ -2088,8 +2259,7 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
     let isCompanyWebsiteFilled = companyWebsite === '' ? false : true;
     let isCompanyWebsiteUnchanged = companyWebsite === req.session.userValues.companyWebsite ? true : false;
     if (isCompanyWebsiteFilled === true &&
-        isCompanyWebsiteUnchanged === true &&
-        urlNotActiveError === false
+        isCompanyWebsiteUnchanged === true 
         ) {
 
             req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
@@ -2176,10 +2346,7 @@ exports.postDeleteYourAccount = wrapAsync(async function(req, res) {
         await LoginFailure.findOneAndRemove({ email });
         await PasswordResetRequest.findOneAndRemove({ email });
         await RecentDeletedAccount.findOneAndRemove({ email });
-        await RecentPasswordResetSuccess.findOneAndRemove({ email });
-        await StripeCancelKey.findOneAndRemove({ email });
         await StripeCheckoutSession.findOneAndRemove({ email });
-        await StripeSuccessKey.findOneAndRemove({ email });
         await UnverifiedUser.findOneAndRemove({ email });
         await User.findOneAndRemove({ email });
 
@@ -2222,6 +2389,14 @@ exports.postLogin = wrapAsync(async function(req, res) {
     let userValues = JSON.parse(JSON.stringify(unprocessedUserValues));
 
     let doesUserExist = userValues === null ? false : true;
+
+    // If the user is suspended kick them out here.
+    if (userValues) {
+
+        let { accountSuspended } = userValues;
+        if (accountSuspended === true) return res.redirect(`/account-suspended?email=${ currentEmail }`);
+
+    }
 
     // If there are any email errors clear out the password.
     if (isCurrentEmailFilled === false || isCurrentEmailValid === false) {
@@ -2311,10 +2486,10 @@ exports.postPasswordReset = wrapAsync(async function(req, res) {
     if (!passwordResetRequest) return res.status(404).redirect('/page-not-found');
 
     let isChangedPasswordFilled = changedPassword === '' ? false : true;
-    let isChangedPasswordInsideMaxLength = checks.checkIfInputInsideMaxLength(changedPassword, renderValue.passwordField.maxLength);
+    let isChangedPasswordInsideMaxLength = changedPassword.length <= renderValue.passwordField.maxLength ? true : false;
     let regExpPassword = new RegExp(regExpValue.password, 'i');
     let isChangedPasswordValidCharacters = regExpPassword.test(changedPassword);
-    let doesChangedPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(changedPassword);
+    let doesChangedPasswordMeetRequirements = checks.checkIfPasswordMeetsRequirements(changedPassword);
 
     let isConfirmationPasswordFilled = confirmationPassword === '' ? false : true;
     let doPasswordsMatch = changedPassword === confirmationPassword ? true : false;
@@ -2328,24 +2503,29 @@ exports.postPasswordReset = wrapAsync(async function(req, res) {
         doPasswordsMatch === true
         ) {
 
-            let { email } = passwordResetRequest;
+            let { email, successHash } = passwordResetRequest;
             let passwordHashed = await logicUserAccounts.hashPassword(changedPassword);
             await User.updateOne({ email }, { password: passwordHashed });
-            await PasswordResetRequest.findOneAndRemove({ confirmationHash: hash });
 
-            // Check for and remove any LoginFailure or old RecentPasswordResetSuccess in the db.
+            // Check for and remove any LoginFailure in the db.
             await LoginFailure.findOneAndRemove({ email });
-            await RecentPasswordResetSuccess.findOneAndRemove({ email });
 
-            let recentPasswordResetSuccess = mongooseInstance.createRecentPasswordResetSuccess(email);
-            await recentPasswordResetSuccess.save();
+            // The new hash makes it impossible for the client to return to the old passwordReset route.
+            // Mongoose automatically deletes The PasswordResetRequest after a short period.
+            let hideThisRouteFromClientHash = logicUserAccounts.createRandomHash(email);
+            await PasswordResetRequest.updateOne({ confirmationHash: hash }, { confirmationHash: hideThisRouteFromClientHash });
 
-            return res.redirect(`/password-reset-success?email=${ email }`);
+            return res.redirect(`/password-reset-success?hash=${ successHash }`);
 
         } else {
 
             // Create and send the error to passwordReset where it will be used and deleted.
-            let changedPasswordError = errorMessage.getChangedPasswordError(isChangedPasswordFilled, isChangedPasswordInsideMaxLength, isChangedPasswordValidCharacters, doesChangedPasswordMeetRequirements);
+            let changedPasswordError = errorMessage.getChangedPasswordError(
+                isChangedPasswordFilled,
+                isChangedPasswordInsideMaxLength,
+                isChangedPasswordValidCharacters,
+                doesChangedPasswordMeetRequirements
+                );
             let confirmationPasswordError = errorMessage.getChangedConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
 
             req.session.transfer = {};
@@ -2370,7 +2550,7 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
 
     // These checks don't test to see if the email corresponds to an actual user.
     // If the email passes the checks and no user exists send the client to passwordResetRequestSent anyway.
-    // This way hackers won't know if an email exists in the db.  
+    // This way hackers won't know if an email exists in the DB.  
     if (isCurrentEmailFilled === false || isCurrentEmailValid === false) {
 
         // Create and send the error to passwordResetRequest where it will be used and deleted.
@@ -2390,23 +2570,30 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
     if (unverifiedUser) {
 
         let numberOfConfirmations = unverifiedUser.numberOfConfirmations;
+        if (numberOfConfirmations > defaultValue.numberOfEmailConfirmationsAllowed) {
 
-        if (numberOfConfirmations >= defaultValue.numberOfEmailConfirmationsAllowed) {
-
-            await UnverifiedUser.updateOne({ currentEmail }, { numberOfConfirmations: defaultValue.numberOfEmailConfirmationsAllowed + 1 });
             return res.redirect(`/confirmation-limit-reached?email=${ currentEmail }&resetattempt=true`);
 
         } else {
+
             return res.redirect(`/confirmation-sent?email=${ currentEmail }&resetattempt=true`);
+
         }  
+
     }
 
-    // If a recent success occurred remove it before a new request is started.
-    await RecentPasswordResetSuccess.findOneAndRemove({ email: currentEmail });
+    // Before a password reset request is created make sure the user isn't locked out of their account.
+    let userValues = await User.findOne({ email: currentEmail });
+    if (userValues) {
+
+        let { accountSuspended } = userValues;
+        if (accountSuspended === true) return res.redirect(`/account-suspended?email=${ currentEmail }`);
+
+    }
 
     let passwordResetRequest = await PasswordResetRequest.findOne({ email: currentEmail });
 
-    let confirmationHash, numberOfRequests;
+    let confirmationHash, numberOfRequests, successHash;
 
     if (passwordResetRequest) {
 
@@ -2427,16 +2614,15 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
 
     } else {
 
-        confirmationHash = logicUserAccounts.createConfirmationHash(currentEmail);
-        passwordResetRequest = await mongooseInstance.createPasswordResetRequest(currentEmail, confirmationHash);
+        confirmationHash = logicUserAccounts.createRandomHash(currentEmail);
+        successHash = logicUserAccounts.createRandomHash(currentEmail);
+        passwordResetRequest = await mongooseInstance.createPasswordResetRequest(currentEmail, confirmationHash, successHash);
         numberOfRequests = passwordResetRequest.numberOfRequests;
         await passwordResetRequest.save();
 
     }
 
-    let doesUserExist = await User.exists({ email: currentEmail });
-
-    if (doesUserExist === true) {
+    if (userValues) {
 
         let emailSubject = emailMessage.passwordResetRequestEmailSubject();
         let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
@@ -2452,12 +2638,16 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
 exports.postRegister = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
+
+    // Add the checkbox if it wasn't checked and then process it.
+    if (!req.body.termsOfUse || req.body.termsOfUse !== 'isChecked') req.body.termsOfUse = 'notChecked';
+    let termsOfUse = logicUserAccounts.convertCheckboxToBoolean(req.body.termsOfUse);
+
     let cleanedFields = logicUserAccounts.cleanFields(formFields.register, req.body);
     let { newEmail, newPassword, confirmationPassword } = cleanedFields;
-    let termsOfUse = logicUserAccounts.convertCheckboxToBoolean(cleanedFields.termsOfUse);
 
     let isNewEmailFilled = newEmail ? true : false;
-    let isNewEmailInsideMaxLength = checks.checkIfInputInsideMaxLength(newEmail, renderValue.emailField.maxLength);
+    let isNewEmailInsideMaxLength = newEmail.length <= renderValue.emailField.maxLength ? true : false;
     let regExpEmail = new RegExp(regExpValue.email, 'i');
     let isNewEmailValidCharacters = regExpEmail.test(newEmail);
     let isNewEmailValid = emailValidator.validate(newEmail);
@@ -2465,10 +2655,10 @@ exports.postRegister = wrapAsync(async function(req, res) {
     let isNewEmailAvailableInUsers = !(await User.exists({ email: newEmail }));
 
     let isNewPasswordFilled = newPassword === '' ? false : true;
-    let isNewPasswordInsideMaxLength = checks.checkIfInputInsideMaxLength(newPassword, renderValue.passwordField.maxLength);
+    let isNewPasswordInsideMaxLength = newPassword.length <= renderValue.passwordField.maxLength ? true : false; 
     let regExpPassword = new RegExp(regExpValue.password, 'i');
     let isNewPasswordValidCharacters = regExpPassword.test(newPassword);
-    let doesNewPasswordMeetRequirements = checks.checkPasswordMeetsRequirements(newPassword);
+    let doesNewPasswordMeetRequirements = checks.checkIfPasswordMeetsRequirements(newPassword);
 
     // If there is any newPassword error clear out newPassword and confirmationPassword.
     if (
@@ -2487,17 +2677,16 @@ exports.postRegister = wrapAsync(async function(req, res) {
     let doPasswordsMatch = newPassword === confirmationPassword ? true : false;
 
     // If there is any confirmationPassword error clear it out.
-    if (
-        isConfirmationPasswordFilled === false ||
-        doPasswordsMatch === false
-    ) {
+    if (isConfirmationPasswordFilled === false || doPasswordsMatch === false) {
+
         confirmationPassword = '';
         cleanedFields.confirmationPassword = '';
+
     }
 
     let isTermsOfUseChecked = termsOfUse === true ? true : false;
 
-    // If there are any errors uncheck termsOfUse.  However it only needs an error message if the user forgot to check it.
+    // If there are any errors uncheck termsOfUse.  However the interface only displays an error message if the user forgot to check it.
     if (
         isNewEmailFilled === false ||
         isNewEmailInsideMaxLength === false ||
@@ -2543,11 +2732,8 @@ exports.postRegister = wrapAsync(async function(req, res) {
 
             let { numberOfConfirmations } = unverifiedUser;
 
-            if (numberOfConfirmations >= defaultValue.numberOfEmailConfirmationsAllowed) {
-
-                req.session.tooManyConfirmations = true;
+            if (numberOfConfirmations > defaultValue.numberOfEmailConfirmationsAllowed) {
                 return res.redirect(`/confirmation-limit-reached?email=${ newEmail }`);
-
             }
 
             let hashedPassword = await logicUserAccounts.hashPassword(newPassword);
@@ -2560,10 +2746,7 @@ exports.postRegister = wrapAsync(async function(req, res) {
             await LoginFailure.findOneAndRemove({ email: newEmail });
             await PasswordResetRequest.findOneAndRemove({ email: newEmail });
             await RecentDeletedAccount.findOneAndRemove({ email: newEmail });
-            await RecentPasswordResetSuccess.findOneAndRemove({ email: newEmail });
-            await StripeCancelKey.findOneAndRemove({ email: newEmail });
             await StripeCheckoutSession.findOneAndRemove({ email: newEmail });
-            await StripeSuccessKey.findOneAndRemove({ email: newEmail });
             await UnverifiedUser.findOneAndRemove({ email: newEmail });
             await User.findOneAndRemove({ email: newEmail });
 
@@ -2581,8 +2764,20 @@ exports.postRegister = wrapAsync(async function(req, res) {
     } else {
 
         // Create and send the errors to register where they will be used and deleted.
-        let newEmailError = errorMessage.getNewEmailError(isNewEmailFilled, isNewEmailInsideMaxLength, isNewEmailValidCharacters, isNewEmailValid, isNewEmailAvailableInUnverifiedUsers, isNewEmailAvailableInUsers);
-        let newPasswordError = errorMessage.getNewPasswordError(isNewPasswordFilled, isNewPasswordInsideMaxLength, isNewPasswordValidCharacters, doesNewPasswordMeetRequirements);
+        let newEmailError = errorMessage.getNewEmailError(
+            isNewEmailFilled,
+            isNewEmailInsideMaxLength,
+            isNewEmailValidCharacters,
+            isNewEmailValid,
+            isNewEmailAvailableInUnverifiedUsers,
+            isNewEmailAvailableInUsers
+            );
+        let newPasswordError = errorMessage.getNewPasswordError(
+            isNewPasswordFilled,
+            isNewPasswordInsideMaxLength,
+            isNewPasswordValidCharacters,
+            doesNewPasswordMeetRequirements
+            );
         let confirmationPasswordError = errorMessage.getNewConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
         let termsOfUseError = isTermsOfUseChecked === true ? undefined : errorMessage.getTermsOfUseError;
 
@@ -2595,14 +2790,13 @@ exports.postRegister = wrapAsync(async function(req, res) {
 
         return res.redirect('/register');
     }
+
 });
 
 // If the user is logged in redirect to my-account.
 exports.redirectMyAccount = wrapAsync(async function(req, res, next) {
 
-    if (req.session.userValues) {
-        return res.redirect('/my-account');
-    }
+    if (req.session.userValues) return res.redirect('/my-account');
 
     return next();
 
@@ -2610,9 +2804,7 @@ exports.redirectMyAccount = wrapAsync(async function(req, res, next) {
 
 exports.redirectLogin = wrapAsync(async function(req, res, next) {
 
-    if (!req.session.userValues) {
-        return res.redirect('/login');
-    }
+    if (!req.session.userValues) return res.redirect('/login');
     
     return next();
     
@@ -2623,7 +2815,13 @@ exports.register = wrapAsync(async function(req, res) {
     // If there is data available from previous postRegister gather it from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedFields, newEmailError, newPasswordError, confirmationPasswordError, termsOfUseError } = req.session.transfer;
+        var {
+            cleanedFields,
+            newEmailError,
+            newPasswordError,
+            confirmationPasswordError,
+            termsOfUseError
+        } = req.session.transfer;
 
         // Set object to previous form input.
         var inputFields = cleanedFields;
@@ -2631,8 +2829,10 @@ exports.register = wrapAsync(async function(req, res) {
         delete req.session.transfer;
 
     } else {
+
         // If req.session data isn't used set every property to an empty string.
         var inputFields = logicUserAccounts.makeFieldsEmpty(formFields.register);
+
     }
 
     // For rendering.
@@ -2645,7 +2845,20 @@ exports.register = wrapAsync(async function(req, res) {
     let patternNewEmail = regExpValue.email;
     let patternNewPassword = regExpValue.password;
 
-    res.render('register', { userInput: inputFields, activeLink, contactEmail, loggedIn, emailAttributes, passwordAttributes, newEmailError, newPasswordError, confirmationPasswordError, termsOfUseError, patternNewEmail, patternNewPassword });
+    res.render('register', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        emailAttributes,
+        passwordAttributes,
+        newEmailError,
+        newPasswordError,
+        confirmationPasswordError,
+        termsOfUseError,
+        patternNewEmail,
+        patternNewPassword
+    });
 
 });
 

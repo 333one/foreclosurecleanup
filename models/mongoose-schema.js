@@ -1,10 +1,11 @@
 "use strict";
 
+const mongoose = require('mongoose');
+const timeZone = require('mongoose-timezone');
+
 const defaultValue = require('../models/default-values');
 const stripeValue = require('../models/stripe-values');
 const timeValue = require('../models/time-values');
-
-const mongoose = require('mongoose');
 
 const LoginFailureSchema = new mongoose.Schema({
     email: {
@@ -21,6 +22,7 @@ const LoginFailureSchema = new mongoose.Schema({
         default: Date.now,
         expires: timeValue.loginFailureExpiration
     }
+
 });
 
 const PasswordResetRequestSchema = new mongoose.Schema({
@@ -41,7 +43,12 @@ const PasswordResetRequestSchema = new mongoose.Schema({
         type: Number,
         default: 1,
         required: true,
+    },
+    successHash: {
+        type: String,
+        required: true
     }
+
 });
 
 const RecentDeletedAccountSchema = new mongoose.Schema({
@@ -54,34 +61,7 @@ const RecentDeletedAccountSchema = new mongoose.Schema({
         type: String,
         required: true
     }
-});
 
-const RecentPasswordResetSuccessSchema = new mongoose.Schema({
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: timeValue.shortTermActivityExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    }
-});
-
-const StripeCancelKeySchema = new mongoose.Schema({
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: stripeValue.cancelSuccessKeyExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    entryKey: {
-        type: String,
-        required: true
-    }
 });
 
 const StripeCheckoutSessionSchema = new mongoose.Schema({
@@ -97,27 +77,21 @@ const StripeCheckoutSessionSchema = new mongoose.Schema({
     paymentIntent: {
         type: String,
         required: true
+    },
+    stripeCancelKey: {
+        type: String,
+        required: true
+    },
+    stripeSuccessKey: {
+        type: String,
+        required: true
+    },
+    wasDbAlreadyUpdatedByWebhook: {
+        type: Boolean,
+        default: false,
+        required: true
     }
-});
 
-const StripeSuccessKeySchema = new mongoose.Schema({
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: stripeValue.cancelSuccessKeyExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    entryKey: {
-        type: String,
-        required: true
-    },
-    paymentIntent: {
-        type: String,
-        required: true
-    }
 });
 
 const UnverifiedUserSchema = new mongoose.Schema({
@@ -143,9 +117,32 @@ const UnverifiedUserSchema = new mongoose.Schema({
         type: String,
         required: true
     }
+
 });
 
 const UserSchema = new mongoose.Schema({
+    accountSuspended: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    alerts: {
+        firstExpirationAlertAlreadySent: {
+            type: Boolean,
+            default: false,
+            required: true
+        },
+        secondExpirationAlertAlreadySent: {
+            type: Boolean,
+            default: false,
+            required: true
+        },
+        finalExpirationAlertAlreadySent: {
+            type: Boolean,
+            default: false,
+            required: true
+        }
+    },
     companyCity: {
         type: String,
         default: '',
@@ -198,7 +195,7 @@ const UserSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
     },
     email: {
         type: String,
@@ -213,7 +210,7 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
         required: true
-    },                                    
+    },                                  
     password: {
         type: String,
         required: true
@@ -286,16 +283,24 @@ const UserSchema = new mongoose.Schema({
         default: false,
         required: true
     }
+    
 });
 
 const LoginFailure = mongoose.model('loginFailure', LoginFailureSchema);
 const PasswordResetRequest = mongoose.model('passwordResetRequest', PasswordResetRequestSchema);
 const RecentDeletedAccount = mongoose.model('recentDeletedAccount', RecentDeletedAccountSchema);
-const RecentPasswordResetSuccess = mongoose.model('recentPasswordResetSuccess', RecentPasswordResetSuccessSchema);
-const StripeCancelKey = mongoose.model('stripeCancelKey', StripeCancelKeySchema);
 const StripeCheckoutSession = mongoose.model('stripeCheckoutSession', StripeCheckoutSessionSchema);
-const StripeSuccessKey = mongoose.model('stripeSuccessKey', StripeSuccessKeySchema);
 const UnverifiedUser = mongoose.model('unverifiedUser', UnverifiedUserSchema);
+
+UserSchema.plugin(timeZone, { paths: ['expirationDate'] });
 const User = mongoose.model('user', UserSchema);
 
-module.exports = { LoginFailure, PasswordResetRequest, RecentDeletedAccount, RecentPasswordResetSuccess, StripeCancelKey, StripeCheckoutSession, StripeSuccessKey, UnverifiedUser, User };
+
+module.exports = { 
+    LoginFailure,
+    PasswordResetRequest,
+    RecentDeletedAccount,
+    StripeCheckoutSession,
+    UnverifiedUser,
+    User
+};

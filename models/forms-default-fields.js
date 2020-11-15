@@ -1,4 +1,12 @@
-exports.addChangeCompanyAddress = ['companyCity', 'companyState', 'companyStreet', 'companyStreetTwo', 'companyZip', 'useOriginalInput', 'deleteProperty'];
+exports.addChangeCompanyAddress = [
+    'companyCity',
+    'companyState',
+    'companyStreet',
+    'companyStreetTwo',
+    'companyZip',
+    'useOriginalInput',
+    'deleteProperty'
+];
 
 exports.addChangeCompanyDescription = ['companyDescription', 'deleteProperty'];
 
@@ -36,5 +44,3 @@ exports.passwordReset = ['changedPassword', 'confirmationPassword'];
 exports.passwordResetRequest = ['currentEmail'];
 
 exports.register = ['newEmail', 'newPassword', 'confirmationPassword', 'termsOfUse'];
-
-exports.requestAnotherConfirmation = ['email'];

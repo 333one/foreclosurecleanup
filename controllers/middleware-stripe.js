@@ -11,11 +11,6 @@ const stripeValue = require('../models/stripe-values');
 
 const { logErrorMessage, wrapAsync } = require('./error-handling');
 
-const {
-    StripeCancelKey,
-    StripeSuccessKey
-    } = require('../models/mongoose-schema');
-
 exports.upgradeExtendPremium = wrapAsync(async function(req, res) {
 
     let { companyProfileType } = req.session.userValues;
@@ -50,12 +45,11 @@ exports.upgradeExtendPremium = wrapAsync(async function(req, res) {
 
 exports.postCreateCheckoutSession = wrapAsync(async function(req, res) {
 
-    let stripeCancelString = cryptoRandomString({ length: 32 });
-    let stripeSuccessString = cryptoRandomString({ length: 32 });
-    let stripeCancelPath = `/my-account?cancel=${ stripeCancelString }`;
-    let stripeSuccessPath = `/my-account?success=${ stripeSuccessString }`;
-    let stripeCancelUrl = `${ siteValue.host }${ stripeCancelPath }`;
-    let stripeSuccessUrl = `${ siteValue.host }${ stripeSuccessPath }`;
+    let stripeCancelKey = cryptoRandomString({ length: 32 });
+    let stripeCancelUrl = `${ siteValue.host }/my-account?cancel=${ stripeCancelKey }`;
+
+    let stripeSuccessKey = cryptoRandomString({ length: 32 });
+    let stripeSuccessUrl = `${ siteValue.host }/my-account?success=${ stripeSuccessKey }`;
     
     const session = await stripe.checkout.sessions.create({
 
@@ -85,19 +79,9 @@ exports.postCreateCheckoutSession = wrapAsync(async function(req, res) {
     // session.payment_intent is a unique identifier and used as a key.  In webhookPremiumUpgrade event.data.object.id should hold the same value.
     let paymentIntent = session.payment_intent;
     let { email } = req.session.userValues;
-    
-    // Not necessarily needed but if for some reason these exist in the DB delete them before you create new ones.
-    await StripeCancelKey.findOneAndRemove({ email });
-    await StripeSuccessKey.findOneAndRemove({ email });
 
-    let stripeCheckoutSession = mongooseInstance.createStripeCheckoutSession(email, paymentIntent);
+    let stripeCheckoutSession = mongooseInstance.createStripeCheckoutSession(email, paymentIntent, stripeCancelKey, stripeSuccessKey);
     await stripeCheckoutSession.save();
-
-    let stripeCancel = mongooseInstance.createStripeCancelSuccessKey(email, stripeCancelString, paymentIntent, StripeCancelKey);
-    await stripeCancel.save();
-
-    let stripeSuccess = mongooseInstance.createStripeCancelSuccessKey(email, stripeSuccessString, paymentIntent, StripeSuccessKey);
-    await stripeSuccess.save();
 
     res.json({ id: session.id });
 
@@ -115,10 +99,14 @@ exports.webhookPremiumUpgrade = wrapAsync(async function(req, res) {
     let event;
 
     try {
+
         event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
+
     } catch (err) {
+
         logErrorMessage(err);
         return res.status(400).send(`Webhook Error: ${err.message}`);
+
     }
 
     // Now that the event is created use event.data.object.id as a key to see if the DB needs to be updated.

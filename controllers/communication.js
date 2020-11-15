@@ -15,6 +15,7 @@ exports.sendEmail = async function(emailRecipient, emailSubject, htmlMessage) {
             user: siteValue.adminEmailSender, 
             pass: process.env.ADMIN_EMAIL_PASSWORD 
         }
+        
     });
 
     // send mail with defined transport object
@@ -26,4 +27,5 @@ exports.sendEmail = async function(emailRecipient, emailSubject, htmlMessage) {
         text: ``, 
         html: htmlMessage
     });
+
 }

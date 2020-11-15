@@ -5,23 +5,9 @@ const renderValue = require('./rendering-values');
 
 let emailNotValid = 'The email you entered is not valid.';
 
-let existingPasswordIncorrect = 'The username and password combination you entered is incorrect.  Please try again.';
-
 function changedNewPasswordDoesNotMeetRequirements(adjective) {
 
     return `Your${ adjective } password was not strong enough, please try again.`;
-
-}
-
-function confirmationEmailDidNotMatch(adjective) {
-
-    return `Confirmation email did not match.  Please re-enter your ${ adjective } email address.`;
-
-}
-
-function confirmationEmailNotFilled(adjective) {
-
-    return `Please confirm your ${ adjective } email.`;
 
 }
 
@@ -34,6 +20,12 @@ function confirmationPasswordDoesNotMatch(adjective) {
 function confirmationPasswordNotFilled(adjective) {
 
     return `Please confirm your${ adjective } password.`;
+
+}
+
+function familyFriendlyMessage(field) {
+
+    return `Your ${ field } must be family friendly.`;
 
 }
 
@@ -97,10 +89,8 @@ exports.getChangedConfirmationPasswordError = function(isConfirmationPasswordFil
 
 exports.getChangedEmailConfirmationError = function(isConfirmationEmailFilled, doEmailsMatch) {
 
-    let adjective = 'new';
-
-    if (isConfirmationEmailFilled === false) return confirmationEmailNotFilled(adjective);
-    if (doEmailsMatch === false) return confirmationEmailDidNotMatch(adjective);
+    if (isConfirmationEmailFilled === false) return `Please confirm your new email.`;
+    if (doEmailsMatch === false) return `Confirmation email did not match.  Please re-enter your new email address.`;
 
 }
 
@@ -178,7 +168,7 @@ exports.getCompanyDescriptionError = function(
     let possessiveField = `${ possessive } ${ field }`;
 
     if (isCompanyDescriptionFilled === false) return fieldNotFilled(possessiveField);
-    if (isCompanyDescriptionFamilyFriendly === false) return `Your ${ possessiveField } must be family friendly.`;
+    if (isCompanyDescriptionFamilyFriendly === false) return familyFriendlyMessage(possessiveField);
     if (isCompanyDescriptionValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyDescription);
     if (isCompanyDescriptionInsideMinLength === false) return fieldTooShort(possessiveField, renderValue.companyDescriptionField.minLength);
     if (isCompanyDescriptionInsideMaxLength === false) return fieldTooLong(possessiveField, renderValue.companyDescriptionField.maxLength);
@@ -198,11 +188,10 @@ exports.getCompanyNameError = function(
     let possessive = owner + '\'s';
     let field = 'name';
 
-    let ownerField = `${ owner } ${ field }`;
     let possessiveField = `${ possessive } ${ field }`;
 
     if (isCompanyNameFilled === false) return fieldNotFilled(possessiveField);
-    if (isCompanyNameFamilyFriendly === false) return valueNotValid(ownerField);
+    if (isCompanyNameFamilyFriendly === false) return familyFriendlyMessage(possessiveField);
     if (isCompanyNameValidCharacters === false) return invalidCharacterMessage(regexpValue.messageCompanyName);
     if (doesCompanyNameContainAtLeastOneCharacter === false) return `Your ${ possessiveField } must include at least 1 letter.`;
     if (isCompanyNameInsideMinLength === false) return fieldTooShort(possessiveField, renderValue.companyNameField.minLength);
@@ -343,7 +332,7 @@ exports.getCurrentPasswordError = function(isCurrentPasswordFilled, isCurrentPas
 exports.getLoginPasswordError = function(isPasswordFilled, doesUserExist, isPasswordCorrect) {
 
     if (isPasswordFilled === false) return fieldNotFilled('password');
-    if (doesUserExist === false || isPasswordCorrect === false) return existingPasswordIncorrect;
+    if (doesUserExist === false || isPasswordCorrect === false) return 'The username and password combination you entered is incorrect.  Please try again.';
 
 }
 

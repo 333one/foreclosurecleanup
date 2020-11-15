@@ -5,37 +5,72 @@ const bcrypt = require('bcryptjs');
 const cryptoRandomString = require('crypto-random-string');
 const normalizeUrl = require('normalize-url');
 const objectHash = require('object-hash');
-const path = require('path');
 
 const communication = require('./communication');
-const defaultMessage = require('../models/default-messages');
-const defaultValue = require('../models/default-values');
 const emailMessage = require('../models/email-messages');
-const logoutSteps = require('./logout-steps');
-const mongooseInstance = require('./mongoose-create-instances');
 const regExpValue = require('../models/regexp-values');
 const renderValue = require('../models/rendering-values');
 const timeValue = require('../models/time-values');
 
-const { 
-    LoginFailure,
-    PasswordResetRequest,
-    StripeCheckoutSession,
-    User
-} = require('../models/mongoose-schema');
+const { User } = require('../models/mongoose-schema');
 
-// Custom path to .env file.
-require('dotenv').config({ path: path.join(__dirname, '../models/.env') });
+function getOrdinal(day) {
 
-exports.addCompanyServices = function(formFields, userValues) {
+    let remainder = day % 10;
 
-    let serviceProperties = {};
+    if (remainder === 1 && day !== 11) {
+        return day + "st";
+    }
 
-    formFields.forEach(function(element) {
-        serviceProperties[element] = userValues[element];
-    });
+    if (remainder === 2 && day !== 12) {
+        return day + "nd";
+    }
 
-    return serviceProperties;
+    if (remainder === 3 && day !== 13) {
+        return day + "rd";
+    }
+
+    return day + "th";
+
+}
+
+async function testIfURLActive(possiblyActiveURL) {
+
+    let axiosResult = false;
+    let okResult = new RegExp('OK', 'i');
+
+    await axios.get(possiblyActiveURL)
+        .then(function(response) {
+
+            let doesResponseInclude2 = String(response.status).includes('2');
+            let doesResponseIncludeOk = okResult.test(response.statusText); 
+
+            if (doesResponseInclude2 === true || doesResponseIncludeOk === true) axiosResult = true;
+
+        })
+        .catch(function(error) {
+
+            if (error.response !== undefined) axiosResult = true;
+
+        });
+
+    if (axiosResult === true) return true;
+
+    return false;
+
+}
+
+exports.addMissingServicesToReqBody = function(formFields, reqBody) {
+
+    for (const element of formFields) {
+
+        if (!reqBody.hasOwnProperty(element)) {
+            reqBody[element] = 'false';
+        }
+
+    }
+
+    return reqBody;
 
 }
 
@@ -92,10 +127,15 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
         if (isCompanyServicesAdded === false) numberOfFollowingServices += 1;
 
         if (numberOfFollowingServices === 0 || numberOfFollowingServices >= 2) {
+
             assembledProperties += `<a href="/add-change-company-name">name</a>, `;
+
         } else if (numberOfFollowingServices === 1) {
+
             assembledProperties += `<a href="/add-change-company-name">name</a> and `;
+
         } 
+        
     }
 
     if (isCompanyPhoneAdded === false) {
@@ -105,10 +145,15 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
         if (isCompanyServicesAdded === false) numberOfFollowingServices += 1;
 
         if (numberOfFollowingServices === 0 || numberOfFollowingServices >= 2) {
+
             assembledProperties += `<a href="/add-change-company-phone">phone number</a>, `;
+
         } else if (numberOfFollowingServices === 1) {
+
             assembledProperties += `<a href="/add-change-company-phone">phone number</a> and `;
-        } 
+
+        }
+
     }
 
     if (isCompanyAddressAdded === false) {
@@ -117,9 +162,13 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
         if (isCompanyServicesAdded === false) numberOfFollowingServices += 1;
 
         if (numberOfFollowingServices === 0) {
+
             assembledProperties += `<a href="/add-change-company-address">address</a>, `;
+
         } else if (numberOfFollowingServices === 1) {
+
             assembledProperties += `<a href="/add-change-company-address">address</a> and `;
+
         } 
     }
     
@@ -128,26 +177,32 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
     let trimmedAssembledProperties = assembledProperties.slice(0, -2);
 
     return trimmedAssembledProperties;
-}
 
-exports.cleanCompanyDescription = function(companyDescription) {
-
-    let regExpRemoveCode = new RegExp(regExpValue.removeCode, 'gi');
-    let cleanedCompanyDescription = companyDescription.replace(regExpRemoveCode, '');
-
-    return cleanedCompanyDescription;
-    
 }
 
 exports.cleanFields = function(formFields, reqBody) {
 
-    //TODO: remove all characters over the maximum number of characters for each field.
+    // This function is used at the beginning of every POST request to deal with the submission of sloppy, erroneous or malicious data.
 
-    // This checks to see if the keys on req.body are different from those in the form.
+    // Trim white space from each property.
+    for (const element in reqBody) {
+        reqBody[element] = reqBody[element].trim();
+    }
+
+    //This checks to see if all keys were submitted with the form.
+    for (const element of formFields) {
+
+        if (!reqBody.hasOwnProperty(element)) {
+            var wereAllKeysPresent = false;
+        }
+
+    }
+
+    // This checks to see if a malicious user submitted extra keys on req.body that weren't in the default form.
     // If a key is fake the value false is stored and that key is deleted from req.body.
     for (const element in reqBody) {
 
-        var isReqBodyKeyGenuine = formFields.includes(element);
+        let isReqBodyKeyGenuine = formFields.includes(element);
 
         if (isReqBodyKeyGenuine === false) {
 
@@ -158,37 +213,18 @@ exports.cleanFields = function(formFields, reqBody) {
 
     }
 
-    // This checks to see that no key was sent twice.  This can happen if a client finds a way to give 2 fields the same name.
-    for (const element in reqBody) {
+    // If there were any missing or fake keys the value of every property is changed to an empty string to eliminate the possibility of malicious data.
+    if (wereAllKeysPresent === false || wereAllKeysGenuine === false) {
 
-        var isReqBodyKeyDuplicate = Array.isArray(reqBody[element]);
-
-        if (isReqBodyKeyDuplicate === true) {
-
-            delete reqBody[element];
-            var wereThereDuplicateKeys = true;
-
-        }
-
-    }
-
-    // If a key was not included in req.body add the key with a value of empty string ''.
-    formFields.forEach(function(element) {
-        reqBody[element] = reqBody[element] || '';
-    });
-
-    // If there were any fake or duplicate keys the value of every property is changed to an empty string to eliminate the possibility of malicious data.
-    if (wereAllKeysGenuine === false || wereThereDuplicateKeys === true) {
-
-        for (const element in reqBody) {
+        for (const element of formFields) {
             reqBody[element] = '';
         }
         
     }
 
-    // Trim white space from each property.
-    for (const element in reqBody) {
-        reqBody[element] = reqBody[element].trim();
+    // deleteProperty is used in many routes.  If it is present make sure the value is either true or empty string.
+    if (reqBody.deleteProperty) {
+        if (reqBody.deleteProperty !== 'true' && reqBody.deleteProperty !== '') reqBody.deleteProperty = 'false';
     }
 
     return reqBody;
@@ -202,85 +238,127 @@ exports.convertCheckboxToBoolean = function(checkInputValue) {
 
 }
 
-exports.convertBooleanToString = function(inputFields) {
+exports.convertBooleanToString = function(userValues) {
 
-    let serviceProperties = {};
+    let companyServiceProperties = {};
 
-    for (const element in inputFields) {
+    for (const element in userValues) {
 
-        if (inputFields[element] === true) {
-            serviceProperties[element] = 'true';
-        } else if (inputFields[element] === false) {
-            serviceProperties[element] = 'false';
+        if (userValues[element] === true) {
+
+            companyServiceProperties[element] = 'true';
+
+        } else if (userValues[element] === false) {
+
+            companyServiceProperties[element] = 'false';
+
         }
 
     };
 
-    return serviceProperties;
+    return companyServiceProperties;
 
 }
 
-exports.convertStringToBoolean = function(companyServicesArray, inputFields) {
+exports.convertStringToBoolean = function(companyServicesDefaultFormFields, cleanedFields) {
 
-    let serviceProperties = {};
+    let companyServiceProperties = {};
 
-    companyServicesArray.forEach( function(element) {
+    // Give everything a boolean value except deleteProperty which has already been extracted and can be excluded here.
+    for (const element of companyServicesDefaultFormFields) {
 
-        if (inputFields[element] === 'true') {
-            serviceProperties[element] = true;
-        } else {
-            serviceProperties[element] = false;
-        }
-        
-    });
+        if (cleanedFields[element] === 'true' && element !== 'deleteProperty') {
 
-    return serviceProperties;
+            companyServiceProperties[element] = true;
+
+        } else if (cleanedFields[element] === 'false' && element !== 'deleteProperty') {
+
+            companyServiceProperties[element] = false;
+
+        } 
+
+    }
+
+    return companyServiceProperties;
 
 }
 
-exports.createConfirmationHash = function(email) {
+exports.createRandomHash = function(stringSeed) {
 
     let salt = cryptoRandomString({ length: 16 });
-    let confirmationHash = objectHash(email + salt);
+    let hash = objectHash(stringSeed + salt);
     
-    return confirmationHash;
+    return hash;
+
 }
 
-exports.formatName = function(name) {
+exports.createNewExpirationDate = function(todaysDate, currentExpirationDate) {
 
-    let onlyOneSpace = filterOnlyOneAllowed(name, ' ')
-    let upperCased = onlyOneSpace.charAt(0).toUpperCase() + onlyOneSpace.slice(1) || '';
-    let nameArray = upperCased.split('');
+    // For a free account use new Date() for the start date.  For a Premium account use the previous expiration date.
+    let newExpirationDate = String(currentExpirationDate) === String(timeValue.freeAccountExpiration) ? new Date(todaysDate) : new Date(currentExpirationDate);
 
-    let formattedArray = nameArray.map(function(element, index, array) {
+    let newExpirationYear = newExpirationDate.getFullYear() + 1;
+    newExpirationDate.setFullYear(newExpirationYear);
 
-        return array[index - 1] === ' ' ? element.toUpperCase() : element;
-    });
+    return newExpirationDate;
+    
+}
 
-    return formattedArray.join('');
+exports.formatCompanyDescription = function(companyDescription) {
+
+    // Add punctuation if needed before max length is tested.
+    let companyDescriptionLength = companyDescription.length;
+
+    let isPunctuationAtEndOfCompanyDescription = 
+        companyDescription.charAt(companyDescriptionLength -1) === '.' ||
+        companyDescription.charAt(companyDescriptionLength -1) === '!' ||
+        companyDescription.charAt(companyDescriptionLength -1) === '?' 
+        ? true : false;
+
+    if (isPunctuationAtEndOfCompanyDescription === false) companyDescription = companyDescription + '.';
+
+    let capitalizedCompanyDescription = companyDescription.charAt(0).toUpperCase() + companyDescription.slice(1);
+
+    return capitalizedCompanyDescription;
+
 }
 
 exports.formatCompanyPhone = function(companyPhone) {
 
-    let cleanedPhone = companyPhone.replace(/\D/g,'');
+    let regExpPhone = new RegExp(regExpValue.anyNonNumberCharacter, 'g');
+    let cleanedPhone = companyPhone.replace(regExpPhone,'');
 
+    // Remove the phone prefix if it exists.
     let phonePrefixRemoved;
-
     if (cleanedPhone.charAt(0) == 0 || cleanedPhone.charAt(0) == 1) {
+
         phonePrefixRemoved = cleanedPhone.slice(1);
+
     } else {
+
         phonePrefixRemoved = cleanedPhone;
+
     }
 
+    // Send it back formatted if its short.
     if (phonePrefixRemoved.length < 4) {
+
         return phonePrefixRemoved.slice(0, 3);
+
     }
 
+    // Send it back formatted if its short.
     if (phonePrefixRemoved.length < 7) {
+
         return phonePrefixRemoved.slice(0, 3) + '-' + phonePrefixRemoved.slice(3);
+
     }
 
-    return phonePrefixRemoved.slice(0, 3) + '-' + phonePrefixRemoved.slice(3, 6) + '-' + phonePrefixRemoved.slice(6);
+    // Send it back formatted.  This may or may not be short.
+    let formattedPhone = phonePrefixRemoved.slice(0, 3) + '-' + phonePrefixRemoved.slice(3, 6) + '-' + phonePrefixRemoved.slice(6);
+
+    return formattedPhone;
+
 }
 
 exports.formatURL = function(companyWebsite) {
@@ -304,6 +382,75 @@ exports.formatURL = function(companyWebsite) {
     }
 
     return formattedURL;
+
+}
+
+exports.getCompanyServicesFromUserValues = function(formFields, userValues) {
+
+    let companyServiceProperties = {};
+
+    formFields.forEach(function(element) {
+        companyServiceProperties[element] = userValues[element];
+    });
+
+    return companyServiceProperties;
+
+}
+
+exports.getNumberOfDaysUntilExpiration = function(expirationDate) {
+
+    let oneDay = 24 * 60 * 60 * 1000;
+    let today = new Date();
+
+    let expirationDateMilliseconds = Date.UTC(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate(), expirationDate.getHours(), expirationDate.getMinutes());
+    let todaysDateMilliseconds = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), today.getHours(), today.getMinutes());
+
+    let numberOfDaysUntilExpiration = Math.round(Math.floor(expirationDateMilliseconds - todaysDateMilliseconds) / oneDay);
+
+    return numberOfDaysUntilExpiration;
+
+}
+
+exports.getPremiumExpirationDateString = function(expirationDate) {
+
+    let month = expirationDate.toLocaleString('default', { month: 'long' });
+    let day = expirationDate.getDate();
+    let year = expirationDate.getFullYear();
+
+    let dayWithOrdinal = getOrdinal(day);
+
+    return `${ month } ${ dayWithOrdinal }, ${year}`;
+
+}
+
+exports.hashPassword = function(password) {
+
+    return new Promise( function(resolve, reject) {
+
+        bcrypt.genSalt(10, function(error, salt) {
+
+            bcrypt.hash(password, salt, function(error, hash) {
+
+                if (error) reject(error);
+                resolve(hash);
+
+            });
+
+        });
+
+    });
+
+}
+
+exports.makeFieldsEmpty = function(formFields) {
+
+    let emptyFields = {};
+
+    formFields.forEach(function(element) {
+        emptyFields[element] = '';
+    });
+
+    return emptyFields;
 
 }
 
@@ -342,258 +489,18 @@ exports.testFormattedURLAndSave = async function(formattedURL, email) {
     let isHttpURLActive = await testIfURLActive(httpVersion);
     if (isHttpURLActive === true) return;
 
-    // No version of the website worked.  Save to the DB, send the user an email and return.
-    await User.updateOne({ email }, { urlNotActiveError: true, shouldBrowserFocusOnURLNotActiveError: true });
+    // Get the user and make sure the website still holds a value.  The client may have quickly deleted their value before this check was complete.
+    let user = await User.findOne({ email });
 
-    let emailSubject = emailMessage.urlNotActiveSubject;
-    let emailBody = emailMessage.urlNotActiveBody(formattedURL);
-    communication.sendEmail(email, emailSubject, emailBody);
+    if (user.companyWebsite !== '') {
 
-}
+        // No version of the website worked.  Save to the DB, send the user an email and return.
+        await User.updateOne({ email }, { urlNotActiveError: true, shouldBrowserFocusOnURLNotActiveError: true });
 
-exports.getDeleteAddChange = function(deleteProperty, companyProperty) {
-
-    let deleteAddChange;
-
-    if (deleteProperty === 'true') {
-        deleteAddChange = 'delete';
-    } else if (companyProperty === '') {
-        deleteAddChange = 'add';
-    } else {
-        deleteAddChange = 'change'
-    }
-
-    return deleteAddChange;
-
-}
-
-exports.getCompanyRegionFull = function(companyCity, companyState, companyZip) {
-    
-    if (companyCity, companyState, companyZip) {
-        return `${ companyCity }, ${ companyState } ${ companyZip }`;
-    } else {
-        return null;
-    }
-
-}
-
-exports.getCompanyStreetFull = function(companyStreet, companyStreetTwo) {
-
-    if (companyStreetTwo) {
-        return `${ companyStreet }, ${ companyStreetTwo }`;
-    } else if (companyStreet) {
-        return `${ companyStreet }`;
-    } else {
-        return null;
-    }
-}
-
-exports.getNumberOfDaysUntilExpiration = function(expirationDate) {
-
-    let oneDay = 24 * 60 * 60 * 1000;
-    let today = new Date();
-
-    let numberOfDays = Math.floor((Date.UTC(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate())) - (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))) / oneDay;
-
-    return numberOfDays;
-}
-
-exports.getOrCreateConfirmationHash = async function(email) {
-
-    // Determine if a password reset request already exists.
-    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email });
-
-    if (retrievedPasswordResetRequest) {
-        return retrievedPasswordResetRequest.confirmationHash;
-    }
-
-    let salt = cryptoRandomString({ length: 16 });
-    let confirmationHash = objectHash(email + salt);
-    return confirmationHash;
-}
-
-exports.getPremiumExpirationDate = function(expirationDate) {
-
-    let month = expirationDate.toLocaleString('default', { month: 'long' });
-    let day = expirationDate.getDate();
-    let year = expirationDate.getFullYear();
-
-    let dayWithOrdinal = getOrdinal(day);
-
-    return `${ month } ${ dayWithOrdinal }, ${year}`;
-}
-
-exports.hashPassword = function(password) {
-
-    return new Promise( function(resolve, reject) {
-        bcrypt.genSalt(10, function(error, salt) {
-            bcrypt.hash(password, salt, function(error, hash) {
-                if (error) {
-                    reject(error);
-                }
-                resolve(hash);
-            });
-        });
-    });
-}
-
-exports.incrementExistingPasswordResetOrCreateNew = async function(email, confirmationHash, forward) {
-
-    // Determine if a password reset request already exists.
-    let retrievedPasswordResetRequest = await PasswordResetRequest.findOne({ email });
-
-    // If a request exists increment numberOfRequests.
-    // Create the request whether a real user exists or not.  The upper limit on requests will stop spammers from repeatedly requesting a reset for a non user.
-    if (retrievedPasswordResetRequest) {
-
-        // If you've surpassed the maximum number of requests forward to password-reset-limit-reached.
-        if (retrievedPasswordResetRequest.numberOfRequests >= defaultValue.numberOfPasswordResetRequestsAllowed) {
-
-            return true;
-        } else {
-
-            if (forward != "true") await PasswordResetRequest.updateOne({ email }, { numberOfRequests: retrievedPasswordResetRequest.numberOfRequests += 1 });
-        } 
-
-    // Because the request didn't exist create a new one.
-    } else {
-
-        let passwordResetRequest = await mongooseInstance.createPasswordResetRequest(confirmationHash, email);
-        await passwordResetRequest.save();
-    }
-    
-    return false;
-}
-
-// exports.logoutSteps = function(req, res) {
-
-//     req.session.destroy( function(error) {
-
-//         if (error) res.clearCookie(process.env.SESSION_NAME);
-//         return res.redirect('/login');
-
-//     });
-
-// }
-
-// exports.logoutStepsNoRedirect = function(req, res) {
-
-//     req.session.destroy( function(error) {
-//         if (error) res.clearCookie(process.env.SESSION_NAME);
-//     });
-
-// }
-
-exports.makeFieldsEmpty = function(formFields, empty = '') {
-
-    let emptyFields = {};
-
-    formFields.forEach(function(element) {
-        emptyFields[element] = empty;
-    });
-
-    return emptyFields;
-
-}
-
-exports.processCompanyDescription = function(companyDescription) {
-
-    // Add punctuation if needed before you test for max length.
-    let companyDescriptionLength = companyDescription.length;
-
-    let isPunctuationAtEndOfCompanyDescription = 
-    companyDescription.charAt(companyDescriptionLength -1) === '.' ||
-    companyDescription.charAt(companyDescriptionLength -1) === '!' ||
-    companyDescription.charAt(companyDescriptionLength -1) === '?' 
-    ? true : false;
-
-    if (
-        isPunctuationAtEndOfCompanyDescription === false
-        ) {
-        companyDescription = companyDescription + '.';
-    }
-
-    let capitalizedCompanyDescription = companyDescription.charAt(0).toUpperCase() + companyDescription.slice(1);
-
-    return capitalizedCompanyDescription;
-
-}
-
-exports.sendEmailIfNecessary = async function(email, confirmationHash, emailSubject, expirationTime, forward) {
-
-    // If User exists create and send the email
-    let retrievedUser = await User.findOne({ email });
-    
-    if (retrievedUser && forward != 'true') {
-
-        let emailBody = emailMessage.passwordResetRequestEmailBody(confirmationHash, expirationTime);
-
+        let emailSubject = emailMessage.urlNotActiveSubject;
+        let emailBody = emailMessage.urlNotActiveBody(formattedURL);
         communication.sendEmail(email, emailSubject, emailBody);
-    }  
-}
 
-function filterOnlyOneAllowed(string, character) {
-
-    let first = true;
-
-    return string.replace(new RegExp(character, 'g'), function(value) {
-        if (first) {
-            first = false;
-            return value;
-        }
-        return '';
-    });
-}
-
-function getOrdinal(day) {
-
-    let firstDigit = day % 10;
-    let lastDigits = day % 100;
-
-    if (firstDigit == 1 && lastDigits != 11) {
-        return day + "st";
     }
-
-    if (firstDigit == 2 && lastDigits != 12) {
-        return day + "nd";
-    }
-
-    if (firstDigit == 3 && lastDigits != 13) {
-        return day + "rd";
-    }
-
-    return day + "th";
-
-}
-
-async function saveActiveURL(activeURL, email, req) {
-
-    await User.updateOne({ email }, { companyWebsite: activeURL });
-    req.session.userValues.companyWebsite = activeURL;
-    req.session.save();
-
-}
-
-async function testIfURLActive(possiblyActiveURL) {
-
-    let axiosResult = false;
-    let okResult = new RegExp('OK', 'i');
-
-    await axios.get(possiblyActiveURL)
-        .then(function(response) {
-
-            let doesResponseInclude2 = String(response.status).includes('2');
-            let doesResponseIncludeOk = okResult.test(response.statusText); 
-
-            if (doesResponseInclude2 === true || doesResponseIncludeOk === true) axiosResult = true;
-
-        })
-        .catch(function(error) {
-            if (error.response !== undefined) axiosResult = true;
-        });
-
-    if (axiosResult === true) return true;
-
-    return false;
 
 }

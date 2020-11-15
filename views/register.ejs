@@ -95,10 +95,8 @@
                                     -errorBorder
                             <% } %> 
                             ">
-                            <input type="checkbox" id="termsOfUse" name="termsOfUse" value="isChecked"
-                                <% if (userInput.termsOfUse === "isChecked") { %> checked<% } %>
-                            >
-                            <label class="textSmall" for="termsOfUse">By creating an account I agree to the <a href="/privacy-policy-terms-Service">Terms Of Service</a> and acknowledge that I have read the <a href="/privacy-policy-terms-service#privacyPolicy">Privacy Policy</a>.</label>
+                            <input type="checkbox" id="termsOfUse" name="termsOfUse" value="isChecked">
+                            <label class="textSmall" for="termsOfUse">By creating an account I acknowledge that I have read and agree to the <a href="/privacy-policy-terms-Service">Terms Of Service</a> and <a href="/privacy-policy-terms-service#privacyPolicy">Privacy Policy</a>.</label>
                         </div>
                         <% if (typeof termsOfUseError != "undefined") { %>
                             <div id="targetTermsOfUseError" class="input__error"><%= termsOfUseError %></div>

@@ -21,7 +21,21 @@
             <form action="/add-change-company-services" method="POST">
 
                 <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Services:</p>
-                <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">Select the services that you'd like customers to know about.  If you offer additional services or would like to include more detail about the services you offer include that on <a href="/upgrade-extend-premium">your company's description page</a>.</p>
+
+                <% if (isAccountUpgraded === true) { %>
+
+                    <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">Select the services that you'd like customers to know about. 
+                        If you offer additional services or would like to include more detail about the services you offer include that information on your company's
+                        <a href="/add-change-company-description">Description page</a>.</p>
+
+                <% } else { %>
+
+                    <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">Select the services that you'd like customers to know about. 
+                        If you offer additional services or would like to include more detail about the services you offer <a href="/upgrade-extend-premium">upgrade to Premium</a> 
+                        and include that information on your your company's Description page.</p>
+                        
+                <% } %> 
+
                 <div class="checkBox__largeContainer -rightLeftMarginMedium -topMarginSmall -topBottomPaddingSmall
                     <% if (typeof companyServicesError != "undefined") { %>
                         -errorBorder
@@ -125,7 +139,7 @@
                 <input type="hidden" name="poolMaintenance" value="false">
                 <input type="hidden" name="propertyCleaning" value="false">
                 <input type="hidden" name="winterizations" value="false">
-                <input type="hidden" name="deleteProperty" value="yes">
+                <input type="hidden" name="deleteProperty" value="true">
             </form>
             <% } %>  
 

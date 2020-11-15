@@ -35,7 +35,7 @@ exports.httpProtocol = /^http:\/\//;
 
 exports.httpsProtocol = /^https:\/\//;
 
+exports.anyNonNumberCharacter = /\D/;
+
 exports.password = /^[A-Z0-9\`\~\!\@\#\$\%\^\&\*\(\)\-\_\=\+\[\{\]\}\\\|\;\:\'\"\,\<\.\>\/\?\']+$/;
 exports.messagePassword = 'letters A - Z, numbers 0 - 9 or special characters ` ~ ! @ # $ % ^ & * ( ) - _ = + [ { ] } \ | ; : \' " , < . > / ? \'';
-
-exports.removeCode = /^\<|\/>|\>|href=+$/;

@@ -39,7 +39,7 @@
 
                 <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
                     <label for="companyDescription" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Description:</label>
-                    <p class="textSmall -bottomMarginSmall">Include information about your company's history, services or other selling points that customers would be interested in.</p>
+                    <p class="textSmall -bottomMarginSmall">Include information about your company's history, services or other selling points that customers would be interested in. Please use <%= companyDescriptionMaxLength %> characters or less.</p>
                     <textarea id="companyDescription" class="input__field -setFontFamilyDefault
                         <% if (typeof companyDescriptionError != "undefined") { %>
                             -errorBorder

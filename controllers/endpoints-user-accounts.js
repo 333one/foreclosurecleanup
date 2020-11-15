@@ -4,16 +4,14 @@ const bodyParser = require('body-parser');
 const express = require('express');
 
 const middlewareUserAccounts = require('./middleware-user-accounts');
-const {
-    redirectLogin,
-    redirectMyAccount
-    } = require('./middleware-user-accounts'); 
+const { redirectLogin, redirectMyAccount } = require('./middleware-user-accounts'); 
 
 const router = express.Router();
 
 const urlEncoded = bodyParser.urlencoded({ extended: true });
 
 router.get('/account-deleted', middlewareUserAccounts.accountDeleted);
+router.get('/account-suspended', middlewareUserAccounts.accountSuspended);
 router.get('/add-change-company-address', redirectLogin, middlewareUserAccounts.addChangeCompanyAddress);
 router.get('/add-change-company-description', redirectLogin, middlewareUserAccounts.addChangeCompanyDescription);
 router.get('/add-change-company-name', redirectLogin, middlewareUserAccounts.addChangeCompanyName);

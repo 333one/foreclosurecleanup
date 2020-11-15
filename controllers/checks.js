@@ -3,154 +3,64 @@
 const phoneNormalizer = require('phone');
 const zxcvbn = require('zxcvbn');
 
-const formFields = require('../models/forms-default-fields.js');
+const formFields = require('../models/forms-default-fields');
 const timeValue = require('../models/time-values');
 
-exports.checkAllFieldsFilled = function(formFields, userInputFields) {
-
-    for(let element of formFields) {
-        if (userInputFields[element] === '' || userInputFields[element] === undefined) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-exports.checkAllAccountPropertiesFilled = function(sessionUserValues, currentProperty) {
+exports.checkAreAllAccountPropertiesFilled = function(sessionUserValues, currentProperty) {
 
     let userProperties = JSON.parse(JSON.stringify(sessionUserValues));
 
     // These 3 are allowed to be empty so delete them.
-    delete userProperties.companyStreetTwo;
     delete userProperties.companyDescription;
+    delete userProperties.companyStreetTwo;
     delete userProperties.companyWebsite;
 
     // The current property has a value or you wouldn't get here.  However it hasn't been updated on the session so it is allowed to be empty.  Delete that property.
-    delete userProperties[currentProperty];
+    if (currentProperty === 'companyAddress') {
 
-    // Company services have to be checked separately so create an array of them.
-    let companyServiceProperties = [...formFields.addChangeCompanyServices];
+        delete userProperties.companyCity;
+        delete userProperties.companyState;
+        delete userProperties.companyStreet;
+        delete userProperties.companyZip;
 
-    // Remove deleteProperty because it isn't needed for this test.
-    let indexOfDeleteProperty = companyServiceProperties.indexOf('deleteProperty');
-    companyServiceProperties.splice(indexOfDeleteProperty, 1);
+    } else if (currentProperty !== 'companyServices') {
 
-    // Check to see if any services have been added.  
-    let haveAnyServicesBeenAdded = false;
-    companyServiceProperties.forEach(function(element) {
-        if (userProperties[element] === true) haveAnyServicesBeenAdded = true;
-    })
+        delete userProperties[currentProperty];
 
-    // if (haveAnyServicesBeenAdded === false) return false;
+    }
 
     // If any remaining property is empty return false.
     for (var key in userProperties) {
-        if (userProperties[key] === "")
-            return false;
+
+        if (userProperties[key] === '') return false;
+            
+    }
+
+    // Company services have to be checked separately.  Don't check if you are at postAddChangeCompanyServices.
+    // In postAddChangeCompanyServices you wouldn't get here if all company services were empty because isAtLeastOneCompanyServiceFilled would redirect you.
+    if (currentProperty !== 'companyServices') {
+
+        let companyServiceProperties = [...formFields.addChangeCompanyServices];
+
+        // Remove deleteProperty because it isn't needed for this test.
+        let indexOfDeleteProperty = companyServiceProperties.indexOf('deleteProperty');
+        companyServiceProperties.splice(indexOfDeleteProperty, 1);
+
+        for (var element of companyServiceProperties) {
+
+            if (userProperties[element] === true) return true;
+    
+        }
+
+        return false;
+
     }
 
     return true;
 
 }
 
-exports.checkArePremiumAccountExtendsAvailable = function(expirationDate, isUpgradeExpirationSoon) {
-
-    let oneDay = 24 * 60 * 60 * 1000;
-    let today = new Date();
-
-    let numberOfDays = Math.floor((Date.UTC(expirationDate.getFullYear(), expirationDate.getMonth(), expirationDate.getDate())) - (Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))) / oneDay;
-
-    let maxDays = timeValue.premiumAccountExtendsCutoff;
-
-    if (numberOfDays < maxDays) {
-
-        return true;
-    } else {
-
-        return false;
-    }
-}
-
-exports.checkCompanyAddressNormalized = function(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, normalizedCompanyAddress) {
-
-    if (
-        normalizedCompanyAddress.street1 === companyStreet &&
-        normalizedCompanyAddress.street2 === companyStreetTwo &&
-        normalizedCompanyAddress.city === companyCity &&
-        normalizedCompanyAddress.state === companyState &&
-        normalizedCompanyAddress.Zip5 === companyZip
-    ) return true;
-
-    return false;
-    
-}
-
-exports.checkIfRouteBeatWebhook = function(expirationDateSessionValue, expirationDateDBValue) {
-
-    if (expirationDateSessionValue === expirationDateDBValue) return true;
-    return false;
-}
-
-exports.checkForPreviousErrors = function(emailError, firstNameError, lastNameError, phoneError) {
-
-    if (emailError || firstNameError || lastNameError || phoneError) {
-        return true;
-    }
-    return false;
-}
-
-exports.checkIfInputInsideMaxLength = function(field, maxLength) {
-
-    return field.length > maxLength ? false : true;
-}
-
-exports.checkIfInputTooShort = function(field, minLength) {
-
-    return field.length < minLength ? true : false;
-}
-
-exports.checkIsUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
-
-    // A negative number indicates this is a free account.
-    if (numberOfDaysUntilExpiration < 0) {
-        return false;
-    } else if (numberOfDaysUntilExpiration > timeValue.upgradeExpirationAlarmTime) {
-        return false;
-    } else {
-        return true;
-    }
-    
-}
-
-exports.checkPasswordMeetsRequirements = function(password) {
-
-    return zxcvbn(password).score >= 2 ? true : false;
-}
-
-exports.checkCompanyPhoneValid = function(companyPhone) {
-
-    // If phoneNormalizer returns an empty array it indicates that the phone number is not complete or valid.
-    if (phoneNormalizer(companyPhone, '', true).length === 0) return false;
-    if (companyPhone.charAt(0) == 0 || companyPhone.charAt(0) == 1) return false;
-    return true;
-}
-
-exports.checkCompanyStateValid = function(companyState) {
-
-    let states = [
-        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
-        'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-        'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-        'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-        'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-        'DC', ''];
-
-    if (states.includes(companyState)) return true;
-    return false;
-}
-
-exports.checkCompanyServicesHaveValue = function (
+exports.checkDoAnyCompanyServicesHaveValue = function (
     boardingSecuring,
     debrisRemovalTrashout,
     evictionManagement,
@@ -172,34 +82,90 @@ exports.checkCompanyServicesHaveValue = function (
 
 }
 
-exports.checkServiceValuesValid = function(cleanedFields) {
+exports.checkIfCompanyAddressNormalized = function(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, normalizedCompanyAddress) {
+
+    if (
+        normalizedCompanyAddress.street1 === companyStreet &&
+        normalizedCompanyAddress.street2 === companyStreetTwo &&
+        normalizedCompanyAddress.city === companyCity &&
+        normalizedCompanyAddress.state === companyState &&
+        normalizedCompanyAddress.Zip5 === companyZip
+    ) return true;
+
+    return false;
+    
+}
+
+exports.checkIfCompanyPhoneValid = function(companyPhone) {
+
+    // If phoneNormalizer returns an empty array it indicates that the phone number is not complete or valid.
+    if (phoneNormalizer(companyPhone, '', true).length === 0) return false;
+
+    // A real phone number in the correct format can't start with a 0 or 1.
+    if (companyPhone.charAt(0) == 0 || companyPhone.charAt(0) == 1) return false;
+
+    return true;
+    
+}
+
+exports.checkIfCompanyStateValid = function(companyState) {
+
+    let states = [
+        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
+        'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+        'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+        'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+        'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+        'DC', ''];
+
+    let wasStateValid = states.includes(companyState);
+
+    if (wasStateValid === true) return true;
+    
+    return false;
+
+}
+
+exports.checkIfPasswordMeetsRequirements = function(password) {
+
+    let didPasswordMeetRequirements = zxcvbn(password).score >= 2;
+
+    if (didPasswordMeetRequirements === true) return true;
+
+    return false;
+
+}
+
+exports.checkIfServiceValuesValid = function(cleanedFields) {
 
     let cleanedFieldsArray = Object.entries(cleanedFields);
 
-    // cleanedFieldsArray.push(['cat', 'abc123']);
+    // cleanedFields is a processed version of the submission.  If the key is not deleteProperty every property should hold true or false.
+    for (const [key, value] of cleanedFieldsArray) {
+        if (key !== 'deleteProperty' && value !== 'true' && value !== 'false') return false;
+    }
 
-    let areAllServiceValuesValid = true;
+    return true;
 
-    cleanedFieldsArray.forEach(function([key, value]) {
+}
 
-        if (key !== 'deleteProperty' && value !== 'true' && value !== '') {
-            areAllServiceValuesValid = false;
-        }
+exports.checkIfUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
 
-    });
+    // A negative number indicates this is a free account.
+    if (numberOfDaysUntilExpiration < 0) return false;
+    if (numberOfDaysUntilExpiration > timeValue.firstAlertBeforeExpiration) return false;
 
-    return areAllServiceValuesValid;
-
+    return true;
+    
 }
 
 exports.checkWereCompanyServicesAdded = function(companyServices, userValues) {
 
-    let wereCompanyServicesAdded = false;
+    // If any value is true that means a service already existed and the change is an update, not an add.
+    for (const element of companyServices) {
+        if (userValues[element] === true) return false;
+    }
 
-    companyServices.forEach(function(element) {
-        if (userValues[element] === true) wereCompanyServicesAdded = true;
-    });
-
-    return wereCompanyServicesAdded;
+    return true;
 
 };
