@@ -1,8 +1,11 @@
 "use strict";
 
 const express = require('express');
+const app = express();
+
 const mongoose = require('mongoose'); 
 const path = require('path');
+const schedule = require('node-schedule');
 const session = require('express-session');
 
 // Use default store when testing on Windows.  On Linux remove the comments below and turn on Redis.  Also turn on Redis in the session.
@@ -10,16 +13,16 @@ const session = require('express-session');
 //let RedisStore = require('connect-redis')(session);
 //let redisClient = redis.createClient();
 
+// Custom path to .env file.
+require('dotenv').config({ path: path.join(__dirname, '/models/.env')});
+
+const accountExpirations = require('./controllers/account-expirations');
+const emailReminders = require('./controllers/email-reminders');
 const endpointsUserAccounts = require('./controllers/endpoints-user-accounts');
 const endpointsStripe = require('./controllers/endpoints-stripe');
 const endpointsDefault = require('./controllers/endpoints-default');
 const { customExpressErrorHandler, logErrorMessage } = require('./controllers/error-handling');
 const siteValue = require('./models/site-values');
-
-// Custom path to .env file.
-require('dotenv').config({ path: path.join(__dirname, '/models/.env')});
-
-const app = express();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -52,20 +55,38 @@ app.use(endpointsDefault);
 app.use(customExpressErrorHandler);
 
 mongoose.connect(process.env.DB_CONNECTION, { useCreateIndex: true, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
-    .then( function(promiseData){
+    .then( function() {
         console.log('mongoose connected');
     })
-    .catch( function(err){
-        logErrorMessage(err);
+    .catch( function(error) {
+        logErrorMessage(error);
     });
 
 app.listen(siteValue.port, function(){
     console.log(`app.js listening on port ${ siteValue.port }`);
 });
 
+// Run this at 1am every night.
+const scheduleAccountExpirations = schedule.scheduleJob('* 1 * * *', function() {
+    accountExpirations.expireOldPremiumAccounts();
+});
+
+// Run this at 1:15am every night.
+const scheduleFirstAlertEmailReminders = schedule.scheduleJob('15 1 * * *', function() {
+    emailReminders.firstAlertBeforeExpiration();
+});
+
+// Run this at 1:30am every night.
+const scheduleSecondAlertEmailReminders = schedule.scheduleJob('30 1 * * *', function() {
+    emailReminders.secondAlertBeforeExpiration();
+});
+
+// Run this at 1:45am every night.
+const scheduleFinalAlertEmailReminders = schedule.scheduleJob('45 1 * * *', function() {
+    emailReminders.finalAlertBeforeExpiration();
+});
+
 // close mongoose connection gracefully when app is terminated with ctrl-c.
 process.on('SIGINT', function() {
-    mongoose.connection.close(function () {
-        process.exit(0);
-    });
+    mongoose.connection.close(function() { process.exit(0); });
 });
