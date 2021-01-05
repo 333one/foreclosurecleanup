@@ -1,5 +1,3 @@
-"use strict";
-
 const mongoose = require('mongoose');
 const timeZone = require('mongoose-timezone');
 
@@ -7,94 +5,9 @@ const defaultValue = require('../models/default-values');
 const stripeValue = require('../models/stripe-values');
 const timeValue = require('../models/time-values');
 
-const LoginFailureSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: true
-    },
-    numberOfFailures: {
-        type: Number,
-        default: 1,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: timeValue.loginFailureExpiration
-    }
+// Building blocks
 
-});
-
-const PasswordResetRequestSchema = new mongoose.Schema({
-    confirmationHash: {
-        type: String,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: timeValue.passwordResetRequestExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    numberOfRequests: {
-        type: Number,
-        default: 1,
-        required: true,
-    },
-    successHash: {
-        type: String,
-        required: true
-    }
-
-});
-
-const RecentDeletedAccountSchema = new mongoose.Schema({
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: timeValue.shortTermActivityExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    }
-
-});
-
-const StripeCheckoutSessionSchema = new mongoose.Schema({
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: stripeValue.checkoutSessionExpiration
-    },
-    email: {
-        type: String,
-        required: true
-    },
-    paymentIntent: {
-        type: String,
-        required: true
-    },
-    stripeCancelKey: {
-        type: String,
-        required: true
-    },
-    stripeSuccessKey: {
-        type: String,
-        required: true
-    },
-    wasDbAlreadyUpdatedByWebhook: {
-        type: Boolean,
-        default: false,
-        required: true
-    }
-
-});
-
-const UnverifiedUserSchema = new mongoose.Schema({
+let accountDataUnverifiedUser = {
     confirmationHash: {
         type: String,
         required: true
@@ -104,23 +17,14 @@ const UnverifiedUserSchema = new mongoose.Schema({
         default: Date.now,
         expires: timeValue.unverifiedUserExpiration
     },
-    email: {
-        type: String,
-        required: true
-    },
     numberOfConfirmations: {
         type: Number,
         default: 0,
         required: true,
-    },
-    password: {
-        type: String,
-        required: true
     }
+}
 
-});
-
-const UserSchema = new mongoose.Schema({
+let accountDataVerifiedUser = {
     accountSuspended: {
         type: Boolean,
         default: false,
@@ -143,16 +47,48 @@ const UserSchema = new mongoose.Schema({
             required: true
         }
     },
+    companyProfileType: {
+        type: String,
+        default: defaultValue.accountDefault,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+    expirationDate: {
+        type: Date,
+        default: timeValue.freeAccountExpiration,
+        required: true
+    },
+    live: {
+        type: Boolean,
+        default: false,
+        required: true
+    },
+    upgradeRenewalDates: {
+        type: Array
+    }
+}
+
+let companyCoreProperties = {
     companyCity: {
         type: String,
         default: '',
         required: false
     },
-    companyDescription: {
-        type: String,
-        default: '',
-        required: false
+    companyLocation: {
+        type: {
+            type: String,
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number],
+            default: [],
+            index: '2dsphere'
+        }
     },
+    
     companyName: {
         type: String,
         default: '',
@@ -162,11 +98,6 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: '',
         required: false
-    },
-    companyProfileType: {
-        type: String,
-        default: defaultValue.accountDefault,
-        required: true
     },
     companyState: {
         type: String,
@@ -183,51 +114,37 @@ const UserSchema = new mongoose.Schema({
         default: '',
         required: false
     },
-    companyWebsite: {
-        type: String,
-        default: '',
-        required: false
-    },
     companyZip: {
         type: String,
         default: '',
         required: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    email: {
+    }
+}
+
+let companyPremiumProperties = {
+    companyDescription: {
         type: String,
-        required: true
+        default: '',
+        required: false
     },
-    expirationDate: {
-        type: Date,
-        default: timeValue.freeAccountExpiration,
-        required: true
-    },
-    live: {
-        type: Boolean,
-        default: false,
-        required: true
-    },                                  
-    password: {
+    companyWebsite: {
         type: String,
-        required: true
+        default: '',
+        required: false
     },
     shouldBrowserFocusOnURLNotActiveError: {
         type: Boolean,
         default: false,
         required: true
     },
-    upgradeRenewalDates: {
-        type: Array
-    },
     urlNotActiveError: {
         type: Boolean,
         default: false,
         required: true
-    },
+    }
+}
+
+let companyServices = {
     boardingSecuring: {
         type: Boolean,
         default: false,
@@ -283,18 +200,134 @@ const UserSchema = new mongoose.Schema({
         default: false,
         required: true
     }
-    
+}
+
+let login = {
+    email: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    }
+};
+
+// Objects
+
+let unverifiedUserObject = {
+    ...accountDataUnverifiedUser,
+    ...login
+}
+
+let verifiedUserObject = {
+    ...accountDataVerifiedUser,
+    ...companyCoreProperties,
+    ...companyPremiumProperties,
+    ...companyServices,
+    ...login
+}
+
+// Schema
+
+const LoginFailureSchema = new mongoose.Schema({
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: timeValue.loginFailureExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    numberOfFailures: {
+        type: Number,
+        default: 1,
+        required: true
+    }
 });
+
+const PasswordResetRequestSchema = new mongoose.Schema({
+    confirmationHash: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: timeValue.passwordResetRequestExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    numberOfRequests: {
+        type: Number,
+        default: 1,
+        required: true,
+    },
+    successHash: {
+        type: String,
+        required: true
+    }
+});
+
+const RecentDeletedAccountSchema = new mongoose.Schema({
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: timeValue.shortTermActivityExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    }
+});
+
+const StripeCheckoutSessionSchema = new mongoose.Schema({
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: stripeValue.checkoutSessionExpiration
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    paymentIntent: {
+        type: String,
+        required: true
+    },
+    stripeCancelKey: {
+        type: String,
+        required: true
+    },
+    stripeSuccessKey: {
+        type: String,
+        required: true
+    },
+    wasDbAlreadyUpdatedByWebhook: {
+        type: Boolean,
+        default: false,
+        required: true
+    }
+});
+
+const UnverifiedUserSchema = new mongoose.Schema(unverifiedUserObject);
+
+const UserSchema = new mongoose.Schema(verifiedUserObject);
+
+// Mongoose stores the time in the wrong timezone.  This fixes that.
+UserSchema.plugin(timeZone, { paths: ['expirationDate'] });
+
+// Models
 
 const LoginFailure = mongoose.model('loginFailure', LoginFailureSchema);
 const PasswordResetRequest = mongoose.model('passwordResetRequest', PasswordResetRequestSchema);
 const RecentDeletedAccount = mongoose.model('recentDeletedAccount', RecentDeletedAccountSchema);
 const StripeCheckoutSession = mongoose.model('stripeCheckoutSession', StripeCheckoutSessionSchema);
 const UnverifiedUser = mongoose.model('unverifiedUser', UnverifiedUserSchema);
-
-UserSchema.plugin(timeZone, { paths: ['expirationDate'] });
 const User = mongoose.model('user', UserSchema);
-
 
 module.exports = { 
     LoginFailure,

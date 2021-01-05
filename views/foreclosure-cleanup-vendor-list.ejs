@@ -2,19 +2,297 @@
 <html lang="en">
 <head>
     <title>Property Preservation &amp; Foreclosure Cleanup Vendor List</title>
+
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
+
+    <% if (typeof searchOutput === 'undefined') { %>
+    <script defer src="js/character-blocker.js"></script>
+    <script defer src="js/connect/foreclosure-cleanup-vendor-list-character-blocker.js"></script>
+    <script defer src="js/scroll-to-search-error.js"></script>
+    <script defer src="js/remove-search-errors.js"></script>
+    <% } %>
+
+    <% if (typeof searchOutput !== 'undefined') { %>
+    <script defer src="js/check-add-bottom-searchagain.js"></script>
+    <% } %>
+    
 </head>
 <body>
 
-    <%- include('includes/standard-screen-header-boilerplate.ejs') %>
+    <%- include('includes/thin-header-boilerplate.ejs') %>
 
-    <main class="-topBottomPaddingLarge">
+    <main>
 
-        <div class="panel__container standardWidth -centerObject -rightLeftMarginMedium">
-            <div>
-                <h3 class="headlineLarge">Vendor List</h3>
+        <div class="-standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        
+            <div class="heading__container -bottomMarginLarge">
+            <% if (typeof searchOutput === 'undefined') { %>
+                <p class="heading__headline -centerAlign -topBottomMarginMedium -rightLeftMarginMedium">Search The National Vendor List</p>
+            <% } else { %>
+                <form action="/foreclosure-cleanup-vendor-list" method="POST">
+                <% for (const key in searchAgainNamesValues) { %>
+                    <input type="hidden" name="<%= key %>" value="<%= searchAgainNamesValues[key] %>">
+                <% } %>
+                    <input type="hidden" name="searchType" value="multiple">
+                    <button class="heading__buttonWithLinkAppearance">
+                        <img class="heading__searchAgainIcon" src="images/back-arrows.svg">
+                        <p class="heading__searchAgainText">Search Again</p>
+                    </button>
+                </form>
+                <p class="heading__headline -topBottomMarginMedium -rightLeftMarginMedium">Search Results For <span class="-noBreak">Zip Code</span> <%= searchZipCode %></p>
+            <% } %>
             </div>
+        
+            <% if (typeof searchOutput === 'undefined') { %>
+            <div class="-rightLeftPaddingMedium">
+                <div class="search__container">
+
+                    <form action="/foreclosure-cleanup-vendor-list" method="POST">
+                        <div id="searchZipCodeContainer" class="search__borderContainer
+                            <% if (typeof searchZipCodeError === "undefined") { %>
+                                    -borderNoError -bottomMarginLarge
+                            <% } else { %>
+                                    -borderError
+                            <% } %>
+                            ">
+                            <div class="search__unit">
+                                <p class="
+                                    <% if (typeof searchZipCodeError === "undefined") { %>
+                                        search__label
+                                    <% } else { %>
+                                        search__labelError
+                                    <% } %>
+                                    -inlineBlock" for="searchZipCode">Zip Code Of Project:</p>
+                                <input id="searchZipCode" class="search__inputText" <%= searchZipAttributes %> value="<%= searchZipCode %>"> 
+                            </div>
+                        </div>
+                    <% if (typeof searchZipCodeError !== "undefined") { %>
+                        <p id="searchZipCodeError" class="search__error"><%= searchZipCodeError %></p>
+                    <% } %> 
+
+                        <div id="searchRadiusContainer" class="search__borderContainer
+                            <% if (typeof searchRadiusError === "undefined") { %>
+                                    -borderNoError -bottomMarginLarge
+                            <% } else { %>
+                                    -borderError
+                            <% } %>
+                            ">                        
+                            <div class="search__unit">
+                                <p class="
+                                    <% if (typeof searchRadiusError === "undefined") { %>
+                                        search__label
+                                    <% } else { %>
+                                        search__labelError
+                                    <% } %>
+                                    ">Search For Providers Inside This Radius:</p>
+                                <div class="-rightLeftMarginSmall -topBottomMarginMedium">
+
+                                <% for(const key in searchRadiusAttributesAndValue) { %>
+
+                                    <div class="-bottomMarginSmall">
+                                        <input type="radio" id="miles<%= searchRadiusAttributesAndValue[key].radius %>" name="searchRadius"
+                                            value="<%= searchRadiusAttributesAndValue[key].radius %>" <%= searchRadiusAttributesAndValue[key].isChecked %>>
+                                        <label class="checkBox__label" for="miles<%= searchRadiusAttributesAndValue[key].radius %>"><%= searchRadiusAttributesAndValue[key].label %></label>
+                                    </div>
+
+                                <% } %>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <% if (typeof searchRadiusError !== "undefined") { %>
+                            <p id="searchRadiusError" class="search__error"><%= searchRadiusError %></p>
+                        <% } %> 
+
+                        <div id="searchServicesContainer" class="search__borderContainer
+                            <% if (typeof searchServicesError === "undefined") { %>
+                                    -borderNoError -bottomMarginLarge
+                            <% } else { %>
+                                    -borderError
+                            <% } %>
+                            ">   
+                            <div class="search__unit">
+                                <p class="
+                                    <% if (typeof searchServicesError === "undefined") { %>
+                                        search__label
+                                    <% } else { %>
+                                        search__labelError
+                                    <% } %>
+                                    ">What Services Do You Need?</p>
+                                <div class="-rightLeftMarginSmall -topBottomMarginMedium">
+
+                                <% for (const key in servicesAttributesAndValues) { %>
+
+                                    <div class="-bottomMarginSmall">
+                                        <input type="checkbox" id="<%= servicesAttributesAndValues[key].name %>" name="<%= servicesAttributesAndValues[key].name %>" value="true"
+                                            <%= servicesAttributesAndValues[key].isChecked %>>
+                                        <label for="<%= servicesAttributesAndValues[key].name %>" class="checkBox__label"><%- servicesAttributesAndValues[key].label %></label>
+                                    </div>
+
+                                <% } %>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <% if (typeof searchServicesError !== "undefined") { %>
+                            <p id="searchServicesError" class="search__error"><%= searchServicesError %></p>
+                        <% } %> 
+
+                    <% if (typeof privacyTermsError === "undefined") { %>
+                        <div class="search__privacyTermsContainer -borderNoError -bottomMarginLarge">
+                    <% } else { %>
+                        <div id="privacyTermsContainer" class="search__privacyTermsContainer -borderError">
+                    <% } %>
+
+                            <input type="checkbox" id="privacyTerms" class="privacyTermsCheckbox" name="privacyTerms" value="isChecked">
+                            <label class="textSmall" for="privacyTerms">By clicking "Search" I acknowledge that I have read and agree to the <a href="/privacy-policy">Privacy Policy</a> and <a href="/terms-of-service">Terms Of Service</a>.</label>   
+
+                        </div>
+
+                    <% if (typeof privacyTermsError !== "undefined") { %>
+                        <p id="privacyTermsError" class="search__error"><%= privacyTermsError %></p>
+                    <% } %> 
+
+                        <input type="hidden" name="searchType" value="new">
+                        <button id="narrowScreen__button" class="-bottomMarginLarge">Search</button>
+
+                    </form>
+
+                </div>
+            </div>
+            <% } %>
+
+            <% if (typeof searchOutput !== 'undefined') { %>
+
+            <div id="searchResultsRoot">
+
+                <% if (searchOutput.premium === true) { %>
+
+                    <% for (const value of premiumAccountsProcessed) { %>
+                        <div class="premiumSearchResult__mainContainer -rightLeftMarginMedium">
+                            <div class="premiumSearchResult__nameContainer">
+                                <p class="searchResult__nameText">
+                                    <% if (value.companyWebsite !== '' ) { %>
+                                        <a href="<%= value.companyWebsite %>"><%= value.companyName %></a>
+                                    <% } else { %>
+                                        <%= value.companyName %>
+                                    <% } %>
+                                </p>
+                            </div>
+
+                            <div class="
+                                <% if (value.companyDescription !== '' ) { %>
+                                    premiumSearchResult__logoContactServicesContainer
+                                <% } else { %>
+                                    premiumSearchResult__logoContactServicesContainer__noCompanyDescription
+                                <% } %>
+                            ">  
+                                <div class="premiumSearchResult__logoContainer">
+                                <% if (value.companyWebsite !== '' ) { %>
+                                    <a href="<%= value.companyWebsite %>"><img src="images/sunflower-logo.svg" width="200" height="200"></a>
+                                <% } else { %>
+                                    <img src="images/sunflower-logo.svg" width="200" height="200">
+                                <% } %>
+                                </div>
+                                <div class="premiumSearchResult__contactServicesContainer">
+                                    <div class="premiumSearchResult__contactContainer">
+                                        <p class="searchResult__miniTitleText -bottomMarginTiny">Contact:</p>
+                                    <% if (value.companyWebsite !== '' ) { %>
+                                        <p class="searchResult__webLink -bottomMarginTiny"><a href="<%= value.companyWebsite %>"><%= value.companyWebsite %></a></p>
+                                    <% } %>
+                                    <p class="searchResult__bodyText -bottomMarginTiny"><a href="tel:<%= value.formattedPhone %>"><%= value.companyPhone %></a></p>
+                                    <% if (value.companyStreetTwo !== '') { %>
+                                        <p class="searchResult__bodyText"><a href="https://maps.google.com/?q=<%= value.companyStreet %>+<%= value.companyTwo %>+<%= value.companyCity %>+<%= value.companyState %>+<%= value.companyZip %>"><%= value.companyStreet %>, <%= value.companyStreetTwo %>, <%= value.companyCity %> <%= value.companyState %>, <%= value.companyZip %></a></p>
+                                    <% } else { %>
+                                        <p class="searchResult__bodyText"><a href="https://maps.google.com/?q=<%= value.companyStreet %>+<%= value.companyCity %>+<%= value.companyState %>+<%= value.companyZip %>"><%= value.companyStreet %>, <%= value.companyCity %> <%= value.companyState %>, <%= value.companyZip %></a></p>
+                                    <% } %>
+                                    </div>
+                                    <div class="searchResult__onlyBorder"></div>
+                                    <div class="premiumSearchResult__servicesContainer">                                    
+                                        <p class="searchResult__miniTitleText -bottomMarginTiny">Services We Offer:</p>
+                                        <p class="searchResult__bodyText"><%- value.companyServicesAssembled %></p>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <% if (value.companyDescription !== '' ) { %>
+
+                                <div class="searchResult__noBottomBorder">
+                                    <p class="searchResult__miniTitleText -bottomMarginTiny">About Us:</p>
+                                    <p class="searchResult__bodyText"><%- value.companyDescription %></p>
+                                </div>
+
+                            <% } %>
+
+                        </div>
+                    <% } %>
+
+                <% } %>
+
+                <% if (searchOutput.free === true) { %>
+
+                    <% for (const value of freeAccountsProcessed) { %>
+                        <div class="freeSearchResult__mainContainer -rightLeftMarginMedium">
+                            <div class="freeSearchResult__nameContainer">
+                                <p class="searchResult__nameText"><%= value.companyName %></p>
+                            </div>
+                            <div class="searchResult__bottomBorder">
+                                <p class="searchResult__miniTitleText -bottomMarginTiny">Contact:</p>
+                                <p class="searchResult__bodyText -bottomMarginTiny"><a href="tel:<%= value.formattedPhone %>"><%= value.companyPhone %></a></p>
+                            <% if (value.companyStreetTwo !== '') { %>
+                                <p class="searchResult__bodyText"><a href="https://maps.google.com/?q=<%= value.companyStreet %>+<%= value.companyTwo %>+<%= value.companyCity %>+<%= value.companyState %>+<%= value.companyZip %>"><%= value.companyStreet %>, <%= value.companyStreetTwo %>, <%= value.companyCity %> <%= value.companyState %>, <%= value.companyZip %></a></p>
+                            <% } else { %>
+                                <p class="searchResult__bodyText"><a href="https://maps.google.com/?q=<%= value.companyStreet %>+<%= value.companyCity %>+<%= value.companyState %>+<%= value.companyZip %>"><%= value.companyStreet %>, <%= value.companyCity %> <%= value.companyState %>, <%= value.companyZip %></a></p>
+                            <% } %>
+                            </div>
+                            <div class="searchResult__noBottomBorder">
+                                <p class="searchResult__miniTitleText -bottomMarginTiny">Services We Offer:</p>
+                                <p class="searchResult__bodyText"><%- value.companyServicesAssembled %></p>
+                            </div>
+                        </div>
+                        
+                    <% } %>
+
+                <% } %>
+
+                <% if (searchOutput.premium === false && searchOutput.free === false) { %>
+
+                    <div class="search__container">
+                        <div class="noSearchResult__mainContainer -narrowWidthVanish">
+                            <h3 class="headlineSmall -bottomMarginTiny">No vendors found.</h3>
+                            <p class="textMedium"> We are sorry but a service provider located within <%= searchRadius %> miles of zip code <%= searchZipCode %> that matched your search criteria was not found in the National Vendor list.  You may want to modify your search parameters and try again.  Thank you.</p>
+                        </div>
+                    </div>
+
+                <% } %>
+                
+                <p class="-bottomMarginLarge"></p>
+
+            <% if (typeof searchOutput !== 'undefined') { %>
+                <div id="bottomSearchAgain">
+                    <div class="heading__container">
+                        <form action="/foreclosure-cleanup-vendor-list" method="POST">
+                        <% for (const key in searchAgainNamesValues) { %>
+                            <input type="hidden" name="<%= key %>" value="<%= searchAgainNamesValues[key] %>">
+                        <% } %>
+                            <input type="hidden" name="searchType" value="multiple">
+                            <button class="heading__buttonWithLinkAppearance">
+                                <img class="heading__searchAgainIcon" src="images/back-arrows.svg">
+                                <p class="heading__searchAgainText">Search Again</p>
+                            </button>
+                        </form>
+                        <p class="heading__headline -topBottomMarginMedium -rightLeftMarginMedium">Search Results For <span class="-noBreak">Zip Code</span> <%= searchZipCode %></p>
+                    </div>
+                </div>
+            <% } %>
+
+            </div>
+            <% } %>
+
         </div>
     
     </main>

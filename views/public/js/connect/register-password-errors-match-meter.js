@@ -1,8 +1,8 @@
-"use strict"
+'use strict';
 
 // errors
 
-let eventArray = ['keyup', 'paste', 'focus', 'blur'];
+let eventArray = ['input'];
 
 eventArray.forEach(function(event) {
 
@@ -20,10 +20,10 @@ eventArray.forEach(function(event) {
 
 });
 
-document.getElementById('termsOfUse').addEventListener('change', function() {
+document.getElementById('privacyPolicyTermsOfService').addEventListener('change', function() {
 
-    if (document.getElementById('termsOfUse').checked && document.getElementById('targetTermsOfUseError')) {
-        removeError('termsOfUse');
+    if (document.getElementById('privacyPolicyTermsOfService').checked && document.getElementById('targetPrivacyPolicyTermsOfServiceError')) {
+        removeError('privacyPolicyTermsOfService');
     }
 
 }); 

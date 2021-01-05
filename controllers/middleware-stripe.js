@@ -1,45 +1,36 @@
-"use strict"
-
 const cryptoRandomString = require('crypto-random-string');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const defaultValue = require('../models/default-values');
 const logicStripe = require('./logic-stripe');
-const mongooseInstance = require('./mongoose-create-instances');
+const mongooseLogic = require('./mongoose-logic');
 const siteValue = require('../models/site-values');
 const stripeValue = require('../models/stripe-values');
 
 const { logErrorMessage, wrapAsync } = require('./error-handling');
 
+
+exports.redirectFromUpgrade = wrapAsync(async function(req, res, next) {
+
+    // If the account is upgraded it can't go to the upgrade page.
+    if (req.session.userValues.companyProfileType !== defaultValue.accountDefault) return res.redirect('/my-account');
+    
+    return next();
+    
+});
+
 exports.upgradeExtendPremium = wrapAsync(async function(req, res) {
 
-    let { companyProfileType } = req.session.userValues;
-
-    let isAccountUpgraded = companyProfileType === defaultValue.accountUpgrade ? true : false;
-
-    let title, headline, bodyText, buttonText;
-    if (isAccountUpgraded === true) {
-
-        title = 'Extend Your Premium Account';
-        headline = 'Extend The Duration Of Your Premium Account';
-        bodyText = `Extend your premium account an additional 12 months for just ${ stripeValue.costInDollarsProduct_1 } for 12 months.`;
-        buttonText = 'Extend Your Account';
-
-    } else {
-
-        title = 'Upgrade Your Account To Premium';
-        headline = 'Upgrade Your Account To Premium';
-        bodyText = `Include a link to your company's website or social media page plus add a company description for just ${ stripeValue.costInDollarsProduct_1 } for 12 months.`;
-        buttonText = 'Upgrade Your Account';
-
-    }
+    let defaultProfileName = defaultValue.accountDefault;
+    let upgradedProfileName = defaultValue.accountUpgrade;
+    let costInDollarsProduct_1 = stripeValue.costInDollarsProduct_1;
 
     // For rendering.
     let activeLink = 'upgrade-extend-premium';
     let contactEmail = siteValue.contactEmail;
     let loggedIn = req.session.userValues ? true : false;
 
-    res.render('upgrade-extend-premium', { activeLink, contactEmail, loggedIn, stripePublicKey: process.env.STRIPE_PUBLIC_KEY, title, headline, bodyText, buttonText });
+    res.render('upgrade-extend-premium', { activeLink, contactEmail, loggedIn, defaultProfileName, upgradedProfileName, costInDollarsProduct_1 });
 
 });
 
@@ -80,7 +71,7 @@ exports.postCreateCheckoutSession = wrapAsync(async function(req, res) {
     let paymentIntent = session.payment_intent;
     let { email } = req.session.userValues;
 
-    let stripeCheckoutSession = mongooseInstance.createStripeCheckoutSession(email, paymentIntent, stripeCancelKey, stripeSuccessKey);
+    let stripeCheckoutSession = mongooseLogic.createStripeCheckoutSession(email, paymentIntent, stripeCancelKey, stripeSuccessKey);
     await stripeCheckoutSession.save();
 
     res.json({ id: session.id });

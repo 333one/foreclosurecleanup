@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 function getScore(elementId) {
 
@@ -82,7 +82,7 @@ function matchIt(primaryId, secondaryId) {
 
 // meter
 
-let meterContainer = document.getElementById('passwordMeterContainer').style.display = "block";
+let meterContainer = document.getElementById('passwordMeterContainer').style.display = 'block';
 let box1 = document.getElementById('passwordMeterBox1');
 let box2 = document.getElementById('passwordMeterBox2');
 let box3 = document.getElementById('passwordMeterBox3');

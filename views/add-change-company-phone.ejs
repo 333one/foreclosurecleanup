@@ -18,7 +18,7 @@
 
     <main>
 
-        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
             <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Phone</p>
 
@@ -57,7 +57,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-phone" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete Your Company's Phone Number</button>
+                    <button class="button_fauxLinkMedium">Delete Your Company's Phone Number</button>
                 </div>
                 <input type="hidden" name="companyPhone" value="">
                 <input type="hidden" name="deleteProperty" value="true">

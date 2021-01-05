@@ -1,5 +1,3 @@
-"use strict";
-
 const defaultValue = require('../models/default-values');
 const logicUserAccounts = require('./logic-user-accounts');
 
@@ -44,6 +42,7 @@ exports.stripeSuccessUpdateDB = async function(eventDataObjectId, stripeCheckout
     if (!updatedExpirationDate) {
 
         let { expirationDate } = await User.findOne({ email });
+
         todaysDate = new Date();
         updatedExpirationDate = logicUserAccounts.createNewExpirationDate(todaysDate, expirationDate);
 

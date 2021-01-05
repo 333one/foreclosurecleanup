@@ -1,5 +1,3 @@
-"use strict";
-
 const regexpValue = require('./regexp-values');
 const renderValue = require('./rendering-values');
 
@@ -61,15 +59,14 @@ function getCommonEmailError(
 
     if (isEmailValid === false) return emailNotValid;
 
-    if (isEmailAvailableInUnverifiedUsers === false || isEmailAvailableInUsers === false) return 'We\'re sorry but the email you entered is already associated with a different \
-        account.  Please try a different email address.';
+    if (isEmailAvailableInUnverifiedUsers === false || isEmailAvailableInUsers === false) return 'We\'re sorry but the email you entered is already associated with a different account.  Please try a different email address.';
 
 }
 
 function invalidCharacterMessage(pattern) {
 
     return `Please only use valid ${ pattern }.`;
-
+    
 }
 
 function valueNotValid(fragment) {
@@ -247,7 +244,8 @@ exports.getCompanyStreetError = function(
     isCompanyStreetValidCharacters,
     isCompanyStreetInsideMinLength,
     isCompanyStreetInsideMaxLength,
-    isCompanyAddressValid
+    isCompanyAddressValid,
+    doesGeoLocationContainCompanyZip
     ) {
 
     let owner = 'company'
@@ -261,6 +259,7 @@ exports.getCompanyStreetError = function(
     if (isCompanyStreetInsideMinLength === false) return fieldTooShort(possessiveField, renderValue.companyStreetField.minLength);
     if (isCompanyStreetInsideMaxLength === false) return fieldTooLong(possessiveField, renderValue.companyStreetField.maxLength);
     if (isCompanyAddressValid === false) return 'We are sorry but this address was not found in the US Postal Service database.  Please check your address and try again.';
+    if (doesGeoLocationContainCompanyZip === false) return 'We are sorry but we were not able to geocode this address.  This may be because your business uses a nonstandard address such as a PO Box.  Without a geocode it\'s not possible to include your company in search results.  If you feel this is incorrect please check your address and try again.';
 
 }
 
@@ -384,4 +383,30 @@ exports.getNewPasswordError = function(
 
 }
 
-exports.getTermsOfUseError = 'Check here to indicate that you have read and agree to our Terms Of Service and Privacy Policy.';
+exports.getSearchServicesError = function(isAtLeastOneServiceChecked, wereAllServiceValuesValid) {
+
+    if (isAtLeastOneServiceChecked === false || wereAllServiceValuesValid === false) return 'Please select at least one service for your project.';
+
+}
+
+exports.getSearchRadiusError = function(isSearchRadiusFilled, isSearchRadiusValid) {
+
+    if (isSearchRadiusFilled === false) return 'Please select a radius in miles.';
+    if (isSearchRadiusValid === false) return 'Please select a valid radius in miles.';
+
+}
+
+exports.getSearchZipCodeError = function(isSearchZipCodeFilled, isSearchZipCodeValidCharacters, isSearchZipCodeFiveDigits, isSearchZipCodeRealAndInUsa) {
+
+    if (isSearchZipCodeFilled === false) return 'Please enter the zip code of your project.';
+    if (isSearchZipCodeValidCharacters === false) return 'Please enter a zip code that contains numbers only.';
+    if (isSearchZipCodeFiveDigits === false) return 'Please enter a 5 digit zip code.'
+    if (isSearchZipCodeRealAndInUsa === false) return 'Please enter a valid zip code located in the United States.';
+
+}
+
+exports.getPrivacyTermsError = function(isPrivacyTermsChecked) {
+
+    if (isPrivacyTermsChecked === false) return 'Check the box if you have read and agree to our Privacy Policy and Terms Of Service.';
+
+}

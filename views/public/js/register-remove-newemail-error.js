@@ -1,7 +1,8 @@
-"use strict"
+'use strict'
 
 document.getElementById('newEmail').addEventListener('keyup', function(){
 
+    // Inside register-activate-form-button.js
     let isEmailValid = getIsEmailValid('newEmail');
 
     if (isEmailValid === true) {

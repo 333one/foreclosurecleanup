@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title><%= title %></title>
+    <title>Upgrade To A <%= upgradedProfileName %></title>
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
-    <script>var stripePublicKey = '<%- stripePublicKey %>';</script>
     <script defer src="https://js.stripe.com/v3/"></script>
     <script defer src="js/checkout.js"></script>
 </head>
@@ -14,17 +13,75 @@
 
     <main>
 
-        <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="-standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
-            <p class="dashboard__headline"><%= headline %></p>
-            <div class="upgradeExtendContainer -centerObject">
-                <p class="textLarge -rightLeftMarginMedium -topBottomMarginMedium"><%= bodyText %></p>
-                <div class="-rightLeftMarginMedium"><img class="upgradeExtendImage" src="images/junk-graphic.jpg"></div>
-            </div>
-            <div class="upgradeExtendContainer -centerAlign -centerObject -bottomMarginLarge">
-                <button id="checkout-button" class="upgradePremium__button -topMarginLarge -bottomMarginSmall"><%= buttonText %></button> 
+            <p class="dashboard__headline -bottomMarginLarge"><%= upgradedProfileName %> And <%= defaultProfileName %> Comparison</p>
+
+            <h2 class="headlineSmall -rightLeftMarginMedium"><span class="-standard__highlight"><%= defaultProfileName %></span></h2>
+            <ul class="upgradeList -rightLeftMarginMedium -bottomMarginMedium">
+                <li>Includes your company's phone number.</li>
+                <li>Includes your company's address so it can be found in search results.</li>
+                <li>Includes a list of the standard services that your company offers.</li>
+            </ul>
+            <p class="textMedium -bottomMarginSmall -rightLeftMarginMedium"><strong><%= upgradedProfileName %> Example</strong></p>
+            <div class="freeSearchResult__mainContainer -rightLeftMarginMedium -bottomMarginHuge">
+                <div class="freeSearchResult__nameContainer">
+                    <p class="searchResult__nameText">Property Pros</p>
+                </div>
+                <div class="searchResult__bottomBorder">
+                    <p class="searchResult__miniTitleText -bottomMarginTiny">Contact:</p>
+                    <p class="searchResult__bodyText -bottomMarginTiny">555-123-4567</p>
+                        <p class="searchResult__bodyText">451 Gartner Dr., Houston, TX 77063</p>
+                </div>
+                <div class="searchResult__noBottomBorder">
+                    <p class="searchResult__miniTitleText -bottomMarginTiny">Services We Offer:</p>
+                    <p class="searchResult__bodyText">Boarding&nbsp;&amp;&nbsp;Securing, Debris&nbsp;Removal&nbsp;&amp;&nbsp;Trashout, Eviction&nbsp;Management, Field&nbsp;Inspection, Handyman&nbsp;&amp;&nbsp;General&nbsp;Maintenance, Landscape&nbsp;Maintenance, Lock&nbsp;Changes, Oversee&nbsp;Property&nbsp;Rehabilitation, Pool&nbsp;Maintenance, Property&nbsp;Cleaning, Winterizations</p>
+                </div>
             </div>
 
+            <h2 class="headlineSmall -rightLeftMarginMedium"><span class="-premium__highlight"><%= upgradedProfileName %></span></h2>
+            <ul class="upgradeList -rightLeftMarginMedium -bottomMarginMedium">
+                <li>Listed before <%= defaultProfileName %>s with gold header in search results.</li>
+                <li>Includes a link to your company website or social media page.</li>
+                <li>Includes your logo or image that is linked to your company website or social media page.</li>
+                <li>Includes an "About Us" section used to describe what your company has to offer.</li>
+                <li>Includes your company's phone number.</li>
+                <li>Includes your company's address so it can be found in search results.</li>
+                <li>Includes a list of the standard services that your company offers.</li>
+                <li>Costs <%= costInDollarsProduct_1 %> per year. There are no contracts or recurring billing.</li>
+            </ul>
+            <p class="textMedium -bottomMarginSmall -rightLeftMarginMedium"><strong><%= upgradedProfileName %> Example</strong></p>
+            <div class="premiumSearchResult__mainContainer -bottomMarginHuge -rightLeftMarginMedium">
+                <div class="premiumSearchResult__nameContainer"><p class="searchResult__nameText"><a href="">Property Pros</a></p></div>
+
+                <div class="premiumSearchResult__logoContactServicesContainer">  
+                    <div class="premiumSearchResult__logoContainer"><a href=""><img src="images/generic-logo.png" width="200" height="200"></a></div>
+                    <div class="premiumSearchResult__contactServicesContainer">
+                        <div class="premiumSearchResult__contactContainer">
+                            <p class="searchResult__miniTitleText -bottomMarginTiny">Contact:</p>
+                            <p class="searchResult__webLink -bottomMarginTiny"><a href="">www.propertypros.com</a></p>
+                            <p class="searchResult__bodyText -bottomMarginTiny">555-123-4567</p>
+                            <p class="searchResult__bodyText">451 Gartner Dr., Houston, TX 77063</p>
+                        </div>
+                        <div class="searchResult__onlyBorder"></div>
+                        <div class="premiumSearchResult__servicesContainer">                                    
+                            <p class="searchResult__miniTitleText -bottomMarginTiny">Services We Offer:</p>
+                            <p class="searchResult__bodyText">Boarding&nbsp;&amp;&nbsp;Securing, Debris&nbsp;Removal&nbsp;&amp;&nbsp;Trashout, Eviction&nbsp;Management, Field&nbsp;Inspection, Handyman&nbsp;&amp;&nbsp;General&nbsp;Maintenance, Landscape&nbsp;Maintenance, Lock&nbsp;Changes, Oversee&nbsp;Property&nbsp;Rehabilitation, Pool&nbsp;Maintenance, Property&nbsp;Cleaning, Winterizations</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="searchResult__noBottomBorder">
+                    <p class="searchResult__miniTitleText -bottomMarginTiny">About Us:</p>
+                    <p class="searchResult__bodyText">Property Pros began serving the property preservation industry during the 2008 recession. Our prices are affordable and our crews are experienced. We pride ourselves on quality service and excellent communication. We promise you a great experience on your next property preservation project.</p>
+                </div>
+            </div>
+
+            <div class="-rightLeftMarginMedium">
+                <button id="checkout-button" class="standardWidth__button -bottomMarginHuge">Upgrade To A <%= upgradedProfileName %></button>
+            </div>
+            
         </div>
 
     </main>

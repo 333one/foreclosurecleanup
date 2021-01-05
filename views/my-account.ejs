@@ -14,7 +14,12 @@
     <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
         <script defer src="js/start-at-url-not-active-message.js"></script>
     <% } %>
-    
+
+    <% if (arePremiumAccountExtendsAvailable === true) { %>
+        <script defer src="https://js.stripe.com/v3/"></script>
+        <script defer src="js/checkout.js"></script>
+    <% } %>
+
 </head>
 <body>
     
@@ -35,7 +40,7 @@
         >
             <%# This empty div is used for centering %>
             <div class="xClose"></div>
-            <div class="standardWidthVanish">
+            <div class="-standardWidthVanish">
                 <p class="textLarge -centerAlign">
                     <% if (typeof successMessage === 'string') { %> 
                         <%- successMessage %>
@@ -54,35 +59,44 @@
 
     <main>
         
-        <div class="standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="-standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
             <p class="dashboard__headline">My Account</p>
             <div class="dashboard__unit -bottomBorder">
                 <div>
                     <p class="dashboard__key -rightLeftMarginMedium">Company Profile Type:</p>
-                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= companyProfileType %></p>
-                    <p class="dashboard__key -rightLeftMarginMedium">Member Since:</p>
-                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= memberSince %></p>
-                    <% if (isAccountUpgraded === false) { %>
-                        <p class="textSmall -rightLeftMarginMedium"><a href="upgrade-extend-premium">Upgrade your company to a <%= upgradedProfileName %></a>. <%= upgradeSalesPitch %></p>
-                    <% } else if (isAccountUpgraded === true) { %>
-                    <p class="dashboard__key -rightLeftMarginMedium">Premium Company Profile Active Until:</p>
-                    <p class="textLarge -rightLeftMarginMedium
-                        <% if (isAccountUpgraded === true) { %> -bottomMarginMedium <% } %>
-                        "><%= premiumExpirationDate %></p>
-                        <% if (isUpgradeExpirationSoon === true) { %>
-                            <p class="textLarge -errorColor -rightLeftMarginMedium -bottomMarginSmall">Your Premium account will expire <%= numberOfDaysUntilExpirationFragment %></span>.</p>
-                        <% } %>
-                    <p class="textSmall -rightLeftMarginMedium">
-                        <% if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === true) { %>
-                            <a href="upgrade-extend-premium">Renew Your Premium Account</a>: Renew your premium account for another 12 months for just <%= costInDollarsProduct_1 %>.
-                        <% } else if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === false) { %>
-                            <a href="upgrade-extend-premium">Extend Your Premium Account</a>: Extend your premium account for an additional 12 months for just <%= costInDollarsProduct_1 %>.
-                        <% } else { %>
-                            Great! Your <%= companyProfileType %> account duration is maxed out. No renewals or extensions are needed at this time.
-                        <% } %>
+                    <p class="textLarge -bottomMarginMedium -rightLeftMarginMedium"><%= companyProfileType %></p>
+                <% if (isAccountUpgraded === false) { %>
+                    <p class="textSmall -bottomMarginTiny -rightLeftMarginMedium">
+                        <a href="upgrade-extend-premium"><%= upgradeCheckItOut %></a>
                     </p>
+                    <p class="textSmall -bottomMarginMedium -rightLeftMarginMedium"><%= upgradeSalesPitch %></p>
+                <% } else if (isAccountUpgraded === true) { %>
+
+                    <% if (isUpgradeExpirationSoon === true) { %>
+                    <p class="textLarge -errorColor -topMarginMedium -rightLeftMarginMedium -bottomMarginMedium">Your <%= companyProfileType %> will expire <%= numberOfDaysUntilExpirationFragment %></span>.</p>
                     <% } %>
+                    
+                <% if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === true) { %>
+                    <div class="-rightLeftMarginMedium -topMarginMedium -bottomMarginMedium">
+                        <button id="checkout-button" class="button_fauxLinkSmall">Renew your <%= companyProfileType %> </button>
+                        <p class="textSmall -inlineBlock">for another 12 months for just <%= costInDollarsProduct_1 %>.</p>
+                    </div>
+                <% } else if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === false) { %>
+                    <div class="-rightLeftMarginMedium -topMarginMedium -bottomMarginMedium">
+                        <button id="checkout-button" class="button_fauxLinkSmall">Extend your <%= companyProfileType %> </button>
+                        <p class="textSmall -inlineBlock">for an additional 12 months for just <%= costInDollarsProduct_1 %>.</p>
+                    </div>
+                <% } else { %>
+                    <p class="textSmall -rightLeftMarginMedium -greenColor -topBottomMarginMedium">Great! Your <%= companyProfileType %> account duration is maxed out at 2 years or more. No renewals or extensions are available or needed at this time.</p>
+                <% } %>
+
+                    <p class="dashboard__key -rightLeftMarginMedium"><%= companyProfileType %> Active Until:</p>
+                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= premiumExpirationDate %></p>
+                    
+                <% } %>
+                    <p class="dashboard__key -rightLeftMarginMedium">Member Since:</p>
+                    <p class="textLarge -rightLeftMarginMedium"><%= memberSince %></p>
                 </div>
             </div>
 
@@ -98,7 +112,12 @@
                 </div>
             </div>
 
-            <p class="dashboard__headline">Company Information</p>
+            <p <% if (isAccountUpgraded === false) { %>
+                class="dashboard__headline"
+            <% } else if (isAccountUpgraded === true) { %>
+                class="dashboard__headlinePremium"
+            <% } %>
+                ><%= companyProfileType %> Vendor Information</p>
 
             <div class="dashboard__unit -bottomBorder">
                 <div>
@@ -150,7 +169,13 @@
                 </div>
             </div>
 
-            <div class="dashboard__unit -bottomBorder">
+            <div class="dashboard__unit 
+            <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
+                -bottomBorderError
+            <% } else { %>
+                -bottomBorder
+            <% } %>
+            ">
                 <div>
                     <p class="dashboard__key -rightLeftMarginMedium">Services Offered:</p>
                     <p class="textLarge -rightLeftMarginMedium"><%- companyServicesMyAccountValue %></p>
@@ -164,43 +189,27 @@
                 </div>
             </div>
 
-            <div class="premium__unit -topMarginMedium -bottomBorder">
-                <% if (isAccountUpgraded === true) { %><div class="premium__headline -centerAlign"><%= companyProfileType %> Information</div><% } %>
-                <% if (isAccountUpgraded === false) { %>
-                    <div class="premium__headline -rightLeftMarginMedium"><%= upgradedProfileName %>:</div>
-                    <div class="premium__description -rightLeftMarginMedium"><%= upgradeSalesPitch %></div>
-                <% } %>
-            </div>
-
-            <% if (isAccountUpgraded === false) { %>
-            <div class="dashboard__unitCovered -bottomBorder">
-                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium">Website Or Social Media Page:</p>
-                    <p class="textSmall -rightLeftMarginMedium">Upgrade to a <%= upgradedProfileName %>.</p>
-                </a>
-            </div>
-
-            <div class="dashboard__unitCovered -bottomBorder -bottomMarginHuge">
-                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Description:</p>
-                    <p class="textSmall -rightLeftMarginMedium">Upgrade to a <%= upgradedProfileName %>.</p>
-                </a>
-            </div>
-            <% } else { %>
-
+        <% if (isAccountUpgraded === true) { %>
             <a id="company-website"></a>
-
-            <div class="dashboard__errorFeatureUnit -topMarginMedium
-            <% if (typeof urlNotActiveMessage === 'undefined') { %>
+            <div class="dashboard__unit 
+            <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
+                -borderError
+            <% } else { %>
                 -bottomBorder
-            <% } %>
-            <% if (typeof urlNotActiveMessage === 'string') { %>
-                -errorBorderVanish
             <% } %>
             ">
                 <div>
                     <p class="dashboard__key -blueText -rightLeftMarginMedium">Website Or Social Media Page:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= companyWebsiteMyAccountValue %></p>
+                    <p class="textLarge -rightLeftMarginMedium
+                    <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
+                        -errorColor
+                    <% } else { %>
+                        -blueText
+                    <% } %>
+                    "><%= companyWebsiteMyAccountValue %></p>
+                    <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
+                    <p class="textMedium -errorColor -topBottomMarginSmall -rightLeftMarginMedium"><%= urlNotActiveMessage %></p>
+                    <% } %>
                 </div>
                 <div class="-leftMarginLargeVanish">
                     <% if (isCompanyWebsiteAdded === true) { %>
@@ -210,14 +219,11 @@
                     <% } %>
                 </div>
             </div>
-            <% if (typeof urlNotActiveMessage === 'string') { %>
-                <p class="textLarge -topPaddingSmall -bottomPaddingLarge -rightLeftPaddingMedium -errorColor -bottomBorder"><%= urlNotActiveMessage %></p>
-            <% } %>
 
-            <div class="dashboard__unit -bottomBorder -bottomMarginHuge">
+            <div class="dashboard__unit -bottomBorder">
                 <div>
                     <p class="dashboard__key -blueText -rightLeftMarginMedium">Company Description:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= companyDescriptionMyAccountValue %></p>
+                    <p class="textLarge -blueText -rightLeftMarginMedium"><%= companyDescriptionMyAccountValue %></p>
                 </div>
                 <div class="-leftMarginLargeVanish">
                     <% if (isCompanyDescriptionAdded === true) { %>
@@ -228,7 +234,55 @@
                 </div>
             </div>
 
-            <% } %>
+            <div class="dashboard__unit -bottomBorder -bottomMarginHuge">
+                <div>
+                    <p class="dashboard__key -blueText -rightLeftMarginMedium">Company Logo Or Image:</p>
+                    <p class="textLarge -blueText -rightLeftMarginMedium"><%= companyLogoMyAccountValue %></p>
+                </div>
+                <div class="-leftMarginLargeVanish">
+                    <% if (isCompanyLogoAdded === true) { %>
+                        <a href="/add-change-company-logo"><div class="dashboard__fauxButtonPremium -rightLeftMarginMedium">Change</div></a>
+                    <% } else { %>
+                        <a href="/add-change-company-logo"><div class="dashboard__fauxButtonPremiumAdd -rightLeftMarginMedium">Add</div></a>
+                    <% } %>
+                </div>
+            </div>
+
+        <% } %>
+
+        <% if (isAccountUpgraded === false) { %>
+
+            <div class="dashboard__headlinePremium topMarginMedium"><span class="-seeThrough"><%= upgradedProfileName %> Vendor Information</span></div>
+
+            <div class="dashboard__unitSales -bottomBorder">
+                <p class="textSmall -bottomMarginTiny -rightLeftMarginMedium">
+                    <a href="upgrade-extend-premium"><%= upgradeCheckItOut %></a>
+                </p>
+                <p class="textSmall -rightLeftMarginMedium"><%= upgradeSalesPitch %></p>
+            </div>
+
+            <div class="dashboard__unitCovered -bottomBorder">
+                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium">Website Or Social Media Page:</p>
+                    <p class="textSmall -rightLeftMarginMedium"><%= upgradeRequired %></p>
+                </a>
+            </div>
+
+            <div class="dashboard__unitCovered -bottomBorder">
+                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Description:</p>
+                    <p class="textSmall -rightLeftMarginMedium"><%= upgradeRequired %></p>
+                </a>
+            </div>
+
+            <div class="dashboard__unitCovered -bottomBorder -bottomMarginHuge">
+                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
+                    <p class="dashboard__key -rightLeftMarginMedium">Company Logo Or Image:</p>
+                    <p class="textSmall -rightLeftMarginMedium"><%= upgradeRequired %></p>
+                </a>
+            </div>
+
+        <% } %>
 
             <p class="dashboard__headline">Login</p>
 

@@ -1,5 +1,3 @@
-"use strict";
-
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const cryptoRandomString = require('crypto-random-string');
@@ -10,69 +8,10 @@ const communication = require('./communication');
 const emailMessage = require('../models/email-messages');
 const regExpValue = require('../models/regexp-values');
 const renderValue = require('../models/rendering-values');
+const siteValue = require('../models/site-values')
 const timeValue = require('../models/time-values');
 
 const { User } = require('../models/mongoose-schema');
-
-function getOrdinal(day) {
-
-    let remainder = day % 10;
-
-    if (remainder === 1 && day !== 11) {
-        return day + "st";
-    }
-
-    if (remainder === 2 && day !== 12) {
-        return day + "nd";
-    }
-
-    if (remainder === 3 && day !== 13) {
-        return day + "rd";
-    }
-
-    return day + "th";
-
-}
-
-async function testIfURLActive(possiblyActiveURL) {
-
-    let axiosResult = false;
-    let okResult = new RegExp('OK', 'i');
-
-    await axios.get(possiblyActiveURL)
-        .then(function(response) {
-
-            let doesResponseInclude2 = String(response.status).includes('2');
-            let doesResponseIncludeOk = okResult.test(response.statusText); 
-
-            if (doesResponseInclude2 === true || doesResponseIncludeOk === true) axiosResult = true;
-
-        })
-        .catch(function(error) {
-
-            if (error.response !== undefined) axiosResult = true;
-
-        });
-
-    if (axiosResult === true) return true;
-
-    return false;
-
-}
-
-exports.addMissingServicesToReqBody = function(formFields, reqBody) {
-
-    for (const element of formFields) {
-
-        if (!reqBody.hasOwnProperty(element)) {
-            reqBody[element] = 'false';
-        }
-
-    }
-
-    return reqBody;
-
-}
 
 exports.assembleCompanyServices = function (
     boardingSecuring,
@@ -88,7 +27,7 @@ exports.assembleCompanyServices = function (
     winterizations
     ) {
 
-    let parameterObject = {
+    let propertyObject = {
         boardingSecuring,
         debrisRemovalTrashout,
         evictionManagement,
@@ -104,8 +43,8 @@ exports.assembleCompanyServices = function (
 
     let assembledServices = '';
 
-    for (const element in parameterObject) {
-        if (parameterObject[element] === true) assembledServices += `${ renderValue[element] }, `;
+    for (const element in propertyObject) {
+        if (propertyObject[element] === true) assembledServices += `${ renderValue[element] }, `;
     }
 
     // remove the last coma and space.
@@ -177,109 +116,6 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
     let trimmedAssembledProperties = assembledProperties.slice(0, -2);
 
     return trimmedAssembledProperties;
-
-}
-
-exports.cleanFields = function(formFields, reqBody) {
-
-    // This function is used at the beginning of every POST request to deal with the submission of sloppy, erroneous or malicious data.
-
-    // Trim white space from each property.
-    for (const element in reqBody) {
-        reqBody[element] = reqBody[element].trim();
-    }
-
-    //This checks to see if all keys were submitted with the form.
-    for (const element of formFields) {
-
-        if (!reqBody.hasOwnProperty(element)) {
-            var wereAllKeysPresent = false;
-        }
-
-    }
-
-    // This checks to see if a malicious user submitted extra keys on req.body that weren't in the default form.
-    // If a key is fake the value false is stored and that key is deleted from req.body.
-    for (const element in reqBody) {
-
-        let isReqBodyKeyGenuine = formFields.includes(element);
-
-        if (isReqBodyKeyGenuine === false) {
-
-            delete reqBody[element];
-            var wereAllKeysGenuine = false;
-
-        }
-
-    }
-
-    // If there were any missing or fake keys the value of every property is changed to an empty string to eliminate the possibility of malicious data.
-    if (wereAllKeysPresent === false || wereAllKeysGenuine === false) {
-
-        for (const element of formFields) {
-            reqBody[element] = '';
-        }
-        
-    }
-
-    // deleteProperty is used in many routes.  If it is present make sure the value is either true or empty string.
-    if (reqBody.deleteProperty) {
-        if (reqBody.deleteProperty !== 'true' && reqBody.deleteProperty !== '') reqBody.deleteProperty = 'false';
-    }
-
-    return reqBody;
-
-}
-
-exports.convertCheckboxToBoolean = function(checkInputValue) {
-
-    if (checkInputValue === 'isChecked') return true;
-    return false;
-
-}
-
-exports.convertBooleanToString = function(userValues) {
-
-    let companyServiceProperties = {};
-
-    for (const element in userValues) {
-
-        if (userValues[element] === true) {
-
-            companyServiceProperties[element] = 'true';
-
-        } else if (userValues[element] === false) {
-
-            companyServiceProperties[element] = 'false';
-
-        }
-
-    };
-
-    return companyServiceProperties;
-
-}
-
-exports.convertStringToBoolean = function(companyServicesDefaultFormFields, cleanedFields) {
-
-    let companyServiceProperties = {};
-
-    // Give everything a boolean value except deleteProperty which has already been extracted and can be excluded here.
-    for (const element of companyServicesDefaultFormFields) {
-
-        if (cleanedFields[element] === 'true' && element !== 'deleteProperty') {
-
-            companyServiceProperties[element] = true;
-
-        } else if (cleanedFields[element] === 'false' && element !== 'deleteProperty') {
-
-            companyServiceProperties[element] = false;
-
-        } 
-
-    }
-
-    return companyServiceProperties;
 
 }
 
@@ -442,17 +278,15 @@ exports.hashPassword = function(password) {
 
 }
 
-exports.makeFieldsEmpty = function(formFields) {
+exports.setReqSessionUserValuesServices = function(reqSessionUserValues, listOfServicesObject) {
 
-    let emptyFields = {};
+    for (const key in listOfServicesObject) {
+        reqSessionUserValues[key] = listOfServicesObject[key];
+    }
 
-    formFields.forEach(function(element) {
-        emptyFields[element] = '';
-    });
+    return reqSessionUserValues;
 
-    return emptyFields;
-
-}
+};
 
 exports.testFormattedURLAndSave = async function(formattedURL, email) {
 
@@ -482,7 +316,7 @@ exports.testFormattedURLAndSave = async function(formattedURL, email) {
 
     }
 
-    // If the URL works on http or https the DB is updated and it returns.
+    // If the URL works on http or https it returns.
     let isHttpsURLActive = await testIfURLActive(httpsVersion);  
     if (isHttpsURLActive === true) return;
     
@@ -499,8 +333,54 @@ exports.testFormattedURLAndSave = async function(formattedURL, email) {
 
         let emailSubject = emailMessage.urlNotActiveSubject;
         let emailBody = emailMessage.urlNotActiveBody(formattedURL);
-        communication.sendEmail(email, emailSubject, emailBody);
+        communication.sendEmail(siteValue.noReplyEmail, email, emailSubject, emailBody);
 
     }
+
+}
+
+function getOrdinal(day) {
+
+    let remainder = day % 10;
+
+    if (remainder === 1 && day !== 11) {
+        return day + "st";
+    }
+
+    if (remainder === 2 && day !== 12) {
+        return day + "nd";
+    }
+
+    if (remainder === 3 && day !== 13) {
+        return day + "rd";
+    }
+
+    return day + "th";
+
+}
+
+async function testIfURLActive(possiblyActiveURL) {
+
+    let axiosResult = false;
+    let okResult = new RegExp('OK', 'i');
+
+    await axios.get(possiblyActiveURL)
+        .then(function(response) {
+
+            let doesResponseInclude2 = String(response.status).includes('2');
+            let doesResponseIncludeOk = okResult.test(response.statusText); 
+
+            if (doesResponseInclude2 === true || doesResponseIncludeOk === true) axiosResult = true;
+
+        })
+        .catch(function(error) {
+
+            if (error.response !== undefined) axiosResult = true;
+
+        });
+
+    if (axiosResult === true) return true;
+
+    return false;
 
 }

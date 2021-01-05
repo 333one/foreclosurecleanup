@@ -1,5 +1,3 @@
-"use strict";
-
 const path = require('path');
 
 const winston = require('winston');
@@ -11,6 +9,7 @@ const logger = winston.createLogger({
     ]
 });
 
+const communication = require('./communication');
 const siteValue = require('../models/site-values');
 
 function sendToLogger(error) {
@@ -25,14 +24,22 @@ function sendToLogger(error) {
 
 exports.customExpressErrorHandler = function(error, req, res, next) {
 
-    sendToLogger(error)
+    if (siteValue.projectStatus === 'development') {
 
-    // For rendering.
-    let activeLink = 'error500';
-    let contactEmail = siteValue.contactEmail;
-    let loggedIn = req.session.userValues ? true : false;
+        console.log(error.message);
+        console.log(error.stack);
 
-    res.render('error500', { activeLink, contactEmail, loggedIn });
+    } else {
+
+        sendToLogger(error);
+
+        let emailSubject = `${ error.name } on ${ siteValue.organization } server`;
+        let emailBody =  `<p style="bottom-margin: 32px">${ error.message }</p><p>${ error.stack }</p>`;
+        communication.sendEmail(siteValue.errorEmail, siteValue.sendServerErrorsHere, emailSubject, emailBody);
+
+    } 
+
+    res.sendFile(path.join(__dirname, '../views/public/html/50x.html'));
 
 };
 

@@ -1,3 +1,7 @@
-"use strict"
+'use strict';
 
-characterBlocker('companyDescription', patternCompanyDescription);
+let patternPassword = /^[A-Z0-9\`\~\!\@\#\$\%\^\&\*\(\)\-\_\=\+\[\{\]\}\\\|\;\:\'\"\,\<\.\>\/\?\']+$/;
+
+characterBlocker('currentPassword', patternPassword);
+characterBlocker('changedPassword', patternPassword);
+characterBlocker('confirmationPassword', patternPassword);

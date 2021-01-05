@@ -1,9 +1,8 @@
-"use strict";
-
 const communication = require('./communication');
 const defaultValue = require('../models/default-values');
 const emailMessage = require('../models/email-messages');
 const logicUserAccounts = require('./logic-user-accounts');
+const siteValue = require('../models/site-values');
 const stripeValue = require('../models/stripe-values');
 const timeValue = require('../models/time-values');
 
@@ -15,7 +14,7 @@ function sendExpirationEmail(email, companyName, numberOfDaysUntilExpiration, pr
 
     let emailSubject = emailMessage.alertBeforeExpirationSubject(numberOfDaysUntilExpiration);
     let emailBody = emailMessage.alertBeforeExpirationBody(companyName, numberOfDaysUntilExpiration, price);
-    communication.sendEmail(email, emailSubject, emailBody);
+    communication.sendEmail(siteValue.noReplyEmail, email, emailSubject, emailBody);
 
 }
 

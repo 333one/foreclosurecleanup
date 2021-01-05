@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 
 // errors
 
-let eventArray = ['keyup', 'paste', 'focus', 'blur'];
+let eventArray = ['input'];
 
 eventArray.forEach(function(event) {
 

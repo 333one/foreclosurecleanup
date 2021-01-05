@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <title><%= htmlTitle %></title>
     
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
 
-    <script>
-        let patternCompanyDescription = <%- patternCompanyDescription %>;
-    </script>
     <script defer src="js/character-blocker.js"></script>
     <script defer src="js/connect/company-description-character-blocker.js"></script>
-
 </head>
 <body>
 
@@ -20,7 +15,7 @@
 
     <main>
 
-        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
             <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Description</p>
 
@@ -59,7 +54,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-description" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete Your Company's Description</button>
+                    <button class="button_fauxLinkMedium">Delete Your Company's Description</button>
                 </div>
                 <input type="hidden" name="companyDescription" value="">
                 <input type="hidden" name="deleteProperty" value="true">

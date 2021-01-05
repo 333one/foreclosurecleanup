@@ -1,7 +1,7 @@
-var stripe = Stripe(stripePublicKey);
+let stripePublicKey = 'pk_test_51HEOocGrZ0PJhhAlNhkIzlORHG9nInW3q3eo9gxbQh83Wf3WLs81W6Suv8fhkZHqygdaJOZuMNgncaNZ4oO313Xd00jiTHDN8e';
+let stripe = Stripe(stripePublicKey);
 
-var checkoutButton = document.getElementById('checkout-button');
-
+let checkoutButton = document.getElementById('checkout-button');
 checkoutButton.addEventListener('click', checkoutSequence);
 
 function checkoutSequence() {

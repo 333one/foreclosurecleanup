@@ -14,7 +14,7 @@
 
     <main>
 
-        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
             <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %> The Services That You Company Offers</p>
 
@@ -115,18 +115,18 @@
                     <div class="input__error -rightLeftMarginMedium -bottomMarginLarge"><%= companyServicesError %></div>
                 <% } %> 
 
-                <input type="hidden" name="deleteProperty" value="no">
-
                 <div class="-bottomMarginLarge -rightLeftMarginMedium">
                     <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
                 </div>
+
+                <input type="hidden" name="deleteProperty" value="false">
 
             </form>
 
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-services" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete Your Company's Services</button>
+                    <button class="button_fauxLinkMedium">Delete Your Company's Services</button>
                 </div>
                 <input type="hidden" name="boardingSecuring" value="false">
                 <input type="hidden" name="debrisRemovalTrashout" value="false">

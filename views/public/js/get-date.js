@@ -4,8 +4,8 @@ var year;
 
 year = new Date().getFullYear();
 
-if (document.getElementById('copyright')) {
-    document.getElementById('copyright').innerHTML = '&copy; ' + year + ' Foreclosure Cleanup.org - All Rights Reserved';
+if (document.querySelector('#copyright')) {
+    document.querySelector('#copyright').innerHTML = '&copy; ' + year + ' Foreclosure Cleanup.org - All Rights Reserved';
 } else {
-    document.getElementById('narrowScreen_copyright').innerHTML = '&copy; ' + year + ' Foreclosure Cleanup.org - All Rights Reserved';
+    document.querySelector('#narrowScreen_copyright').innerHTML = '&copy; ' + year + ' Foreclosure Cleanup.org - All Rights Reserved';
 }

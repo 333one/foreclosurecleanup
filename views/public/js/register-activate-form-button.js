@@ -1,25 +1,26 @@
-"use strict"
+'use strict';
 
 // setup
 
 document.getElementById('narrowScreen__button').style.backgroundColor = 'var(--grey192)';
+document.getElementById('narrowScreen__button').style.color = 'var(--white)';
 document.getElementById('narrowScreen__button').disabled = true;
 document.getElementById('narrowScreen__button').style.cursor = 'default';
 
-document.getElementById('newEmail').addEventListener('keyup', function() {
-    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'termsOfUse');
+document.getElementById('newEmail').addEventListener('input', function() {
+    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'privacyPolicyTermsOfService');
 });
 
-document.getElementById('newPassword').addEventListener('keyup', function() {
-    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'termsOfUse');
+document.getElementById('newPassword').addEventListener('input', function() {
+    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'privacyPolicyTermsOfService');
 });
 
-document.getElementById('confirmationPassword').addEventListener('keyup', function() {
-    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'termsOfUse');
+document.getElementById('confirmationPassword').addEventListener('input', function() {
+    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'privacyPolicyTermsOfService');
 });
 
-document.getElementById('termsOfUse').addEventListener('change', function() {
-    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'termsOfUse');
+document.getElementById('privacyPolicyTermsOfService').addEventListener('input', function() {
+    checkForSuccess('newEmail', 'newPassword', 'confirmationPassword', 'privacyPolicyTermsOfService');
 });
 
 // core functionality
@@ -34,6 +35,7 @@ function checkForSuccess(primaryEmail, primaryPassword, secondaryPassword, check
     ) {
 
         document.getElementById('narrowScreen__button').style.backgroundColor = 'var(--grey32)';
+        document.getElementById('narrowScreen__button').style.color = 'var(--gold)';
         document.getElementById('narrowScreen__button').disabled = false;
         document.getElementById('narrowScreen__button').style.cursor = 'pointer';
 
@@ -68,6 +70,7 @@ function checkForSuccess(primaryEmail, primaryPassword, secondaryPassword, check
     } else {
 
         document.getElementById('narrowScreen__button').style.backgroundColor = 'var(--grey192)';
+        document.getElementById('narrowScreen__button').style.color = 'var(--white)';
         document.getElementById('narrowScreen__button').disabled = true;
         document.getElementById('narrowScreen__button').style.cursor = 'default';
 
@@ -93,7 +96,7 @@ function primaryEmailCheck(primaryEmail) {
 
     let isEmailValid = getIsEmailValid(primaryEmail);
 
-    if (isEmailValid = true) return 'passed';
+    if (isEmailValid === true) return 'passed';
     return 'failed';
 
 }

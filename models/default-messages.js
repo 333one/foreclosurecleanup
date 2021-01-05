@@ -1,5 +1,4 @@
-"use strict";
-
+const defaultValue = require('../models/default-values');
 const stripeValue = require('../models/stripe-values');
 
 let resetAttemptBeforeVerifiedLine = '<p class="textLarge -bottomMarginMedium">Before you can reset your password you must first verify your account.</p>';
@@ -23,8 +22,7 @@ exports.confirmationLimitReachedBody = function(email, emailSubject, expirationT
 
     let htmlBody = `<h3 class="narrowScreen__headline -bottomMarginMedium">Confirmation Limit Reached</h3>
     ${ topSentence }
-    <p class="textLarge -bottomMarginMedium">We are sorry but the maximum number of confirmation emails that can be sent to <span class="highlightEffect">${ email }</span> 
-    has been reached. ${ bodyText }`;
+    <p class="textLarge -bottomMarginMedium">We are sorry but the maximum number of confirmation emails that can be sent to <span class="highlightEffect">${ email }</span> has been reached. ${ bodyText }`;
 
     return htmlBody;
 }
@@ -124,8 +122,10 @@ exports.successfulChange = function(companyProperty, changeVerb) {
 
 }
 
-exports.upgradeSalesPitch = `Help support the site. Include a link to your website or social media page plus a company description for ${ stripeValue.costInDollarsProduct_1 } 
-    for 12 months. There are no contracts or recurring billing.`;
+exports.upgradeCheckItOut = `See what a ${ defaultValue.accountUpgrade } looks like.`;
 
-exports.urlNotActiveMessage = 'We tried to reach your company website but it didn\'t appear to be active.  Please double-check to make sure your website is spelled correctly \
-    and that it is online.  If you feel this message is in error, please re-enter your website and we\'ll check it again.';
+exports.upgradeRequired = `This feature requires a ${ defaultValue.accountUpgrade } upgrade.`
+
+exports.upgradeSalesPitch = `${ defaultValue.accountUpgrade }s appear first in search results, include a link to your company's website or social media page, a company logo and a company description for just ${ stripeValue.costInDollarsProduct_1 } per year. There are no contracts or recurring billing.`;
+
+exports.urlNotActiveMessage = 'We tried to reach your company website but it didn\'t appear to be active.  Please double-check to make sure your website is spelled correctly and that it is online.  If you feel this message is in error, please re-enter your website and we\'ll check it again.';

@@ -1,5 +1,3 @@
-"use strict";
-
 exports.logoutUser = function(req, res, destination) {
 
     req.session.destroy( function(error) {

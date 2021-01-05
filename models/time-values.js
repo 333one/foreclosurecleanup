@@ -1,6 +1,3 @@
-
-"use strict";
-
 //  Old, fake date used as a filler for a required value in the User schema.
 exports.freeAccountExpiration = new Date('Mon Jan 01 1900 00:00:00 GMT-0700 (Mountain Standard Time)');
 

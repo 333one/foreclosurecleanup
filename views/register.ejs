@@ -13,23 +13,21 @@
     <script defer src="js/password-errors-match-meter.js"></script>
     <script defer src="js/connect/register-password-errors-match-meter.js"></script>
 
-    <script>
-        let patternNewEmail = <%- patternNewEmail %>;
-        let patternNewPassword = <%- patternNewPassword %>;
-    </script>
     <script defer src="js/character-blocker.js"></script>
     <script defer src="js/connect/register-character-blocker.js"></script>
 
     <script defer src="js/register-remove-newemail-error.js"></script>
-
 </head>
 <body>
 
     <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
                 
-                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Create Your Account</h3>
+                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Register Your Company</h3>
 
-                <p class="textSmall -centerAlign -bottomMarginMedium">Already have an account? Sign in <a href="/login">here</a>.</p>
+                <p class="mediumSmall -bottomMarginSmall">If you own a property preservation company or provide maintenance services for foreclosed properties it is free
+                    to register your business on the national vendor list. We do not spam vendors and will never sell or give your information to a 3rd party.</p>
+
+                <p class="textSmall -centerAlign -bottomMarginMedium">Already registered? Sign in <a href="/login">here</a>.</p>
 
                 <form action="/register" method="POST">
 
@@ -90,16 +88,16 @@
                     </div>
 
                     <div class="-bottomMarginLarge">
-                        <div id="targetTermsOfUseContainer" class="checkBox__unit
-                            <% if (typeof termsOfUseError != "undefined") { %>
+                        <div id="privacyTermsBottomErrorContainer" class="checkBox__unit
+                            <% if (typeof privacyPolicyTermsOfServiceError != "undefined") { %>
                                     -errorBorder
                             <% } %> 
                             ">
-                            <input type="checkbox" id="termsOfUse" name="termsOfUse" value="isChecked">
-                            <label class="textSmall" for="termsOfUse">By creating an account I acknowledge that I have read and agree to the <a href="/privacy-policy-terms-Service">Terms Of Service</a> and <a href="/privacy-policy-terms-service#privacyPolicy">Privacy Policy</a>.</label>
+                            <input type="checkbox" id="privacyPolicyTermsOfService" name="privacyPolicyTermsOfService" value="isChecked">
+                            <label class="textSmall" for="privacyPolicyTermsOfService">By clicking "Register" I acknowledge that I have read and agree to the <a href="/privacy-policy">Privacy Policy</a> and <a href="/terms-of-service">Terms Of Service</a>.</label>
                         </div>
-                        <% if (typeof termsOfUseError != "undefined") { %>
-                            <div id="targetTermsOfUseError" class="input__error"><%= termsOfUseError %></div>
+                        <% if (typeof privacyPolicyTermsOfServiceError != "undefined") { %>
+                            <div id="targetPrivacyPolicyTermsOfServiceError" class="input__error"><%= privacyPolicyTermsOfServiceError %></div>
                         <% } %> 
                     </div>
                     

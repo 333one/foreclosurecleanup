@@ -1,21 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <title><%= htmlTitle %></title>
 
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
     
-    <script>
-        let patternCompanyCity = <%- patternCompanyCity %>;
-        let patternCompanyStreet = <%- patternCompanyStreet %>;
-        let patternCompanyStreetTwo = <%- patternCompanyStreetTwo %>;
-        let patternCompanyZip = <%- patternCompanyZip %>;
-    </script>
     <script defer src="js/character-blocker.js"></script>
     <script defer src="js/connect/company-address-character-blocker.js"></script>
-    
 </head>
 <body>
 
@@ -23,14 +15,15 @@
 
     <main>
 
-        <div class="narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
 
             <% if (showUspsNormalizedVsOriginal === true) { %>
 
             <p class="dashboard__headline -bottomMarginLarge -rightLeftPaddingMedium">Address Normalization</p>
-            <p class="textMedium -bottomMarginMedium -rightLeftMarginMedium">If the top address is correct we recommend that you use <span class="-noWrap">US Postal Service</span> format to maximize search performance.</p>
+            <p class="textMedium -green -bottomMarginMedium -rightLeftMarginMedium">If the top address is correct we recommend that you use <span class="-noWrap">US Postal Service</span> format to maximize search performance.</p>
             <div class="addressNormalizationBox -rightLeftMarginMedium">
-                <p class="addressNormalization -topMarginMedium"><%= uspsNormalized.companyStreet %></p>
+                <p class="mediumText -greenColor -rightLeftMarginMedium -topMarginMedium -bottomMarginSmall">Recommended In Most Cases</p>
+                <p class="addressNormalization"><%= uspsNormalized.companyStreet %></p>
                 <% if (typeof uspsNormalized.companyStreetTwo === "string") { %>
                     <p class="addressNormalization"><%= uspsNormalized.companyStreetTwo %></p>
                 <% } %>
@@ -95,7 +88,7 @@
             <form action="/add-change-company-address" method="POST">
 
                 <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Company Address:</p>
-                <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">This address is used on the <a href="/foreclosure-cleanup-vendor-list">vendor list search page</a> to help customers search for vendors near their location.</p>
+                <p class="textSmall -bottomPaddingMedium -rightLeftPaddingMedium">This address is used on the <a href="/foreclosure-cleanup-vendor-list">vendor list search page</a> to help customers search for vendors near their location.</p>
                 <input type="hidden" name="useOriginalInput" value="false">
                 <input type="hidden" name="deleteProperty" value="false">
 
@@ -222,7 +215,7 @@
             <% if (addOrChangeProperty === "change") { %>
             <form action="/add-change-company-address" method="POST">
                 <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLink">Delete Your Company's Address</button>
+                    <button class="button_fauxLinkMedium">Delete Your Company's Address</button>
                 </div>
                 <input type="hidden" name="companyStreet" value="">
                 <input type="hidden" name="companyStreetTwo" value="">

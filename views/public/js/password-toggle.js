@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 let password__toggle = document.getElementsByClassName('password__toggle');
 
@@ -11,7 +11,7 @@ function setUpToggles(coreID, secondID, thirdID) {
 
     document.getElementById(`${ coreID }Eye`).addEventListener('click', function(event) {
 
-        if (document.getElementById(`${ coreID }Eye`).getAttribute('src') === "images/eye-slash-solid.svg") {
+        if (document.getElementById(`${ coreID }Eye`).getAttribute('src') === 'images/eye-slash-solid.svg') {
 
             setToRegularEye(coreID);
 

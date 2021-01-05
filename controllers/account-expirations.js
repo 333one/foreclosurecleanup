@@ -1,5 +1,3 @@
-"use strict";
-
 const defaultValue = require('../models/default-values');
 const timeValue = require('../models/time-values');
 

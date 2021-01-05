@@ -80,6 +80,17 @@ exports.passwordField = {
     }
 }
 
+exports.searchZipField = {
+    minLength: 5,
+    maxLength: 5,
+    name: 'searchZipCode',
+    size: 5,
+    get attributes() {
+        return `type=text name=${ this.name } maxLength=${ this.maxLength } size=${ this.size } autofocus`;
+    }
+}
+
+
 exports.boardingSecuring = 'Boarding&nbsp;&amp;&nbsp;Securing';
 
 exports.debrisRemovalTrashout = 'Debris&nbsp;Removal&nbsp;&amp;&nbsp;Trashout';

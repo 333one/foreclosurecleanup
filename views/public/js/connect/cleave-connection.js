@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 new Cleave('#companyPhone', {
     phone: true,

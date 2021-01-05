@@ -1,6 +1,6 @@
     <footer class="-rightLeftPaddingMediumStatic">
         
-        <div class="standardWidth">
+        <div class="-standardWidth">
             <div class="footer__container -topBottomPaddingLarge">
 
                 <div>
@@ -39,13 +39,27 @@
                 <div class="footer__logo"><a href="/"><img src="images/foreclosure-cleanup-logo-bw.svg" alt="Foreclosure Cleanup logo"></a></div>
             </div>
 
-            <% if (activeLink === 'privacy-policy-terms-service') { %>
-                <p class="footerLink__active -bottomMarginLarge">
-            <% } else { %>
-                <p class="footerLink -bottomMarginLarge">
-            <% } %>
-                    <a href="/privacy-policy-terms-service">Privacy Policy</a> | <a href="/privacy-policy-terms-service#termsOfService">Terms Of Service</a>
-                </p>
+            <div class="footer__privacyTermsContainer -bottomMarginLarge">
+
+                <a href="/privacy-policy" class="
+                    <% if (activeLink === 'privacy-policy') { %>
+                        footer__privacyTerms__active
+                    <% } else { %>
+                        footer__privacyTerms
+                    <% } %>
+                        ">Privacy Policy</a>
+                    
+                    |
+
+                <a href="/terms-of-service" class="
+                    <% if (activeLink === 'terms-of-service') { %>
+                            footer__privacyTerms__active
+                    <% } else { %>
+                            footer__privacyTerms
+                    <% } %>
+                        ">Terms Of Service</a>
+
+            </div>
             <p id="copyright">© Foreclosure Cleanup.org - All Rights Reserved</p>
         </div>
         

@@ -1,10 +1,10 @@
-"use strict";
-
 const phoneNormalizer = require('phone');
 const zxcvbn = require('zxcvbn');
 
+const defaultValue = require('../models/default-values');
 const formFields = require('../models/forms-default-fields');
 const timeValue = require('../models/time-values');
+const { getCompanyServicesFromUserValues } = require('./logic-user-accounts');
 
 exports.checkAreAllAccountPropertiesFilled = function(sessionUserValues, currentProperty) {
 
@@ -22,6 +22,8 @@ exports.checkAreAllAccountPropertiesFilled = function(sessionUserValues, current
         delete userProperties.companyState;
         delete userProperties.companyStreet;
         delete userProperties.companyZip;
+        delete userProperties.companyLatitude;
+        delete userProperties.companyLongitude;
 
     } else if (currentProperty !== 'companyServices') {
 
@@ -74,15 +76,62 @@ exports.checkDoAnyCompanyServicesHaveValue = function (
     winterizations
     ) {
 
-    for (const element of arguments) {
-        if (element === true) return true;
+    for (const value of arguments) {
+        if (value === true) return true;
     }
 
     return false;
 
 }
 
-exports.checkIfCompanyAddressNormalized = function(companyStreet, companyStreetTwo, companyCity, companyState, companyZip, normalizedCompanyAddress) {
+exports.checkIfAllContentGenuine = function(defaultSubmissionFields, request) {
+
+    let isKeyGenuine;
+    for (const key in request) {
+
+        isKeyGenuine = defaultSubmissionFields.includes(key);
+        if (isKeyGenuine === false) return false;
+
+    }
+
+    return true;
+
+}
+
+exports.checkIfAllContentSubmitted = function(defaultSubmissionFields, request) {
+
+    for (const value of defaultSubmissionFields) {
+
+        if (request.hasOwnProperty(value) === false) {
+            return false;
+        }
+
+    }
+
+    return true;
+
+}
+
+exports.checkIfAtLeastOneCompanyServiceFilled = function(cleanedFormWithBoolean) {
+
+    let listOfCompanyServices = defaultValue.listOfCompanyServices;
+
+    for (const value of listOfCompanyServices) {
+        if (cleanedFormWithBoolean[value] === true) return true;
+    }
+
+    return false;
+
+};
+
+exports.checkIfCompanyAddressNormalized = function(
+    companyStreet,
+    companyStreetTwo,
+    companyCity,
+    companyState,
+    companyZip,
+    normalizedCompanyAddress
+    ) {
 
     if (
         normalizedCompanyAddress.street1 === companyStreet &&
@@ -108,6 +157,16 @@ exports.checkIfCompanyPhoneValid = function(companyPhone) {
     
 }
 
+exports.checkIfCompanyServicesUnchanged = function(reqSessionUserValues, listOfServicesObject) {
+
+    for (const key in listOfServicesObject) {
+        if (listOfServicesObject[key] !== reqSessionUserValues[key]) return false;
+    }
+
+    return true;
+
+}
+
 exports.checkIfCompanyStateValid = function(companyState) {
 
     let states = [
@@ -126,6 +185,27 @@ exports.checkIfCompanyStateValid = function(companyState) {
 
 }
 
+exports.checkIfDeletePropertyCorrectlySet = function(reqBody) {
+
+    // deleteProperty is used in many routes.  If it is present make sure the value is either true or empty string.
+    if (reqBody.deleteProperty) {
+
+        if (reqBody.deleteProperty === 'true' || reqBody.deleteProperty === 'false') {
+
+            return true;
+
+        } else {
+
+            return false;
+
+        }
+
+    }
+
+    return true;
+
+}
+
 exports.checkIfPasswordMeetsRequirements = function(password) {
 
     let didPasswordMeetRequirements = zxcvbn(password).score >= 2;
@@ -136,13 +216,12 @@ exports.checkIfPasswordMeetsRequirements = function(password) {
 
 }
 
-exports.checkIfServiceValuesValid = function(cleanedFields) {
+exports.checkIfServiceValuesValid = function(cleanedSubmission) {
 
-    let cleanedFieldsArray = Object.entries(cleanedFields);
+    let listOfCompanyServices = defaultValue.listOfCompanyServices;
 
-    // cleanedFields is a processed version of the submission.  If the key is not deleteProperty every property should hold true or false.
-    for (const [key, value] of cleanedFieldsArray) {
-        if (key !== 'deleteProperty' && value !== 'true' && value !== 'false') return false;
+    for (const value of listOfCompanyServices) {
+        if (cleanedSubmission[value] !== true && cleanedSubmission[value] !== false) return false;
     }
 
     return true;
@@ -162,8 +241,8 @@ exports.checkIfUpgradeExpirationSoon = function(numberOfDaysUntilExpiration) {
 exports.checkWereCompanyServicesAdded = function(companyServices, userValues) {
 
     // If any value is true that means a service already existed and the change is an update, not an add.
-    for (const element of companyServices) {
-        if (userValues[element] === true) return false;
+    for (const value of companyServices) {
+        if (userValues[value] === true) return false;
     }
 
     return true;

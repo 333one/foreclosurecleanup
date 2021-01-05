@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 document.getElementById('targetVendorIcon').addEventListener('mouseover', rollOverIcon);
 document.getElementById('targetVendorIcon').addEventListener('mouseout', rollOffIcon);

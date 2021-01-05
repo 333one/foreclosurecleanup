@@ -1,23 +1,52 @@
-let domain = 'https://www.foreclosurecleanup.org';
+// This is the main variable that tells the rest of the app what environment it is operating in.
+// Possible values are 'development', 'staging', 'production'
+let projectStatus = 'development';
 
-let testingHost = 'http://localhost:8080';
+let domain = 'foreclosurecleanup.org';
+let subDomainForStaging = 'testbed';
+let projectPortNumber = projectStatus === 'development' || projectStatus === 'production' ? 8080 : 10001;
+let organization = 'Foreclosure Cleanup.org';
 
-exports.adminEmailSender = 'confirmation@foreclosurecleanup.org';
+function host(projectStatus) {
+    if (projectStatus === 'development') return `http://localhost:${ projectPortNumber }`;
+    if (projectStatus === 'staging') return `https://${ subDomainForStaging }.${ domain }`;
+    if (projectStatus === 'production') return `https://www.${ domain }`;
+}
 
-exports.adminEmailSenderName = 'Foreclosure Cleanup';
+exports.companyIcon = `https://www.${ domain }/images/foreclosure-cleanup-logo.png`;
 
-exports.adminEmailServer = 'server.foreclosurecleanup.org';
+exports.host = host(projectStatus);
 
-exports.companyIcon = `${ domain }/images/foreclosure-cleanup-logo.png`;
+exports.organization = organization;
 
-exports.contactEmail = 'contact@foreclosurecleanup.org';
+exports.passwordResetRequestLink = `${ host(projectStatus) }/password-reset-request`;
 
-exports.host = testingHost;
+exports.port = projectPortNumber;
 
-exports.organization = 'Foreclosure Cleanup.org';
+exports.projectStatus = projectStatus;
 
-exports.passwordResetRequestLink = `${ testingHost }/password-reset-request`;
+// Email Addresses
 
-exports.port = 8080;
+exports.contactEmail = {
+    email: `contact@${ domain }`,
+    name: organization,
+    password: process.env.CONTACT_EMAIL_PASSWORD
+}
 
-exports.website = domain;
+exports.errorEmail = {
+    email: `error@${ domain }`,
+    name: `error@${ organization }`,
+    password: process.env.ERROR_EMAIL_PASSWORD
+}
+
+exports.noReplyEmail = {
+    email: `noreply@${ domain }`,
+    name: 'noreply',
+    password: process.env.NOREPLY_EMAIL_PASSWORD
+}
+
+// Email
+
+exports.emailServer = `server.${ domain }`;
+
+exports.sendServerErrorsHere = 'thr333one@gmail.com';

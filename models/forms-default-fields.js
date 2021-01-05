@@ -1,3 +1,6 @@
+const defaultValue = require('../models/default-values');
+const renderValue = require('../models/rendering-values');
+
 exports.addChangeCompanyAddress = [
     'companyCity',
     'companyState',
@@ -14,20 +17,7 @@ exports.addChangeCompanyName = ['companyName', 'deleteProperty'];
 
 exports.addChangeCompanyPhone = ['companyPhone', 'deleteProperty'];
 
-exports.addChangeCompanyServices = [
-    'boardingSecuring',
-    'debrisRemovalTrashout',
-    'evictionManagement',
-    'fieldInspection',
-    'handymanGeneralMaintenance',
-    'landscapeMaintenance',
-    'lockChanges',
-    'overseePropertyRehabilitation',
-    'poolMaintenance',
-    'propertyCleaning',
-    'winterizations',
-    'deleteProperty'
-];
+exports.addChangeCompanyServices = ['deleteProperty', ...defaultValue.listOfCompanyServices];
 
 exports.addChangeCompanyWebsite = ['companyWebsite', 'deleteProperty'];
 
@@ -37,10 +27,12 @@ exports.changePassword = ['currentPassword', 'changedPassword', 'confirmationPas
 
 exports.deleteYourAccount = ['currentPassword'];
 
+exports.foreclosureCleanupVendorList = ['searchRadius', renderValue.searchZipField.name, 'searchType', ...defaultValue.listOfCompanyServices];
+
 exports.login = ['currentEmail', 'currentPassword'];
 
 exports.passwordReset = ['changedPassword', 'confirmationPassword'];
 
 exports.passwordResetRequest = ['currentEmail'];
 
-exports.register = ['newEmail', 'newPassword', 'confirmationPassword', 'termsOfUse'];
+exports.register = ['newEmail', 'newPassword', 'confirmationPassword', 'privacyPolicyTermsOfService'];

@@ -1,4 +1,4 @@
-"use strict";
+const defaultValue = require('../models/default-values');
 
 const { 
     LoginFailure,
@@ -38,6 +38,59 @@ exports.createPasswordResetRequest = function(email, confirmationHash, successHa
     });
 
     return passwordResetRequest;
+
+}
+
+exports.createMongooseSearchObject = function(searchRadiusNumerical, longAndLat, servicesObject) {
+
+    let searchObject = {
+        $and: [
+            { companyLocation: {
+                    $geoWithin: {
+                        $centerSphere: [longAndLat, searchRadiusNumerical / defaultValue.radiusOfEarthInMiles]
+                    }
+                }
+            },
+            {
+                $or: [
+
+                ]
+            },
+            {
+                live: true
+            }
+        ]
+
+    }
+
+    for (const key in servicesObject) {
+        if (servicesObject[key] === true) searchObject.$and[1].$or.push({ [key]: true });
+    }
+
+    return searchObject;
+
+}
+
+exports.createMongooseSelectObject = function() {
+
+    let selectObject = {
+        companyProfileType: 1,
+        companyName: 1,
+        companyPhone: 1,
+        companyCity: 1,
+        companyState: 1,
+        companyStreet: 1,
+        companyStreetTwo: 1,
+        companyZip: 1,
+        companyDescription: 1,
+        companyWebsite: 1
+    }
+
+    for (const element of defaultValue.listOfCompanyServices) {
+        selectObject[element] = 1;
+    }
+
+    return selectObject;
 
 }
 
