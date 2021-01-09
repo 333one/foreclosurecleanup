@@ -2,7 +2,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 
 const middlewareUserAccounts = require('./middleware-user-accounts');
-const { redirectLogin, redirectMyAccount } = require('./middleware-user-accounts'); 
+const { redirectIfNoUpgrade, redirectLogin, redirectMyAccount } = require('./middleware-user-accounts'); 
 
 const router = express.Router();
 
@@ -11,11 +11,12 @@ const urlEncoded = bodyParser.urlencoded({ extended: true });
 router.get('/account-deleted', middlewareUserAccounts.accountDeleted);
 router.get('/account-suspended', middlewareUserAccounts.accountSuspended);
 router.get('/add-change-company-address', redirectLogin, middlewareUserAccounts.addChangeCompanyAddress);
-router.get('/add-change-company-description', redirectLogin, middlewareUserAccounts.addChangeCompanyDescription);
+router.get('/add-change-company-description', redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.addChangeCompanyDescription);
+router.get('/add-change-company-logo', redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.addChangeCompanyLogo);
 router.get('/add-change-company-name', redirectLogin, middlewareUserAccounts.addChangeCompanyName);
 router.get('/add-change-company-phone', redirectLogin, middlewareUserAccounts.addChangeCompanyPhone);
 router.get('/add-change-company-services', redirectLogin, middlewareUserAccounts.addChangeCompanyServices);
-router.get('/add-change-company-website', redirectLogin, middlewareUserAccounts.addChangeCompanyWebsite);
+router.get('/add-change-company-website', redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.addChangeCompanyWebsite);
 router.get('/change-email', redirectLogin, middlewareUserAccounts.changeEmail);
 router.get('/change-password', redirectLogin, middlewareUserAccounts.changePassword);
 router.get('/confirmation-limit-reached', middlewareUserAccounts.confirmationLimitReached);
@@ -34,11 +35,12 @@ router.get('/register', middlewareUserAccounts.register);
 router.get('/verified', redirectMyAccount, middlewareUserAccounts.verified);
 
 router.post('/add-change-company-address', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyAddress);
-router.post('/add-change-company-description', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyDescription);
+router.post('/add-change-company-description', urlEncoded, redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.postAddChangeCompanyDescription);
+router.get('/add-change-company-logo', urlEncoded, redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.postAddChangeCompanyLogo);
 router.post('/add-change-company-name', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyName);
 router.post('/add-change-company-phone', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyPhone);
 router.post('/add-change-company-services', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyServices);
-router.post('/add-change-company-website', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyWebsite);
+router.post('/add-change-company-website', urlEncoded, redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.postAddChangeCompanyWebsite);
 router.post('/change-email', urlEncoded, redirectLogin, middlewareUserAccounts.postChangeEmail);
 router.post('/change-password', urlEncoded, redirectLogin, middlewareUserAccounts.postChangePassword);
 router.post('/delete-your-account', urlEncoded, redirectLogin, middlewareUserAccounts.postDeleteYourAccount);

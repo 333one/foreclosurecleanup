@@ -15,7 +15,7 @@ exports.checkoutSessionExpiration = 3 * 24 * 60 * 60;
 
 exports.costInDollarsProduct_1 = `$${costProduct_1 / 100}`;
 
-exports.productDataDescription_1 = `Upgrade your account to a ${ defaultValue.accountUpgrade } for 12 months.  Thanks for supporting the site!`;
+exports.productDataDescription_1 = `Upgrade your account to a ${ defaultValue.accountUpgrade } for 12 months. Thanks for helping us pay the bills! Watch for Pro Journal, LLC on your payment or statement.`;
 
 exports.productDataImages_1_a = 'https://www.foreclosurecleanup.org/images/foreclosure-cleanup-stripe-image.png';
 

@@ -13,8 +13,6 @@ function host(projectStatus) {
     if (projectStatus === 'production') return `https://www.${ domain }`;
 }
 
-exports.companyIcon = `https://www.${ domain }/images/foreclosure-cleanup-logo.png`;
-
 exports.host = host(projectStatus);
 
 exports.organization = organization;
@@ -24,6 +22,12 @@ exports.passwordResetRequestLink = `${ host(projectStatus) }/password-reset-requ
 exports.port = projectPortNumber;
 
 exports.projectStatus = projectStatus;
+
+// Email icons
+
+exports.companyIcon = `https://www.${ domain }/images/foreclosure-cleanup-email-icon.png`;
+
+exports.proJournalIcon = `https://www.${ domain }/images/pro-journal-email-icon.png`;
 
 // Email Addresses
 

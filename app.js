@@ -32,7 +32,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // In the production app NGINX will serve static files and this shouldn't be needed.
 if (projectStatus === 'development') {
-    app.use(express.static( path.join(__dirname, 'views/public')));
+    app.use(express.static(path.join(__dirname, 'views/public')));
 }
 
 let sessionObject = logicDefault.createSessionObject(projectStatus, redisClient, RedisStore);

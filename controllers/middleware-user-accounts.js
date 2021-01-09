@@ -259,6 +259,46 @@ exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
 
 });
 
+exports.addChangeCompanyLogo = wrapAsync(async function(req, res) {
+
+    // Create these now and set the value in the if block below.
+    let inputFields = {};
+    let addOrChangeProperty = req.session.userValues.companyDescription ? 'change' : 'add';
+
+    // Grab the data from req.session and then delete it.
+    if (req.session.transfer) {
+
+        var { cleanedForm, companyLogoError } = req.session.transfer;
+        delete req.session.transfer;
+
+        // Set object to previous form input.
+        inputFields = cleanedForm;
+
+    } else {
+
+
+    } 
+
+    let capitalizedAddOrChange = addOrChangeProperty.charAt(0).toUpperCase() + addOrChangeProperty.slice(1);
+    let htmlTitle = `${ capitalizedAddOrChange } Company Logo`;
+
+    // For rendering.
+    let activeLink = 'add-change-company-logo';
+    let contactEmail = siteValue.contactEmail;
+    let loggedIn = req.session.userValues ? true : false;
+
+    res.render('add-change-company-logo', {
+        userInput: inputFields,
+        activeLink,
+        contactEmail,
+        loggedIn,
+        addOrChangeProperty,
+        companyLogoError,
+        htmlTitle
+    });
+
+});
+
 exports.addChangeCompanyName = wrapAsync(async function(req, res) {
 
     // Create these now and set the value in the if block below.
@@ -833,6 +873,11 @@ exports.myAccount = wrapAsync(async function(req, res) {
             await StripeCheckoutSession.findOneAndDelete({ stripeSuccessKey: req.query.success });
 
             if (isAccountUpgraded === false) {
+
+                // Notify the user of the change.
+                let emailSubject = emailMessage.premiumUpgradeSubject();
+                let emailBody = emailMessage.emailPremiumUpgradeBody();
+                communication.sendEmail(siteValue.noReplyEmail, email, emailSubject, emailBody);
 
                 successMessage = stripeValue.successUpgradeMessage;
                 isAccountUpgraded = true;
@@ -1901,6 +1946,10 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
 
 });
 
+exports.postAddChangeCompanyLogo = wrapAsync(async function(req, res) {
+
+});
+
 exports.postAddChangeCompanyName = wrapAsync(async function(req, res) {
 
     // Sanitize and process input.
@@ -2803,7 +2852,7 @@ exports.postRegister = wrapAsync(async function(req, res) {
             doesNewPasswordMeetRequirements
             );
         let confirmationPasswordError = errorMessage.getNewConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
-        let privacyPolicyTermsOfServiceError = errorMessage.getPrivacyPolicyTermsOfServiceError(isPrivacyPolicyTermsOfServiceChecked);
+        let privacyPolicyTermsOfServiceError = errorMessage.getPrivacyTermsError(isPrivacyPolicyTermsOfServiceChecked);
 
         req.session.transfer = {};
         req.session.transfer.cleanedForm = cleanedForm;
@@ -2815,6 +2864,14 @@ exports.postRegister = wrapAsync(async function(req, res) {
         return res.redirect('/register');
     }
 
+});
+
+exports.redirectIfNoUpgrade = wrapAsync(async function(req, res, next) {
+
+    if (req.session.userValues.companyProfileType === defaultValue.accountDefault) return res.redirect('/my-account');
+    
+    return next();
+    
 });
 
 // If the user is logged in redirect to my-account.
