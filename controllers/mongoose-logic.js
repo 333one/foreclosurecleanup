@@ -83,6 +83,7 @@ exports.createMongooseSelectObject = function() {
         companyStreetTwo: 1,
         companyZip: 1,
         companyDescription: 1,
+        companyLogo: 1,
         companyWebsite: 1
     }
 

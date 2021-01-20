@@ -23,29 +23,29 @@ exports.getNumberOfDaysUntilExpirationFragment = function(numberOfDaysUntilExpir
 
 }
 
+// 1 day
+exports.finalAlertBeforeExpiration = 1;
+
+// 30 days
+exports.firstAlertBeforeExpiration = 30;
+
 // 20 minutes
 exports.loginFailureExpiration = 20 * 60;
 
 // 1 hour
 exports.passwordResetRequestExpiration = 1 * 60 * 60;
 
-// 2 years - 1 day.  Users can't extend their premium account again if it is more than this many days from expiration.
-exports.premiumAccountExtendsCutoff = 729;
-
-// Premium accounts last 1 year.
-exports.premiumUserExpiration = 365 * 24 * 60 * 60;
+// 7 days
+exports.secondAlertBeforeExpiration = 7;
 
 // 5 minutes
 exports.shortTermActivityExpiration = 5 * 60;
 
+// 2 years - 1 day.  Users can't extend their premium account again if it is more than this many days from expiration.
+exports.upgradeAccountExtendsCutoff = 729;
+
+// Premium accounts last 1 year.
+exports.upgradeUserExpiration = 365 * 24 * 60 * 60;
+
 // 2 hours
 exports.unverifiedUserExpiration = 2 * 60 * 60;
-
-// 30 days
-exports.firstAlertBeforeExpiration = 30;
-
-// 7 days
-exports.secondAlertBeforeExpiration = 7;
-
-// 1 day
-exports.finalAlertBeforeExpiration = 1;

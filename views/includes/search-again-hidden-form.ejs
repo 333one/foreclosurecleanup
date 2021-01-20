@@ -1,0 +1,15 @@
+            <% if (typeof searchOutput === 'undefined') { %>
+                <p class="heading__headline">Search The National Vendor List</p>
+            <% } else { %>
+                <form action="/foreclosure-cleanup-vendor-list" method="POST">
+                <% for (const key in searchAgainNamesValues) { %>
+                    <input type="hidden" name="<%= key %>" value="<%= searchAgainNamesValues[key] %>">
+                <% } %>
+                    <input type="hidden" name="searchType" value="multiple">
+                    <button class="vendorList__buttonWithLinkAppearance">
+                        <img class="vendorList__searchAgainIcon" src="images/back-arrows.svg">
+                        <p class="vendorList__searchAgainText">Search Again</p>
+                    </button>
+                </form>
+                <p class="heading__headline">Search Results For Zip Code <%= searchZipCode %></p>
+            <% } %>

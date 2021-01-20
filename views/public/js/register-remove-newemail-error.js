@@ -19,7 +19,7 @@ function removeNewEmailError(elementId) {
 
     let uppercaseFirstLetter = elementId.charAt(0).toUpperCase() + elementId.slice(1);
 
-    document.getElementById(elementId).classList.remove('-errorBorder');
+    document.getElementById(elementId).classList.remove('-borderError');
 
     if (document.getElementById(`target${ uppercaseFirstLetter }Error`)) {
         document.getElementById(`target${ uppercaseFirstLetter }Error`).innerText = '';

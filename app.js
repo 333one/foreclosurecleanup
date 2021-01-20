@@ -22,9 +22,14 @@ let { projectStatus } = siteValue;
 
 // Use default store when testing on Windows.  On Linux turn on Redis.  Also turn on Redis in the session.
 if (projectStatus === 'staging' || projectStatus === 'production') {
+
     var redis = require('redis');
     var redisClient = redis.createClient();
     var RedisStore = require('connect-redis')(session);
+    // app.set('trust proxy', 'loopback');
+
+    app.set('referenceToRedisClient', redisClient);
+    
 }
 
 app.set('view engine', 'ejs');
@@ -36,7 +41,6 @@ if (projectStatus === 'development') {
 }
 
 let sessionObject = logicDefault.createSessionObject(projectStatus, redisClient, RedisStore);
-
 app.use(session(sessionObject));
 
 let temporaryPlaceholder = false;
@@ -45,7 +49,7 @@ if (temporaryPlaceholder === true) {
 
     app.get(['/', '/index'], function(req, res) {
 
-        res.sendFile(path.join(__dirname, 'views/public/html/index.html'));
+        res.render('index-single-page-site');
 
     });
 

@@ -8,16 +8,16 @@
 
     <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
 
-                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Delete Your Account</h3>
-                <p class="textLarge -bottomMarginMedium">If you would like to delete your account fill in your password below and click "Delete Account"</p>
+                <h3 class="headlineLarge">Delete Your Account</h3>
+                <p class="font15 -marginBottomTwo">If you would like to delete your account fill in your password below and click "Delete Account"</p>
 
                 <form action="/delete-your-account" method="POST">
 
-                    <div class="input__unit -bottomMarginLarge"> 
+                    <div class="input__unit -marginBottomFour"> 
                         <label for="currentPassword" class="input__label">Password:</label>
                         <div class="password__container 
                         <% if (typeof currentPasswordError != "undefined") { %>
-                            -errorBorder
+                            -borderError
                         <% } %>
                         ">
                             <input id="currentPassword" class="input__passwordField" name="currentPassword" <%= passwordAttributes %>>
@@ -28,13 +28,12 @@
                         <% } %> 
                     </div>
 
-                    <div class="-bottomMarginLarge">
-                        <button id="narrowScreen__button">Delete Account</button>
-                    </div> 
+                    <button class="button__narrowScreen">Delete Account</button> 
 
                 </form>
 
-                <div class="textMedium -rightAlign -bottomMarginLarge"><a href="/my-account">Back To My Account ></a></div>
+                <%- include('includes/back-to-my-account.ejs') %>
+                <div class="-marginBottomFour"></div>
 
     <%- include('includes/narrow-screen-bottom-boilerplate.ejs') %>
 

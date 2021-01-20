@@ -2,10 +2,10 @@
 
 // setup
 
-document.getElementById('narrowScreen__button').style.backgroundColor = 'var(--grey192)';
-document.getElementById('narrowScreen__button').style.color = 'var(--white)';
-document.getElementById('narrowScreen__button').disabled = true;
-document.getElementById('narrowScreen__button').style.cursor = 'default';
+document.getElementById('button__submit').style.backgroundColor = 'var(--grey192)';
+document.getElementById('button__submit').style.color = 'var(--white)';
+document.getElementById('button__submit').disabled = true;
+document.getElementById('button__submit').style.cursor = 'default';
 
 let imageFile = document.querySelector('#imageFile');
 let imageDisplay = document.querySelector('#imageDisplay');
@@ -81,10 +81,10 @@ imageFile.addEventListener('input', function(event) {
             imageDisplay.setAttribute('height', displayHeight);
             imageDisplay.src = uploadedImage.src;
 
-            document.getElementById('narrowScreen__button').style.backgroundColor = 'var(--grey32)';
-            document.getElementById('narrowScreen__button').style.color = 'var(--gold)';
-            document.getElementById('narrowScreen__button').disabled = false;
-            document.getElementById('narrowScreen__button').style.cursor = 'pointer';
+            document.getElementById('button__submit').style.backgroundColor = 'var(--grey32)';
+            document.getElementById('button__submit').style.color = 'var(--gold)';
+            document.getElementById('button__submit').disabled = false;
+            document.getElementById('button__submit').style.cursor = 'pointer';
 
         });
 

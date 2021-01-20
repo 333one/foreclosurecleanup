@@ -16,7 +16,7 @@
 
             document.querySelector('#searchServicesContainer').scrollIntoView({ behavior: "smooth" });
             
-        } else if (document.querySelector('#privacyTermsError')) {
+        } else if (document.querySelector('#targetPrivacyTermsError')) {
 
             document.querySelector('#privacyTermsContainer').scrollIntoView({ behavior: "smooth" });
 

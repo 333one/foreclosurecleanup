@@ -13,77 +13,79 @@
 </head>
 <body>
 
-    <%- include('includes/dashboard-header.ejs') %>
+    <%- include('includes/my-account-header.ejs') %>
 
-    <main>
+    <main class="mainContainer__standard">
 
-        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="internalContainer__narrowVanish">
 
-            <p class="dashboard__headline">Change Your Login Email</p>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Current Email Address:</p>
-                    <p class="dashboard__value -rightLeftMarginMedium"><%= currentEmail %></p>
-                </div>
+            <div class="heading__container">
+                <p class="heading__headline">Change Your Login Email</p>
             </div>
 
-            <form action="/change-email" method="POST">
-            
-                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="changedEmail" id="targetChangedEmailLabel" class="input__label">New Email Address:</label>
-                    <input id="changedEmail" class="input__field
+            <div class="myAccount__defaultUnit">
+                <p class="myAccount__subHeadline">Current Email Address:</p>
+                <p class="myAccount__bodyTextLarge -marginBottomZero"><%= currentEmail %></p>
+            </div>
+
+            <div class="internalContainer__paddingTwo32Four">
+
+                <form action="/change-email" method="POST">
+                
+                    <div class="input__unit -marginBottomFour"> 
+                        <label for="changedEmail" id="targetChangedEmailLabel" class="input__label">New Email Address:</label>
+                        <input id="changedEmail" class="input__field
+                            <% if (typeof changedEmailError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="changedEmail" <%= emailAttributes %> value="<%= userInput.changedEmail %>" autocomplete="new-password" autofocus>
+                            
                         <% if (typeof changedEmailError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="changedEmail" <%= emailAttributes %> value="<%= userInput.changedEmail %>" autocomplete="new-password" autofocus>
-                        
-                    <% if (typeof changedEmailError != "undefined") { %>
-                    <div id="targetChangedEmailError" class="input__error"><%= changedEmailError %></div>
-                    <% } %> 
-                </div>
-
-                <div class="input__unit -bottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="confirmationEmail" id="targetConfirmationEmailLabel" class="input__label">Confirm New Email Address:</label>
-                    <input id="confirmationEmail" class="input__field
-                        <% if (typeof confirmationEmailError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="confirmationEmail" <%= emailAttributes %> value="<%= userInput.confirmationEmail %>" autocomplete="new-password">
-                    <% if (typeof confirmationEmailError != "undefined") { %>
-                    <div id="targetConfirmationEmailError" class="input__error"><%= confirmationEmailError %></div>
-                    <% } %> 
-                </div>
-
-                <div class="input__unit -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="currentPassword" id="targetPasswordLabel" class="input__label">Password:</label>
-                    <div id="targetCurrentPasswordContainer" class="password__container 
-                        <% if (typeof currentPasswordError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        ">
-                        <input id="currentPassword" class="input__passwordField" name="currentPassword" <%= passwordAttributes %> value="<%= userInput.currentPassword %>" autocomplete="new-password">
-                        <div class="password__toggle"><img id="currentPasswordEye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                        <div id="targetChangedEmailError" class="input__error"><%= changedEmailError %></div>
+                        <% } %> 
                     </div>
 
-                    <% if (typeof currentPasswordError != "undefined") { %>
-                    <div id="targetCurrentPasswordError" class="input__error"><%= currentPasswordError %></div>
-                    <% } %> 
-                </div>
+                    <div class="input__unit -marginBottomFour">
+                        <label for="confirmationEmail" id="targetConfirmationEmailLabel" class="input__label">Confirm New Email Address:</label>
+                        <input id="confirmationEmail" class="input__field
+                            <% if (typeof confirmationEmailError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="confirmationEmail" <%= emailAttributes %> value="<%= userInput.confirmationEmail %>" autocomplete="new-password">
+                        <% if (typeof confirmationEmailError != "undefined") { %>
+                        <div id="targetConfirmationEmailError" class="input__error"><%= confirmationEmailError %></div>
+                        <% } %> 
+                    </div>
 
-                <div class="-bottomMarginLarge -rightLeftMarginMedium">
-                    <button id="narrowScreen__button">Save Change</button>
-                </div>  
+                    <div class="input__unit -marginBottomFour">
+                        <label for="currentPassword" id="targetPasswordLabel" class="input__label">Password:</label>
+                        <div id="targetCurrentPasswordContainer" class="password__container 
+                            <% if (typeof currentPasswordError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            ">
+                            <input id="currentPassword" class="input__passwordField" name="currentPassword" <%= passwordAttributes %> value="<%= userInput.currentPassword %>" autocomplete="new-password">
+                            <div class="password__toggle"><img id="currentPasswordEye" src="images/eye-slash-solid.svg" alt="show / hide password"></div>
+                        </div>
 
-            </form>
+                        <% if (typeof currentPasswordError != "undefined") { %>
+                        <div id="targetCurrentPasswordError" class="input__error"><%= currentPasswordError %></div>
+                        <% } %> 
+                    </div>
+
+                    <button class="button__narrowScreen">Save Change</button> 
+
+                </form>
 
             <%- include('includes/back-to-my-account.ejs') %>
+
+            </div>
 
         </div>
 
     </main>
 
-    <%- include('includes/standard-screen-footer.ejs') %>
+    <%- include('includes/footer-standard.ejs') %>
 
 </body>
 </html>

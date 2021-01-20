@@ -2,6 +2,18 @@ const defaultValue = require('../models/default-values');
 const logicUserAccounts = require('./logic-user-accounts')
 const renderValue = require('../models/rendering-values');
 
+exports.assembleCompanyStreet = function(companyCity, companyState, companyStreet, companyStreetTwo, companyZip) {
+
+    let companyStreetLine1Line2 = !companyStreetTwo ? `${ companyStreet }<br>` : `${ companyStreet }<br>${ companyStreetTwo }<br>`;
+
+    let companyStreetLine3 = `${ companyCity }, ${ companyState }, ${ companyZip }`;
+
+    let companyStreetAssembled = `${ companyStreetLine1Line2 }${ companyStreetLine3 }`;
+
+    return companyStreetAssembled;
+
+}
+
 exports.convertBooleanToString = function(objectToConvert, listOfPropertiesToCheck) {
 
     for (const value of listOfPropertiesToCheck) {
@@ -48,7 +60,7 @@ exports.getSearchAgainNamesValues = function(cleanedQueryWithBoolean) {
 
 }
 
-exports.processCompanyServices = function(accounts) {
+exports.processCompanyForViewing = function(accounts, accountType) {
 
     if (accounts.length === 0) return;
 
@@ -94,11 +106,18 @@ exports.processCompanyServices = function(accounts) {
             winterizations
         );
 
+        individualAccount.companyServicesAssembled = companyServicesAssembled;
+
         // This version is used for the telephone link.
         individualAccount.formattedPhone = removeDashesFromPhone(individualAccount.companyPhone);
+
+        if (accountType === defaultValue.accountUpgrade) {
+
+            // Add 2 slashes to the website if an http or https isn't included.  This makes the link work.
+            individualAccount.companyWebsiteProcessed = addTwoSlashesIfNoPrefix(individualAccount.companyWebsite);
+
+        }
     
-        individualAccount.companyServicesAssembled = companyServicesAssembled;
-        
     }
 
     return accounts;
@@ -199,6 +218,7 @@ exports.createSessionObject = function(projectStatus, redisClient, RedisStore) {
         // maxAge: 24 hours
         maxAge: 24 * 60 * 60 * 1000,
         name: process.env.SESSION_NAME,
+        // Redis uses the touch method so this value should be set to false.  Probably fine for testing with default store too.
         resave: false,
         saveUninitialized: true,
         secret: process.env.SESSION_SECRET,
@@ -210,9 +230,12 @@ exports.createSessionObject = function(projectStatus, redisClient, RedisStore) {
         } 
     }
 
-    // Use default store when testing on Windows.  On Linux remove the comment below to turn on the Redis store.
+    // Use default store when testing on Windows.  On Linux turn on the Redis store.
     if (projectStatus === 'staged' || projectStatus === 'production') {
+
         sessionObject.store = new RedisStore({ client: redisClient });
+        // sessionObject.cookie.secure = true;
+
     }
 
     return sessionObject;
@@ -238,6 +261,16 @@ exports.getGeoLocationAnswerLatLong = function(companyZip, geoLocation) {
     }
 
     return { isZipCodeRealAndInUsa, zipCodeLongAndLat };
+
+}
+
+function addTwoSlashesIfNoPrefix(companyWebsite) {
+
+    let doesCompanyWebsiteStartWithPrefix = companyWebsite.startsWith('http') || companyWebsite.startsWith('https') ? true : false;
+
+    if (doesCompanyWebsiteStartWithPrefix === false) return `//${ companyWebsite }`;
+    
+    return companyWebsite;
 
 }
 

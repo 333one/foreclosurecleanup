@@ -1,0 +1,19 @@
+
+                    <a id="targetLogInOutText" class="header__rowOne__right__text"
+                <% if (loggedIn === true) { %> 
+                    href="my-account">My Account
+                <% } else { %>
+                    href="login">Vendor Log In
+                <% } %>
+                    </a>
+                    <div class="header__rowOne__right__vendorIconContainer">
+                <% if (loggedIn === true) { %>
+                        <a href="my-account">
+                <% } else { %>
+                        <a href="login">
+                <% } %>
+                        <img src="images/vendor-icon-white.svg" alt="my account" id="targetVendorIcon" class="header__rowOne__right__vendorIcon"></a></div>
+                <% if (loggedIn === true) { %> 
+                    <div class="header__rowOne__right__breakLine"></div>
+                    <a href="logout" class="header__rowOne__right__text">Log Out</a>
+                <% } %>

@@ -12,19 +12,19 @@
 </head>
 <body>
 
-    <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
+            <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
 
-                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Log In To Your Account</h3>
+                <h3 class="headlineLarge">Log In To Your Account</h3>
 
-                <p class="textSmall -centerAlign -bottomMarginMedium">Need to register an account? Click <a href="/register" class="tertiaryLink">here</a>.</p>
+                <p class="font1 -centerAlign -marginBottomTwo">Need to register an account? Click <a href="/register" class="tertiaryLink">here</a>.</p>
 
                     <form action="/login" method="POST">
 
-                        <div class="input__unit -bottomMarginMedium"> 
+                        <div class="input__unit -marginBottomTwo"> 
                             <label for="currentEmail" class="input__label">Email Address:</label>
                             <input id="currentEmail" class="input__field
                                 <% if (typeof currentEmailError != "undefined") { %>
-                                    -errorBorder
+                                    -borderError
                                 <% } %>
                                     " name="currentEmail" <%= emailAttributes %> value="<%= userInput.currentEmail %>" autofocus>
                             <% if (typeof currentEmailError != "undefined") { %>
@@ -32,11 +32,11 @@
                             <% } %> 
                         </div>
 
-                        <div class="input__unit -bottomMarginLarge"> 
+                        <div class="input__unit -marginBottomFour"> 
                             <label for="currentPassword" class="input__label">Password:</label>
                             <div class="password__container 
                             <% if (typeof currentPasswordError != "undefined") { %>
-                                -errorBorder
+                                -borderError
                             <% } %>
                             ">
                                 <input id="currentPassword" class="input__passwordField" name="currentPassword" <%= passwordAttributes %> value="<%= userInput.currentPassword %>">
@@ -47,15 +47,15 @@
                             <% } %> 
                         </div>
 
-                        <div class="-bottomMarginLarge">
-                            <button id="narrowScreen__button">Log In</button>
+                        <div class="-marginBottomFour">
+                            <button class="button__narrowScreen -marginBottomTwo">Log In</button>
                         </div>  
 
                     </form> 
 
-                <p class="textMedium -centerAlign -bottomMarginLarge"><a href="/password-reset-request">I forgot my password</a>.</p>
+                <p class="font125 -centerAlign -marginBottomFour"><a href="/password-reset-request">I forgot my password</a>.</p>
 
-    <%- include('includes/narrow-screen-bottom-boilerplate.ejs') %>
+                <%- include('includes/narrow-screen-bottom-boilerplate.ejs') %>
 
 </body>
 </html>

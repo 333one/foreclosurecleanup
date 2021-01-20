@@ -19,18 +19,18 @@ exports.redirectFromUpgrade = wrapAsync(async function(req, res, next) {
     
 });
 
-exports.upgradeExtendPremium = wrapAsync(async function(req, res) {
+exports.upgradePremium = wrapAsync(async function(req, res) {
 
     let defaultProfileName = defaultValue.accountDefault;
     let upgradedProfileName = defaultValue.accountUpgrade;
     let costInDollarsProduct_1 = stripeValue.costInDollarsProduct_1;
 
     // For rendering.
-    let activeLink = 'upgrade-extend-premium';
-    let contactEmail = siteValue.contactEmail;
+    let activeLink = 'upgrade-premium';
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
-    res.render('upgrade-extend-premium', { activeLink, contactEmail, loggedIn, defaultProfileName, upgradedProfileName, costInDollarsProduct_1 });
+    res.render('upgrade-premium', { activeLink, contactEmail, loggedIn, defaultProfileName, upgradedProfileName, costInDollarsProduct_1 });
 
 });
 

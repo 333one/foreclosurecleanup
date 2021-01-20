@@ -23,6 +23,6 @@ exports.productDataName_1 = `Upgrade To A ${ defaultValue.accountUpgrade }`;
 
 exports.productDataUnitAmount_1 = costProduct_1;
 
-exports.successUpgradeMessage = `Your account was upgraded to a ${ defaultValue.accountUpgrade }.`;
-
 exports.successExtendMessage = `Your ${ defaultValue.accountUpgrade } was extended for an additional year.`;
+
+exports.successUpgradeMessage = `Your account was upgraded to a ${ defaultValue.accountUpgrade }.`;

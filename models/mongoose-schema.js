@@ -74,8 +74,7 @@ let accountDataVerifiedUser = {
 let companyCoreProperties = {
     companyCity: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     companyLocation: {
         type: {
@@ -88,49 +87,44 @@ let companyCoreProperties = {
             index: '2dsphere'
         }
     },
-    
     companyName: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     companyPhone: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     companyState: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     companyStreet: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     companyStreetTwo: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     companyZip: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     }
 }
 
 let companyPremiumProperties = {
     companyDescription: {
         type: String,
-        default: '',
-        required: false
+        default: ''
+    },
+    companyLogo: {
+        type: String,
+        default: ''
     },
     companyWebsite: {
         type: String,
-        default: '',
-        required: false
+        default: ''
     },
     shouldBrowserFocusOnURLNotActiveError: {
         type: Boolean,

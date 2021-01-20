@@ -17,25 +17,28 @@
     <script defer src="js/connect/register-character-blocker.js"></script>
 
     <script defer src="js/register-remove-newemail-error.js"></script>
+
+    <!-- <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script defer src="js/connect/google-captcha.js"></script>  -->
 </head>
 <body>
 
     <%- include('includes/narrow-screen-top-boilerplate.ejs') %>
                 
-                <h3 class="headlineLarge -centerAlign -bottomMarginMedium">Register Your Company</h3>
+                <h3 class="headlineLarge">Register Your Company</h3>
 
-                <p class="mediumSmall -bottomMarginSmall">If you own a property preservation company or provide maintenance services for foreclosed properties it is free
+                <p class="font1 -marginBottomOne">If you own a property preservation company or provide maintenance services for foreclosed properties it is free
                     to register your business on the national vendor list. We do not spam vendors and will never sell or give your information to a 3rd party.</p>
 
-                <p class="textSmall -centerAlign -bottomMarginMedium">Already registered? Sign in <a href="/login">here</a>.</p>
+                <p class="font1 -centerAlign -marginBottomTwo">Already registered? Sign in <a href="/login">here</a>.</p>
 
                 <form action="/register" method="POST">
 
-                    <div class="input__unit -bottomMarginMedium"> 
+                    <div class="input__unit -marginBottomTwo"> 
                         <label for="newEmail" class="input__label">Email:</label>
                         <input id="newEmail" class="input__field
                             <% if (typeof newEmailError != "undefined") { %>
-                                -errorBorder
+                                -borderError
                             <% } %>
                             " name="newEmail" <%= emailAttributes %> value="<%= userInput.newEmail %>" autofocus>
                         <% if (typeof newEmailError != "undefined") { %>
@@ -43,11 +46,11 @@
                         <% } %> 
                     </div>
 
-                    <div class="input__unit -bottomMarginMedium"> 
+                    <div class="input__unit -marginBottomTwo"> 
                         <label for="newPassword" class="input__label">Password:</label>
                         <div id="targetNewPasswordContainer" class="password__container 
                             <% if (typeof newPasswordError != "undefined") { %>
-                                -errorBorder
+                                -borderError
                             <% } %>
                             ">
                             <input id="newPassword" class="input__passwordField" name="newPassword" <%= passwordAttributes %> value="<%= userInput.newPassword %>" autocomplete="new-password">
@@ -68,11 +71,11 @@
                         <% } %> 
                     </div>
 
-                    <div class="input__unit -bottomMarginLarge"> 
+                    <div class="input__unit -marginBottomFour"> 
                         <label for="confirmationPassword" class="input__label">Confirm Password:</label>
                         <div id="targetConfirmationPasswordContainer" class="password__container 
                             <% if (typeof confirmationPasswordError != "undefined") { %>
-                                -errorBorder
+                                -borderError
                             <% } %>
                             ">
                             <input id="confirmationPassword" class="input__passwordField" name="confirmationPassword" <%= passwordAttributes %> value="<%= userInput.confirmationPassword %>" autocomplete="new-password">
@@ -87,27 +90,17 @@
 
                     </div>
 
-                    <div class="-bottomMarginLarge">
-                        <div id="privacyTermsBottomErrorContainer" class="checkBox__unit
-                            <% if (typeof privacyPolicyTermsOfServiceError != "undefined") { %>
-                                    -errorBorder
-                            <% } %> 
-                            ">
-                            <input type="checkbox" id="privacyPolicyTermsOfService" name="privacyPolicyTermsOfService" value="isChecked">
-                            <label class="textSmall" for="privacyPolicyTermsOfService">By clicking "Register" I acknowledge that I have read and agree to the <a href="/privacy-policy">Privacy Policy</a> and <a href="/terms-of-service">Terms Of Service</a>.</label>
-                        </div>
-                        <% if (typeof privacyPolicyTermsOfServiceError != "undefined") { %>
-                            <div id="targetPrivacyPolicyTermsOfServiceError" class="input__error"><%= privacyPolicyTermsOfServiceError %></div>
-                        <% } %> 
+                    <div class="-marginBottomFour">
+                        <%- include('includes/privacy-terms.ejs', { buttonTitle : 'Register' }) %>
                     </div>
                     
-                    <div class="-bottomMarginLarge">
-                        <button id="narrowScreen__button">Register</button>
+                    <div class="-marginBottomFour">
+                        <button id="button__submit" class="g-recaptcha button__narrowScreen -marginBottomTwo" data-sitekey="6LexRCcaAAAAAL8e6OIIpU-JvFonCgqorfJGkou7" data-callback='onSubmit' data-action='submit'>Register</button>
                     </div>  
 
                 </form> 
 
-                <p id="narrowScreen_copyright">© Foreclosure Cleanup.org - All Rights Reserved</p>
+                <%- include('includes/copyright.ejs', { size: 'narrow' }) %>
 
             </div>
 

@@ -26,16 +26,16 @@ exports.messageCompanyStreet = 'letters A - Z and numbers 0 - 9';
 exports.companyStreetTwo = /^[A-Z0-9\-\# ]+$/;
 exports.messageCompanyStreetTwo = 'letters A - Z, numbers 0 - 9 or special characters - #';
 
-exports.companyWebsite = /^[A-Z0-9\-\.\_\~\:\/]+$/;
-exports.messageCompanyWebsite = 'letters A - Z, numbers 0 - 9 or special characters - . _ ~ : /';
+exports.companyWebsite = /^[a-z0-9\-\.\_\~\:\/]+$/;
+exports.messageCompanyWebsite = 'lower case letters a - z, numbers 0 - 9 or special characters - . _ ~ : /';
 
 exports.companyZip = /^[0-9]+$/;
 exports.messageCompanyZip = 'numbers 0 - 9';
 
 exports.directoryIndex = /^default\.[a-z]+$/;
 
-exports.email = /^[A-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\.\@]+$/;
-exports.messageEmail = 'letters A - Z, numbers 0 - 9 or special characters ! # $ % & \' * + - / = ? ^ _ ` { | } ~';
+exports.email = /^[a-z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\.\@]+$/;
+exports.messageEmail = 'lower case letters a - z, numbers 0 - 9 or special characters ! # $ % & \' * + - / = ? ^ _ ` { | } ~';
 
 exports.httpProtocol = /^http:\/\//;
 

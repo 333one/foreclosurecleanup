@@ -1,8 +1,5 @@
 const bcrypt = require('bcryptjs');
 
-// const { Client } = require("@googlemaps/google-maps-services-js");
-// const client = new Client({});
-
 const cryptoRandomString = require('crypto-random-string');
 const emailValidator = require('email-validator');
 
@@ -63,7 +60,7 @@ exports.accountDeleted = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'account-deleted';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = false;
     
     res.render('account-deleted', { activeLink, contactEmail, loggedIn });
@@ -91,7 +88,7 @@ exports.accountSuspended = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'account-suspended';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = false;
     
     res.render('account-suspended', { activeLink, contactEmail, loggedIn });
@@ -174,9 +171,11 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
         companyZip
     } = req.session.userValues;
 
+    let companyAddressMyAccountValue = logicDefault.assembleCompanyStreet(companyCity, companyState, companyStreet, companyStreetTwo, companyZip);
+
     // For rendering.
     let activeLink = 'add-change-company-address';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let companyCityAttributes = renderValue.companyCityField.attributes;
     let companyStreetAttributes = renderValue.companyStreetField.attributes;
@@ -189,11 +188,7 @@ exports.addChangeCompanyAddress = wrapAsync(async function(req, res) {
         contactEmail,
         loggedIn,
         addOrChangeProperty,
-        companyCity,
-        companyState,
-        companyStreet,
-        companyStreetTwo,
-        companyZip,
+        companyAddressMyAccountValue,
         companyCityError,
         companyStateError,
         companyStreetError,
@@ -238,7 +233,7 @@ exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'add-change-company-description';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let companyDescription = req.session.userValues.companyDescription;
     let companyDescriptionAttributes = renderValue.companyDescriptionField.attributes;
@@ -284,8 +279,10 @@ exports.addChangeCompanyLogo = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'add-change-company-logo';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
+
+    let companyLogo = 'images/generic-logo.png';
 
     res.render('add-change-company-logo', {
         userInput: inputFields,
@@ -293,6 +290,7 @@ exports.addChangeCompanyLogo = wrapAsync(async function(req, res) {
         contactEmail,
         loggedIn,
         addOrChangeProperty,
+        companyLogo,
         companyLogoError,
         htmlTitle
     });
@@ -326,7 +324,7 @@ exports.addChangeCompanyName = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'add-change-company-name';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let companyName = req.session.userValues.companyName;
     let companyNameAttributes = renderValue.companyNameField.attributes;
@@ -372,7 +370,7 @@ exports.addChangeCompanyPhone = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'add-change-company-phone';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let companyPhone = req.session.userValues.companyPhone;
     let companyPhoneAttributes = renderValue.companyPhoneField.attributes;
@@ -420,7 +418,8 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
 
     } else {
 
-        inputFields = logicDefault.convertBooleanToString(req.session.userValues, defaultValue.listOfCompanyServices);
+        let reqSessionUserValuesDereferenced = JSON.parse(JSON.stringify(req.session.userValues));
+        inputFields = logicDefault.convertBooleanToString(reqSessionUserValuesDereferenced, defaultValue.listOfCompanyServices);
 
     }
 
@@ -429,7 +428,7 @@ exports.addChangeCompanyServices = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'add-change-company-services';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let isAccountUpgraded = companyProfileType === defaultValue.accountUpgrade ? true : false;
 
@@ -498,7 +497,7 @@ exports.addChangeCompanyWebsite = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'add-change-company-website';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let companyWebsiteAttributes = renderValue.companyWebsiteField.attributes;
     let companyWebsite = req.session.userValues.companyWebsite;
@@ -545,7 +544,7 @@ exports.changeEmail = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'change-email';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     let emailAttributes = renderValue.emailField.attributes;
@@ -591,7 +590,7 @@ exports.changePassword = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'change-password';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     let allPasswordsAttributes = renderValue.passwordField.attributes;
@@ -636,7 +635,7 @@ exports.confirmationLimitReached = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'confirmation-limit-reached';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('confirmation-limit-reached', { activeLink, contactEmail, loggedIn, htmlBody });
@@ -694,7 +693,7 @@ exports.confirmationSent = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'confirmation-sent';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('confirmation-sent', {
@@ -726,7 +725,7 @@ exports.deleteYourAccount = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'delete-your-account';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let passwordAttributes = renderValue.passwordField.attributes;
 
@@ -764,7 +763,7 @@ exports.login = wrapAsync( async function(req, res) {
 
     // For rendering.
     let activeLink = 'login';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let emailAttributes  = renderValue.emailField.attributes;
     let passwordAttributes = renderValue.passwordField.attributes;
@@ -797,7 +796,7 @@ exports.loginFailureLimitReached = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'login-failure-limit-reached';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = false;
 
     let expirationTime = timeValue.getExpirationTime(timeValue.loginFailureExpiration);
@@ -951,7 +950,7 @@ exports.myAccount = wrapAsync(async function(req, res) {
         var numberOfDaysUntilExpiration = logicUserAccounts.getNumberOfDaysUntilExpiration(expirationDate);
         var isUpgradeExpirationSoon = checks.checkIfUpgradeExpirationSoon(numberOfDaysUntilExpiration);
         var numberOfDaysUntilExpirationFragment = isUpgradeExpirationSoon === true ? timeValue.getNumberOfDaysUntilExpirationFragment(numberOfDaysUntilExpiration) : undefined;
-        var arePremiumAccountExtendsAvailable = numberOfDaysUntilExpiration < timeValue.premiumAccountExtendsCutoff ? true : false;
+        var areAccountUpgradesExtendsAvailable = numberOfDaysUntilExpiration < timeValue.upgradeAccountExtendsCutoff ? true : false;
         var premiumExpirationDate = logicUserAccounts.getPremiumExpirationDateString(expirationDate);
 
     }
@@ -1000,25 +999,18 @@ exports.myAccount = wrapAsync(async function(req, res) {
     let companyPhoneMyAccountValue = companyPhone ? companyPhone : defaultMessage.myAccountInformationEmpty;
     let companyWebsiteMyAccountValue = companyWebsite ? companyWebsite : defaultMessage.myAccountInformationEmpty;
 
+    if (companyCity && companyState && companyStreet && companyZip) {
 
-    // If Company City exists in req.session.userValues all address fields exist.
-    if (companyCity) {
-
-        var companyCityMyAccountValue = companyCity;
-        var companyStateMyAccountValue = companyState;
-        var companyStreetMyAccountValue = companyStreet;
-        var companyZipMyAccountValue = companyZip;
-
-        if (companyStreetTwo) var companyStreetTwoMyAccountValue = companyStreetTwo;
+        var companyAddressMyAccountValue = logicDefault.assembleCompanyStreet(companyCity, companyState, companyStreet, companyStreetTwo, companyZip);
 
     } else {
 
-        companyStreetMyAccountValue = defaultMessage.myAccountInformationEmpty;
+        companyAddressMyAccountValue = defaultMessage.myAccountInformationEmpty;
 
     }
 
     // Check to see if properties were added.  During rendering, typeof === string check won't work because all accountValues store a string even if it is empty ''.
-    let isCompanyAddressAdded = companyStreetMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
+    let isCompanyAddressAdded = companyAddressMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyDescriptionAdded = companyDescriptionMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyNameAdded = companyNameMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyPhoneAdded = companyPhoneMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
@@ -1045,26 +1037,22 @@ exports.myAccount = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'my-account';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = true;
 
     res.render('my-account', {
         activeLink,
         contactEmail,
         loggedIn,
-        arePremiumAccountExtendsAvailable,
-        companyCityMyAccountValue,
+        areAccountUpgradesExtendsAvailable,
+        companyAddressMyAccountValue,
         companyDescriptionMyAccountValue,
         companyNameMyAccountValue,
         companyPhoneMyAccountValue,
         companyProfileType,
         companyPropertiesUnfilled,
         companyServicesMyAccountValue,
-        companyStateMyAccountValue,
-        companyStreetMyAccountValue,
-        companyStreetTwoMyAccountValue,
         companyWebsiteMyAccountValue,
-        companyZipMyAccountValue,
         contactEmail,
         costInDollarsProduct_1: stripeValue.costInDollarsProduct_1,
         email,
@@ -1100,7 +1088,7 @@ exports.pageNotFound = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'page-not-found';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.status(404).render('page-not-found', { activeLink, contactEmail, loggedIn });
@@ -1135,7 +1123,7 @@ exports.passwordReset = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'password-reset';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let passwordAttributes = renderValue.passwordField.attributes;
 
@@ -1172,7 +1160,7 @@ exports.passwordResetRequest = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'password-reset-request';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let emailAttributes = renderValue.emailField.attributes;
 
@@ -1201,7 +1189,7 @@ exports.passwordResetRequestSent = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'password-reset-request-sent';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     
     res.render('password-reset-request-sent', {
@@ -1230,7 +1218,7 @@ exports.passwordResetLimitReached = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'password-reset-limit-reached';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     let emailSubject = emailMessage.passwordResetRequestEmailSubject();
     let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
@@ -1257,7 +1245,7 @@ exports.passwordResetSuccess = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'password-reset-success';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('password-reset-success', { activeLink, contactEmail, loggedIn });
@@ -1273,10 +1261,14 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
 
     let changeProperty = 'email';
 
-    let isChangedEmailFilled = changedEmail === '' ? false : true;
+    // lowercase all email addresses
+    let changedEmailLowercase = changedEmail.toLowerCase();
+    let confirmationEmailLowercase = confirmationEmail.toLowerCase();
+
+    let isChangedEmailFilled = changedEmailLowercase === '' ? false : true;
 
     // Check for a change.  If nothing changed redirect to MyAccount.
-    let isEmailUnchanged = email === changedEmail ? true : false;
+    let isEmailUnchanged = email === changedEmailLowercase ? true : false;
     if (isChangedEmailFilled === true && isEmailUnchanged === true) {
 
         req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
@@ -1284,14 +1276,14 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
 
     }
 
-    let isChangedEmailInsideMaxLength = changedEmail.length <= renderValue.emailField.maxLength ? true : false;  
-    let regExpChangedEmail = new RegExp(regExpValue.email, 'i');
-    let isChangedEmailValidCharacters = regExpChangedEmail.test(changedEmail);
-    let isChangedEmailValid = emailValidator.validate(changedEmail);
-    let isChangedEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: changedEmail }));
-    let isChangedEmailAvailableInUsers = !(await User.exists({ email: changedEmail }));
+    let isChangedEmailInsideMaxLength = changedEmailLowercase.length <= renderValue.emailField.maxLength ? true : false;  
+    let regExpChangedEmail = new RegExp(regExpValue.email);
+    let isChangedEmailValidCharacters = regExpChangedEmail.test(changedEmailLowercase);
+    let isChangedEmailValid = emailValidator.validate(changedEmailLowercase);
+    let isChangedEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: changedEmailLowercase }));
+    let isChangedEmailAvailableInUsers = !(await User.exists({ email: changedEmailLowercase }));
 
-    // If changedEmail has any errors clear out confirmationEmail which will trigger an error for confirmationEmail as well.
+    // If changedEmail has any errors clear out changedEmail and confirmationEmail.
     if (
         isChangedEmailFilled === false ||
         isChangedEmailInsideMaxLength === false ||
@@ -1301,20 +1293,18 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
         isChangedEmailAvailableInUsers === false
         ) {
 
-        confirmationEmail = '';
+        cleanedForm.changedEmail = '';
+        confirmationEmailLowercase = '';
         cleanedForm.confirmationEmail = '';
 
     }
 
-    let isConfirmationEmailFilled = confirmationEmail === '' ? false : true;
-    let doEmailsMatch = changedEmail === confirmationEmail ? true : false; 
+    let isConfirmationEmailFilled = confirmationEmailLowercase === '' ? false : true;
+    let doEmailsMatch = changedEmailLowercase === confirmationEmailLowercase ? true : false; 
 
     // If confirmationEmail has any errors clear it out.  
-    if (isConfirmationEmailFilled === false || confirmationEmail === false) {
-
-        confirmationEmail = '';
+    if (isConfirmationEmailFilled === false || doEmailsMatch === false) {
         cleanedForm.confirmationEmail = '';
-
     }
 
     let isCurrentPasswordFilled = currentPassword === '' ? false : true;
@@ -1322,10 +1312,7 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
 
     // If currentPassword has any errors clear it out.
     if(isCurrentPasswordFilled === false || isCurrentPasswordCorrect === false) {
-
-        currentPassword = '';
         cleanedForm.currentPassword = '';
-
     }
     
     if (
@@ -1341,16 +1328,16 @@ exports.postChangeEmail = wrapAsync(async function(req, res) {
         isCurrentPasswordCorrect === true
     ) {
 
-        await User.updateOne({ email }, { email: changedEmail });
+        await User.updateOne({ email }, { email: changedEmailLowercase });
 
         let changeProperty = 'email';
         let changeVerb = defaultMessage.companyPropertyChangeVerb.update;
         req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
-        req.session.userValues.email = changedEmail;
+        req.session.userValues.email = changedEmailLowercase;
 
         // Notify the user of the change.
         let emailSubject = emailMessage.emailChangedSubject();
-        let emailBody = emailMessage.emailChangedBody(email, changedEmail);
+        let emailBody = emailMessage.emailChangedBody(email, changedEmailLowercase);
         communication.sendEmail(siteValue.noReplyEmail, email, emailSubject, emailBody);
 
         return res.redirect('/my-account');
@@ -1506,6 +1493,11 @@ exports.postChangePassword = wrapAsync(async function(req, res) {
 
 exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
 
+    // Before the form is sanitized req.body.state must be added if the user forgot to select a value.  Otherwise the whole form is deemed to be fake because it didn't include all properties.  All potentially fake form submissions are cleared out during sanitization.
+    if (!req.body.companyState) {
+        req.body.companyState = '';
+    }
+
     // Sanitize and process input.
     let cleanedForm = submissionProcessing.cleanForm(formFields.addChangeCompanyAddress, req.body);
     let {
@@ -1563,7 +1555,7 @@ exports.postAddChangeCompanyAddress = wrapAsync(async function(req, res) {
 
     // Eliminate ALL CAPS and Capitalize the input.  This needs to be done before values are compared.
     // Since only the first letter of each word is capitalized this will screw up words like McAlister.
-    // In those rare cases that can be fixed if the user selects the USPS formatted address.
+    // In those rare cases that will be fixed when the user selects the USPS formatted address.
     let capitalizeEveryWordPattern = new RegExp(regExpValue.capitalizeEveryWord, 'g');
 
     if (isCompanyStreetFilled === true) {
@@ -2307,6 +2299,9 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
     let { companyWebsite, deleteProperty } = cleanedForm;
     let { email } = req.session.userValues;
 
+    // lowercase all company websites
+    let companyWebsiteLowercase = companyWebsite.toLowerCase();
+
     let changeProperty = 'website'
     let changeVerb;
 
@@ -2326,8 +2321,8 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
     }
 
     // If nothing changed redirect to my-account.
-    let isCompanyWebsiteFilled = companyWebsite === '' ? false : true;
-    let isCompanyWebsiteUnchanged = companyWebsite === req.session.userValues.companyWebsite ? true : false;
+    let isCompanyWebsiteFilled = companyWebsiteLowercase === '' ? false : true;
+    let isCompanyWebsiteUnchanged = companyWebsiteLowercase === req.session.userValues.companyWebsite ? true : false;
     if (isCompanyWebsiteFilled === true &&
         isCompanyWebsiteUnchanged === true 
         ) {
@@ -2337,13 +2332,13 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
 
     }
 
-    let regExpCompanyWebsite = new RegExp(regExpValue.companyWebsite, 'i');
-    let isCompanyWebsiteValidCharacters = regExpCompanyWebsite.test(companyWebsite);
+    let regExpCompanyWebsite = new RegExp(regExpValue.companyWebsiteLowercase);
+    let isCompanyWebsiteValidCharacters = regExpCompanyWebsite.test(companyWebsiteLowercase);
 
-    let isCompanyWebsiteValid = validator.isURL(companyWebsite);
+    let isCompanyWebsiteValid = validator.isURL(companyWebsiteLowercase);
 
-    let isCompanyWebsiteInsideMinLength = companyWebsite.length >= renderValue.companyWebsiteField.minLength ? true : false;
-    let isCompanyWebsiteInsideMaxLength = companyWebsite.length <= renderValue.companyWebsiteField.maxLength ? true : false;
+    let isCompanyWebsiteInsideMinLength = companyWebsiteLowercase.length >= renderValue.companyWebsiteField.minLength ? true : false;
+    let isCompanyWebsiteInsideMaxLength = companyWebsiteLowercase.length <= renderValue.companyWebsiteField.maxLength ? true : false;
 
     if (
         isCompanyWebsiteFilled === true &&
@@ -2353,7 +2348,7 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function(req, res) {
         isCompanyWebsiteInsideMaxLength === true
     ) {
 
-        let formattedURL = logicUserAccounts.formatURL(companyWebsite);
+        let formattedURL = logicUserAccounts.formatURL(companyWebsiteLowercase);
 
         // A new or changed website save clears out any errors in the DB.  Any new errors will have to be created in testFormattedURLAndSave.
         await User.updateOne({ email }, { companyWebsite: formattedURL, urlNotActiveError: false, shouldBrowserFocusOnURLNotActiveError: false });
@@ -2446,20 +2441,23 @@ exports.postLogin = wrapAsync(async function(req, res) {
     let cleanedForm = submissionProcessing.cleanForm(formFields.login, req.body);
     let { currentEmail, currentPassword } = cleanedForm;
 
-    let loginFailure = await LoginFailure.findOne({ email: currentEmail }).select({ numberOfFailures: 1 }).lean();
+    // lowercase all email addresses
+    let currentEmailLowercase = currentEmail.toLowerCase();
+
+    let loginFailure = await LoginFailure.findOne({ email: currentEmailLowercase }).select({ numberOfFailures: 1 }).lean();
     if (loginFailure) {
 
         let { numberOfFailures } = loginFailure;
-        if (numberOfFailures > defaultValue.numberOfLoginFailuresAllowed) return res.redirect(`/login-failure-limit-reached?email=${ currentEmail }`); 
+        if (numberOfFailures > defaultValue.numberOfLoginFailuresAllowed) return res.redirect(`/login-failure-limit-reached?email=${ currentEmailLowercase }`); 
 
     }
     
-    let isCurrentEmailFilled = currentEmail === '' ? false : true;
-    let isCurrentEmailValid = emailValidator.validate(currentEmail);
+    let isCurrentEmailFilled = currentEmailLowercase === '' ? false : true;
+    let isCurrentEmailValid = emailValidator.validate(currentEmailLowercase);
 
     // Without stringify userValues comes out as a model which in at least one instance created weird behavior.
     // Because of expiration date and timeZone plugin using .lean() will require significant refactor.
-    let unprocessedUserValues = await User.findOne({ email: currentEmail });
+    let unprocessedUserValues = await User.findOne({ email: currentEmailLowercase });
     let userValues = JSON.parse(JSON.stringify(unprocessedUserValues));
 
     let doesUserExist = userValues === null ? false : true;
@@ -2468,7 +2466,7 @@ exports.postLogin = wrapAsync(async function(req, res) {
     if (userValues) {
 
         let { accountSuspended } = userValues;
-        if (accountSuspended === true) return res.redirect(`/account-suspended?email=${ currentEmail }`);
+        if (accountSuspended === true) return res.redirect(`/account-suspended?email=${ currentEmailLowercase }`);
 
     }
 
@@ -2494,7 +2492,7 @@ exports.postLogin = wrapAsync(async function(req, res) {
 
         if (!loginFailure) {
 
-            loginFailure = mongooseLogic.createLoginFailure(currentEmail);
+            loginFailure = mongooseLogic.createLoginFailure(currentEmailLowercase);
             await loginFailure.save();
 
         } else {
@@ -2505,11 +2503,11 @@ exports.postLogin = wrapAsync(async function(req, res) {
             if (numberOfFailures > defaultValue.numberOfLoginFailuresAllowed) {
 
                 // If locked out set numberOfFailures to max + 1
-                await LoginFailure.updateOne({ email: currentEmail }, { numberOfFailures: defaultValue.numberOfLoginFailuresAllowed + 1 });
-                return res.redirect(`/login-failure-limit-reached?email=${ currentEmail }`);
+                await LoginFailure.updateOne({ email: currentEmailLowercase }, { numberOfFailures: defaultValue.numberOfLoginFailuresAllowed + 1 });
+                return res.redirect(`/login-failure-limit-reached?email=${ currentEmailLowercase }`);
 
             } else {
-                await LoginFailure.updateOne({ email: currentEmail }, { numberOfFailures });
+                await LoginFailure.updateOne({ email: currentEmailLowercase }, { numberOfFailures });
             }
 
         }
@@ -2522,7 +2520,7 @@ exports.postLogin = wrapAsync(async function(req, res) {
         ) {    
 
         // Check for and remove any login failures in the db.
-        await LoginFailure.findOneAndDelete({ email: currentEmail });
+        await LoginFailure.findOneAndDelete({ email: currentEmailLowercase });
 
         req.session.userValues = userValues;
 
@@ -2619,8 +2617,11 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
     let cleanedForm = submissionProcessing.cleanForm(formFields.passwordResetRequest, req.body);
     let { currentEmail } = cleanedForm;
 
-    let isCurrentEmailFilled = currentEmail === '' ? false : true;
-    let isCurrentEmailValid = emailValidator.validate(currentEmail);
+    // lower case all email addresses
+    let currentEmailLowercase = currentEmail.toLowerCase();
+
+    let isCurrentEmailFilled = currentEmailLowercase === '' ? false : true;
+    let isCurrentEmailValid = emailValidator.validate(currentEmailLowercase);
 
     // These checks don't test to see if the email corresponds to an actual user.
     // If the email passes the checks and no user exists send the client to passwordResetRequestSent anyway.
@@ -2639,32 +2640,32 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
     } 
 
     // If client attempts to reset password of an unverified account make him verify first.
-    let unverifiedUser = await UnverifiedUser.findOne({ email: currentEmail }).select({ numberOfConfirmations: 1 }).lean();
+    let unverifiedUser = await UnverifiedUser.findOne({ email: currentEmailLowercase }).select({ numberOfConfirmations: 1 }).lean();
     if (unverifiedUser) {
 
         let { numberOfConfirmations } = unverifiedUser;
         if (numberOfConfirmations > defaultValue.numberOfEmailConfirmationsAllowed) {
 
-            return res.redirect(`/confirmation-limit-reached?email=${ currentEmail }&resetattempt=true`);
+            return res.redirect(`/confirmation-limit-reached?email=${ currentEmailLowercase }&resetattempt=true`);
 
         } else {
 
-            return res.redirect(`/confirmation-sent?email=${ currentEmail }&resetattempt=true`);
+            return res.redirect(`/confirmation-sent?email=${ currentEmailLowercase }&resetattempt=true`);
 
         }  
 
     }
 
     // Before a password reset request is created make sure the user isn't locked out of their account.
-    let userValues = await User.findOne({ email: currentEmail }).select({ accountSuspended: 1 }).lean();
+    let userValues = await User.findOne({ email: currentEmailLowercase }).select({ accountSuspended: 1 }).lean();
     if (userValues) {
 
         let { accountSuspended } = userValues;
-        if (accountSuspended === true) return res.redirect(`/account-suspended?email=${ currentEmail }`);
+        if (accountSuspended === true) return res.redirect(`/account-suspended?email=${ currentEmailLowercase }`);
 
     }
 
-    let passwordResetRequest = await PasswordResetRequest.findOne({ email: currentEmail }).select({ confirmationHash: 1, numberOfRequests: 1 }).lean();
+    let passwordResetRequest = await PasswordResetRequest.findOne({ email: currentEmailLowercase }).select({ confirmationHash: 1, numberOfRequests: 1 }).lean();
 
     let confirmationHash, numberOfRequests;
     if (passwordResetRequest) {
@@ -2675,20 +2676,20 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
         if (numberOfRequests > defaultValue.numberOfPasswordResetRequestsAllowed) {
 
             numberOfRequests = defaultValue.numberOfPasswordResetRequestsAllowed + 1;
-            await PasswordResetRequest.updateOne({ email: currentEmail }, { numberOfRequests });
-            return res.redirect(`/password-reset-limit-reached?email=${ currentEmail }`);
+            await PasswordResetRequest.updateOne({ email: currentEmailLowercase }, { numberOfRequests });
+            return res.redirect(`/password-reset-limit-reached?email=${ currentEmailLowercase }`);
 
         } else {
 
-            await PasswordResetRequest.updateOne({ email: currentEmail }, { numberOfRequests });
+            await PasswordResetRequest.updateOne({ email: currentEmailLowercase }, { numberOfRequests });
 
         }
 
     } else {
 
-        confirmationHash = logicUserAccounts.createRandomHash(currentEmail);
-        let successHash = logicUserAccounts.createRandomHash(currentEmail);
-        passwordResetRequest = await mongooseLogic.createPasswordResetRequest(currentEmail, confirmationHash, successHash);
+        confirmationHash = logicUserAccounts.createRandomHash(currentEmailLowercase);
+        let successHash = logicUserAccounts.createRandomHash(currentEmailLowercase);
+        passwordResetRequest = await mongooseLogic.createPasswordResetRequest(currentEmailLowercase, confirmationHash, successHash);
         numberOfRequests = passwordResetRequest.numberOfRequests;
         await passwordResetRequest.save();
 
@@ -2699,11 +2700,11 @@ exports.postPasswordResetRequest = wrapAsync(async function(req, res) {
         let emailSubject = emailMessage.passwordResetRequestEmailSubject();
         let expirationTime = timeValue.getExpirationTime(timeValue.passwordResetRequestExpiration);
         let emailBody = emailMessage.passwordResetRequestEmailBody(confirmationHash, expirationTime);
-        communication.sendEmail(siteValue.noReplyEmail, currentEmail, emailSubject, emailBody);
+        communication.sendEmail(siteValue.noReplyEmail, currentEmailLowercase, emailSubject, emailBody);
 
     }
 
-    return res.redirect(`/password-reset-request-sent?email=${ currentEmail }`);
+    return res.redirect(`/password-reset-request-sent?email=${ currentEmailLowercase }`);
 
 });
 
@@ -2712,19 +2713,22 @@ exports.postRegister = wrapAsync(async function(req, res) {
     // Sanitize and process input.
 
     // Add the checkbox if it wasn't checked and then process it.
-    if (!req.body.privacyPolicyTermsOfService || req.body.privacyPolicyTermsOfService !== 'isChecked') req.body.privacyPolicyTermsOfService = 'notChecked';
-    let privacyPolicyTermsOfService = submissionProcessing.convertCheckboxToBoolean(req.body.privacyPolicyTermsOfService);
+    if (!req.body.privacyTerms || req.body.privacyTerms !== 'isChecked') req.body.privacyTerms = 'notChecked';
+    let privacyPolicyTermsOfService = submissionProcessing.convertCheckboxToBoolean(req.body.privacyTerms);
 
     let cleanedForm = submissionProcessing.cleanForm(formFields.register, req.body);
     let { newEmail, newPassword, confirmationPassword } = cleanedForm;
 
-    let isNewEmailFilled = newEmail ? true : false;
-    let isNewEmailInsideMaxLength = newEmail.length <= renderValue.emailField.maxLength ? true : false;
-    let regExpEmail = new RegExp(regExpValue.email, 'i');
-    let isNewEmailValidCharacters = regExpEmail.test(newEmail);
-    let isNewEmailValid = emailValidator.validate(newEmail);
-    let isNewEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: newEmail }));
-    let isNewEmailAvailableInUsers = !(await User.exists({ email: newEmail }));
+    // lower case all email addresses
+    let newEmailLowercase = newEmail.toLowerCase();
+
+    let isNewEmailFilled = newEmailLowercase ? true : false;
+    let isNewEmailInsideMaxLength = newEmailLowercase.length <= renderValue.emailField.maxLength ? true : false;
+    let regExpEmail = new RegExp(regExpValue.email);
+    let isNewEmailValidCharacters = regExpEmail.test(newEmailLowercase);
+    let isNewEmailValid = emailValidator.validate(newEmailLowercase);
+    let isNewEmailAvailableInUnverifiedUsers = !(await UnverifiedUser.exists({ email: newEmailLowercase }));
+    let isNewEmailAvailableInUsers = !(await User.exists({ email: newEmailLowercase }));
 
     let isNewPasswordFilled = newPassword === '' ? false : true;
     let isNewPasswordInsideMaxLength = newPassword.length <= renderValue.passwordField.maxLength ? true : false; 
@@ -2800,39 +2804,39 @@ exports.postRegister = wrapAsync(async function(req, res) {
         // If an unverified user already exists save over it with new values but update the confirmation counter so that a hacker can't blast the server with same email an unlimited number of times.
         if (isNewEmailAvailableInUnverifiedUsers === false) {
 
-            let unverifiedUser = await UnverifiedUser.findOne({ email: newEmail }).select({ numberOfConfirmations: 1 }).lean();
+            let unverifiedUser = await UnverifiedUser.findOne({ email: newEmailLowercase }).select({ numberOfConfirmations: 1 }).lean();
 
             let { numberOfConfirmations } = unverifiedUser;
             if (numberOfConfirmations > defaultValue.numberOfEmailConfirmationsAllowed) {
-                return res.redirect(`/confirmation-limit-reached?email=${ newEmail }`);
+                return res.redirect(`/confirmation-limit-reached?email=${ newEmailLowercase }`);
             }
 
             let hashedPassword = await logicUserAccounts.hashPassword(newPassword);
-            await UnverifiedUser.updateOne({ email: newEmail }, { password: hashedPassword });
+            await UnverifiedUser.updateOne({ email: newEmailLowercase }, { password: hashedPassword });
             unverifiedMultipleRegisters = '&unverifiedmultipleregisters=true';
 
         } else {
 
             // If for some reason there is anything in the DB delete it.  It is no longer needed.
             await Promise.all([
-                LoginFailure.findOneAndDelete({ email: newEmail }),
-                PasswordResetRequest.findOneAndDelete({ email: newEmail }),
-                RecentDeletedAccount.findOneAndDelete({ email: newEmail }),
-                StripeCheckoutSession.findOneAndDelete({ email: newEmail }),
-                UnverifiedUser.findOneAndDelete({ email: newEmail }),
-                User.findOneAndDelete({ email: newEmail })
+                LoginFailure.findOneAndDelete({ email: newEmailLowercase }),
+                PasswordResetRequest.findOneAndDelete({ email: newEmailLowercase }),
+                RecentDeletedAccount.findOneAndDelete({ email: newEmailLowercase }),
+                StripeCheckoutSession.findOneAndDelete({ email: newEmailLowercase }),
+                UnverifiedUser.findOneAndDelete({ email: newEmailLowercase }),
+                User.findOneAndDelete({ email: newEmailLowercase })
             ]);
 
-            let unverifiedUser = mongooseLogic.createUnverifiedUser(newEmail);
+            let unverifiedUser = mongooseLogic.createUnverifiedUser(newEmailLowercase);
             let salt = cryptoRandomString({ length: 10 });
-            unverifiedUser.confirmationHash = objectHash(newEmail + salt);
+            unverifiedUser.confirmationHash = objectHash(newEmailLowercase + salt);
             unverifiedUser.password = await logicUserAccounts.hashPassword(newPassword);
             await unverifiedUser.save();
             newRegister = '&newregister=true';
 
         }
 
-        return res.redirect(`/confirmation-sent?email=${ newEmail }${ newRegister }${ unverifiedMultipleRegisters }`);
+        return res.redirect(`/confirmation-sent?email=${ newEmailLowercase }${ newRegister }${ unverifiedMultipleRegisters }`);
 
     } else {
 
@@ -2852,14 +2856,14 @@ exports.postRegister = wrapAsync(async function(req, res) {
             doesNewPasswordMeetRequirements
             );
         let confirmationPasswordError = errorMessage.getNewConfirmationPasswordError(isConfirmationPasswordFilled, doPasswordsMatch);
-        let privacyPolicyTermsOfServiceError = errorMessage.getPrivacyTermsError(isPrivacyPolicyTermsOfServiceChecked);
+        let privacyTermsError = errorMessage.getPrivacyTermsError(isPrivacyPolicyTermsOfServiceChecked);
 
         req.session.transfer = {};
         req.session.transfer.cleanedForm = cleanedForm;
         req.session.transfer.newEmailError = newEmailError;
         req.session.transfer.newPasswordError = newPasswordError;
         req.session.transfer.confirmationPasswordError = confirmationPasswordError;
-        req.session.transfer.privacyPolicyTermsOfServiceError = privacyPolicyTermsOfServiceError;
+        req.session.transfer.privacyTermsError = privacyTermsError;
 
         return res.redirect('/register');
     }
@@ -2901,7 +2905,7 @@ exports.register = wrapAsync(async function(req, res) {
             newEmailError,
             newPasswordError,
             confirmationPasswordError,
-            privacyPolicyTermsOfServiceError
+            privacyTermsError
         } = req.session.transfer;
 
         // Set object to previous form input.
@@ -2918,7 +2922,7 @@ exports.register = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'register';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     let emailAttributes = renderValue.emailField.attributes;
@@ -2934,7 +2938,7 @@ exports.register = wrapAsync(async function(req, res) {
         newEmailError,
         newPasswordError,
         confirmationPasswordError,
-        privacyPolicyTermsOfServiceError
+        privacyTermsError
     });
 
 });
@@ -2965,7 +2969,7 @@ exports.verified = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'verified';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('verified', { activeLink, contactEmail, loggedIn });

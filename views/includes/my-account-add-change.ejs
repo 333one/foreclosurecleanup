@@ -1,0 +1,31 @@
+            <div class="myAccount__flexUnit">
+                <div>
+                    <p class="myAccount__subHeadline 
+                    <% if (isUpgradeProperty === true) { %>
+                        myAccount__subHeadlineUpgrade
+                    <% } else { %>
+                        myAccount__subHeadline                       
+                        <% if (isKeyAdded === false) { %>
+                            -orangeColor
+                        <% } %>
+                    <% } %>
+                    "><%= unitKey %>:</p>
+                    <p class="
+                    <% if (isUpgradeProperty === true) { %>
+                        myAccount__bodyTextLargeFlexUpgrade
+                    <% } else { %>
+                        <% if (unitKey === 'Password') { %>
+                            myAccount__bodyTextSmallFlex
+                        <% } else { %>
+                            myAccount__bodyTextLargeFlex
+                        <% } %>                        
+                    <% } %>
+                    ">
+                    <% if (unitKey === 'Company Address' || unitKey === 'Services Offered') { %>
+                        <%- unitValue %></p>
+                    <% } else { %>
+                        <%= unitValue %></p>
+                    <% } %>
+                </div>
+                <%- include('my-account-add-change-button.ejs', { link, isKeyAdded, isUpgradeProperty }); %>
+            </div>

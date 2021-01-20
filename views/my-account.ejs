@@ -15,7 +15,7 @@
         <script defer src="js/start-at-url-not-active-message.js"></script>
     <% } %>
 
-    <% if (arePremiumAccountExtendsAvailable === true) { %>
+    <% if (areAccountUpgradesExtendsAvailable === true) { %>
         <script defer src="https://js.stripe.com/v3/"></script>
         <script defer src="js/checkout.js"></script>
     <% } %>
@@ -24,24 +24,19 @@
 <body>
     
     <% if (typeof failMessage === 'string' || typeof noChangeMessage === 'string' || typeof successMessage === 'string') { %>
-        <script>
-            window.addEventListener('DOMContentLoaded', function() {
-                document.getElementById('messageContainer').style.display = 'flex';
-            });
-        </script>
-        <div id="messageContainer"
+        <div id="messageContainer" class="
             <% if (typeof successMessage === 'string') { %> 
-                class="successBar"
+                myAccount__successBar
             <% } else if (typeof noChangeMessage === 'string') { %>
-                class="noChangeBar"
+                myAccount__noChangeBar
             <% } else { %>
-                class="cancelBar"
+                myAccount__cancelBar
             <% } %>
-        >
+        ">
             <%# This empty div is used for centering %>
-            <div class="xClose"></div>
-            <div class="-standardWidthVanish">
-                <p class="textLarge -centerAlign">
+            <div class="myAccount__xClose"></div>
+            <div class="myAccount__barInternal">
+                <p class="font15 -centerAlign">
                     <% if (typeof successMessage === 'string') { %> 
                         <%- successMessage %>
                     <% } else if (typeof noChangeMessage === 'string') { %>
@@ -51,268 +46,182 @@
                     <% } %>
                 </p>
             </div>
-            <div id="xButtonContainer" class="xClose"></div>
+            <div id="xButtonContainer" class="myAccount__xClose"></div>
         </div>
     <% } %>    
 
-    <%- include('includes/dashboard-header.ejs') %>
+    <%- include('includes/my-account-header.ejs') %>
 
-    <main>
-        
-        <div class="-standardWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+    <main class="mainContainer__standard">
 
-            <p class="dashboard__headline">My Account</p>
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Profile Type:</p>
-                    <p class="textLarge -bottomMarginMedium -rightLeftMarginMedium"><%= companyProfileType %></p>
-                <% if (isAccountUpgraded === false) { %>
-                    <p class="textSmall -bottomMarginTiny -rightLeftMarginMedium">
-                        <a href="upgrade-extend-premium"><%= upgradeCheckItOut %></a>
-                    </p>
-                    <p class="textSmall -bottomMarginMedium -rightLeftMarginMedium"><%= upgradeSalesPitch %></p>
-                <% } else if (isAccountUpgraded === true) { %>
+        <div class="internalContainer__standard">
 
-                    <% if (isUpgradeExpirationSoon === true) { %>
-                    <p class="textLarge -errorColor -topMarginMedium -rightLeftMarginMedium -bottomMarginMedium">Your <%= companyProfileType %> will expire <%= numberOfDaysUntilExpirationFragment %></span>.</p>
-                    <% } %>
-                    
-                <% if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === true) { %>
-                    <div class="-rightLeftMarginMedium -topMarginMedium -bottomMarginMedium">
-                        <button id="checkout-button" class="button_fauxLinkSmall">Renew your <%= companyProfileType %> </button>
-                        <p class="textSmall -inlineBlock">for another 12 months for just <%= costInDollarsProduct_1 %>.</p>
-                    </div>
-                <% } else if (arePremiumAccountExtendsAvailable === true && isUpgradeExpirationSoon === false) { %>
-                    <div class="-rightLeftMarginMedium -topMarginMedium -bottomMarginMedium">
-                        <button id="checkout-button" class="button_fauxLinkSmall">Extend your <%= companyProfileType %> </button>
-                        <p class="textSmall -inlineBlock">for an additional 12 months for just <%= costInDollarsProduct_1 %>.</p>
-                    </div>
-                <% } else { %>
-                    <p class="textSmall -rightLeftMarginMedium -greenColor -topBottomMarginMedium">Great! Your <%= companyProfileType %> account duration is maxed out at 2 years or more. No renewals or extensions are available or needed at this time.</p>
-                <% } %>
-
-                    <p class="dashboard__key -rightLeftMarginMedium"><%= companyProfileType %> Active Until:</p>
-                    <p class="textLarge -rightLeftMarginMedium -bottomMarginMedium"><%= premiumExpirationDate %></p>
-                    
-                <% } %>
-                    <p class="dashboard__key -rightLeftMarginMedium">Member Since:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= memberSince %></p>
-                </div>
+            <div class="heading__container">
+                <p class="heading__headline">My Account</p>
             </div>
 
-            <div class="dashboard__unit -bottomBorder -bottomMarginHuge">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Vendor List Status:</p>
-                    <% if (isAccountLive === true) { %>
-                        <p class="textLarge -rightLeftMarginMedium -liveText">Your Company Profile Is Live.</p>
-                    <% } else { %>
-                        <p class="textLarge -rightLeftMarginMedium -bottomMarginSmall -inactiveText">Your Company Profile Is Not Live.</p>
-                        <p class="textSmall -rightLeftMarginMedium">Please add your company's <%- companyPropertiesUnfilled %> to make your company profile live.</p>
-                    <% } %>
-                </div>
-            </div>
-
-            <p <% if (isAccountUpgraded === false) { %>
-                class="dashboard__headline"
+            <div class="myAccount__defaultUnit">
+                <p class="myAccount__subHeadline">Company Profile Type:</p>
+                <p class="myAccount__bodyTextLarge -greenColor -bold -marginBottomHalf"><%= companyProfileType %></p>
+            <% if (isAccountUpgraded === false) { %>
+                <p class="myAccount__bodyTextSmall">
+                    <a href="upgrade-premium"><%= upgradeCheckItOut %></a>
+                </p>
+                <p class="myAccount__bodyTextSmall -marginBottomTwo"><%= upgradeSalesPitch %></p>
             <% } else if (isAccountUpgraded === true) { %>
-                class="dashboard__headlinePremium"
+
+                <% if (isUpgradeExpirationSoon === true) { %>
+                <p class="myAccount__bodyTextLarge -errorColor">Your <%= companyProfileType %> will expire <%= numberOfDaysUntilExpirationFragment %></span>.</p>
+                <% } %>
+                
+                <div class="-marginBottomTwo">
+                    <% if (areAccountUpgradesExtendsAvailable === true) { %>
+                    <button id="checkout-button" class="button__bodyTextSmall">
+                    <% if (isUpgradeExpirationSoon === true) { %>
+                        Renew 
+                    <% } else if (isUpgradeExpirationSoon === false) { %>
+                        Extend 
+                    <% } %>
+                        your <%= companyProfileType %> 
+                    </button>
+                    <p class="myAccount__bodyTextSmall -inlineBlock -marginBottomZero">
+                    <% if (isUpgradeExpirationSoon === true) { %>
+                        and extend it for an additional year for just <%= costInDollarsProduct_1 %>.
+                    <% } else if (isUpgradeExpirationSoon === false) { %>
+                        for an additional year for just <%= costInDollarsProduct_1 %>.
+                    <% } %>
+                    </p>
+                    <% } else if (areAccountUpgradesExtendsAvailable === false) { %>
+                    <p class="myAccount__bodyTextSmall"><span class="-greenColor -bold">Great!</span> Your <%= companyProfileType %> account duration is maxed out at 2 years or more. No renewals or extensions are available or needed at this time.</p>
+                    <% } %>
+                </div>
+
+                <p class="myAccount__subHeadline"><%= companyProfileType %> Active Until:</p>
+                <p class="myAccount__bodyTextLarge"><%= premiumExpirationDate %></p>
+                
             <% } %>
-                ><%= companyProfileType %> Vendor Information</p>
 
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Name:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= companyNameMyAccountValue %></p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyNameAdded === true) { %>
-                        <a href="/add-change-company-name"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-company-name"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
+                <p class="myAccount__subHeadline">Member Since:</p>
+                <p class="myAccount__bodyTextLarge -marginBottomZero"><%= memberSince %></p>
             </div>
 
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Phone:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= companyPhoneMyAccountValue %></p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyPhoneAdded === true) { %>
-                        <a href="/add-change-company-phone"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
+            <div class="myAccount__defaultUnit -marginBottomSix">
+                <p class="myAccount__subHeadline">Vendor List Status:</p>
+                <p class="myAccount__bodyTextLarge -bold -marginBottomHalf
+                    <% if (isAccountLive === true) { %>
+                        -greenColor
                     <% } else { %>
-                        <a href="/add-change-company-phone"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
+                        -orangeColor
                     <% } %>
-                </div>
+                "><%= companyProfileType %> 
+                    <% if (isAccountLive === false) { %>
+                        Not 
+                    <% } %>
+                Live</p>
+                <% if (isAccountLive === true) { %>
+                <p class="myAccount__bodyTextSmall -marginBottomZero">Your company's <%= companyProfileType %> is live and can show up in search results on the <a href="/foreclosure-cleanup-vendor-list">National Vendor List</a>.</p>
+                <% } else { %>
+                <p class="myAccount__bodyTextSmall">Your company's <%= companyProfileType %> is not complete and will not show up in search results on the <a href="/foreclosure-cleanup-vendor-list">National Vendor List</a>.</p>
+                <p class="myAccount__bodyTextSmall
+                    <% if (isAccountUpgraded === false) { %>
+                        -marginBottomZero
+                    <% } %>
+                ">Please add your company's <%- companyPropertiesUnfilled %> to make your <%= companyProfileType %> live.</p>
+                    <% if (isAccountUpgraded === true) { %>
+                <p class="myAccount__bodyTextSmall -marginBottomZero">Your company's <a href="add-change-company-website">website</a>, <a href="add-change-company-description">description</a> and <a href="add-change-company-logo">logo</a> are not required to make a <%= companyProfileType %> live.</p>
+                    <% } %>
+                <% } %>
             </div>
 
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Address:</p>
-                    <% if (isCompanyAddressAdded === true) { %>
-                        <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
-                        <% if (typeof companyStreetTwoMyAccountValue === 'string') { %>
-                            <p class="textLarge -rightLeftMarginMedium"><%= companyStreetTwoMyAccountValue %></p>
-                        <% } %>
-                        <p class="textLarge -rightLeftMarginMedium"><%= companyCityMyAccountValue %>, <%= companyStateMyAccountValue %> <%= companyZipMyAccountValue %></p>
-                    <% } else { %>
-                    <p class="textLarge -rightLeftMarginMedium"><%= companyStreetMyAccountValue %></p>
-                    <% } %>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyAddressAdded === true) { %>
-                        <a href="/add-change-company-address"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-company-address"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
-            </div>
-
-            <div class="dashboard__unit 
-            <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
-                -bottomBorderError
-            <% } else { %>
-                -bottomBorder
-            <% } %>
+            <div class="
+                <% if (isAccountUpgraded === true) { %>
+                    heading__containerPremium
+                <% } else { %>
+                    heading__container
+                <% } %>
             ">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Services Offered:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%- companyServicesMyAccountValue %></p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyServicesAdded === true) { %>
-                        <a href="/add-change-company-services"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-company-services"><div class="dashboard__fauxButtonAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
+                <p class="
+                    <% if (isAccountUpgraded === true) { %>
+                    heading__headlinePremium
+                <% } else { %>
+                    heading__headline
+                <% } %>
+                "><%= companyProfileType %> Vendor Information</p>
             </div>
+
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Company Name', unitValue: companyNameMyAccountValue, link: '/add-change-company-name', isKeyAdded: isCompanyNameAdded, isUpgradeProperty: false }); %>
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Company Phone', unitValue: companyPhoneMyAccountValue, link: '/add-change-company-phone', isKeyAdded: isCompanyPhoneAdded, isUpgradeProperty: false }); %>
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Company Address', unitValue: companyAddressMyAccountValue, link: '/add-change-company-address', isKeyAdded: isCompanyAddressAdded, isUpgradeProperty: false }); %>
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Services Offered', unitValue: companyServicesMyAccountValue, link: '/add-change-company-services', isKeyAdded: isCompanyServicesAdded, isUpgradeProperty: false }); %>
 
         <% if (isAccountUpgraded === true) { %>
             <a id="company-website"></a>
-            <div class="dashboard__unit 
+            <div class="myAccount__flexUnit
             <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
-                -borderError
-            <% } else { %>
-                -bottomBorder
+                myAccount__errorBorder
             <% } %>
             ">
                 <div>
-                    <p class="dashboard__key -blueText -rightLeftMarginMedium">Website Or Social Media Page:</p>
-                    <p class="textLarge -rightLeftMarginMedium
+                    <p class="myAccount__subHeadlineUpgrade">Website Or Social Media Page:</p>
+                    <p class="myAccount__bodyTextLargeFlex
                     <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
                         -errorColor
                     <% } else { %>
-                        -blueText
+                        -blueColor
                     <% } %>
                     "><%= companyWebsiteMyAccountValue %></p>
                     <% if (shouldBrowserFocusOnURLNotActiveError === true) { %>
-                    <p class="textMedium -errorColor -topBottomMarginSmall -rightLeftMarginMedium"><%= urlNotActiveMessage %></p>
+                    <p class="myAccount__error"><%= urlNotActiveMessage %></p>
                     <% } %>
                 </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyWebsiteAdded === true) { %>
-                        <a href="/add-change-company-website"><div class="dashboard__fauxButtonPremium -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-company-website"><div class="dashboard__fauxButtonPremiumAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
+                <%- include('includes/my-account-add-change-button.ejs', { link: '/add-change-company-website', isKeyAdded: isCompanyWebsiteAdded, isUpgradeProperty: true }); %>
             </div>
 
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -blueText -rightLeftMarginMedium">Company Description:</p>
-                    <p class="textLarge -blueText -rightLeftMarginMedium"><%= companyDescriptionMyAccountValue %></p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyDescriptionAdded === true) { %>
-                        <a href="/add-change-company-description"><div class="dashboard__fauxButtonPremium -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-company-description"><div class="dashboard__fauxButtonPremiumAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
-            </div>
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Company Description', unitValue: companyDescriptionMyAccountValue, link: '/add-change-company-description', isKeyAdded: isCompanyDescriptionAdded, isUpgradeProperty: true }); %>
 
-            <div class="dashboard__unit -bottomBorder -bottomMarginHuge">
+            <div class="myAccount__flexUnit">
                 <div>
-                    <p class="dashboard__key -blueText -rightLeftMarginMedium">Company Logo Or Image:</p>
-                    <p class="textLarge -blueText -rightLeftMarginMedium"><%= companyLogoMyAccountValue %></p>
+                    <p class="myAccount__subHeadlineUpgrade">Company Logo Or Image:</p>
+                    <p class="myAccount__bodyTextLargeFlexUpgrade"><%= companyLogoMyAccountValue %></p>
                 </div>
-                <div class="-leftMarginLargeVanish">
-                    <% if (isCompanyLogoAdded === true) { %>
-                        <a href="/add-change-company-logo"><div class="dashboard__fauxButtonPremium -rightLeftMarginMedium">Change</div></a>
-                    <% } else { %>
-                        <a href="/add-change-company-logo"><div class="dashboard__fauxButtonPremiumAdd -rightLeftMarginMedium">Add</div></a>
-                    <% } %>
-                </div>
+                <%- include('includes/my-account-add-change-button.ejs', { link: '/add-change-company-logo', isKeyAdded: isCompanyLogoAdded, isUpgradeProperty: true }); %>
             </div>
 
         <% } %>
 
         <% if (isAccountUpgraded === false) { %>
 
-            <div class="dashboard__headlinePremium topMarginMedium"><span class="-seeThrough"><%= upgradedProfileName %> Vendor Information</span></div>
+            <div class="heading__containerPremium">
+                <p class="heading__headlinePremium -seeThrough"><%= upgradedProfileName %> Vendor Information</p>
+            </div>
 
-            <div class="dashboard__unitSales -bottomBorder">
-                <p class="textSmall -bottomMarginTiny -rightLeftMarginMedium">
-                    <a href="upgrade-extend-premium"><%= upgradeCheckItOut %></a>
+            <div class="myAccount__defaultUnit">                
+                <p class="myAccount__bodyTextSmall">
+                    <a href="upgrade-premium"><%= upgradeCheckItOut %></a>
                 </p>
-                <p class="textSmall -rightLeftMarginMedium"><%= upgradeSalesPitch %></p>
+                <p class="myAccount__bodyTextSmall -marginBottomZero"><%= upgradeSalesPitch %></p>
             </div>
 
-            <div class="dashboard__unitCovered -bottomBorder">
-                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium">Website Or Social Media Page:</p>
-                    <p class="textSmall -rightLeftMarginMedium"><%= upgradeRequired %></p>
-                </a>
-            </div>
-
-            <div class="dashboard__unitCovered -bottomBorder">
-                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Description:</p>
-                    <p class="textSmall -rightLeftMarginMedium"><%= upgradeRequired %></p>
-                </a>
-            </div>
-
-            <div class="dashboard__unitCovered -bottomBorder -bottomMarginHuge">
-                <a href="upgrade-extend-premium" class="dashboard__unitCoveredLink">
-                    <p class="dashboard__key -rightLeftMarginMedium">Company Logo Or Image:</p>
-                    <p class="textSmall -rightLeftMarginMedium"><%= upgradeRequired %></p>
-                </a>
-            </div>
+            <%- include('includes/my-account-blue-covered-links.ejs', { upgradeRequired, headline: 'Website Or Social Media Page' }) %>
+            <%- include('includes/my-account-blue-covered-links.ejs', { upgradeRequired, headline: 'Company Description' }) %>
+            <%- include('includes/my-account-blue-covered-links.ejs', { upgradeRequired, headline: 'Company Logo Or Image' }) %>
 
         <% } %>
 
-            <p class="dashboard__headline">Login</p>
-
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Email Address:</p>
-                    <p class="textLarge -rightLeftMarginMedium"><%= email %></p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <a href="/change-email"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
-                </div>
+            <div class="heading__container">
+                <p class="heading__headline">Login</p>
             </div>
 
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Password:</p>
-                    <p class="textSmall -rightLeftMarginMedium">[Password not displayed for your security.]</p>
-                </div>
-                <div class="-leftMarginLargeVanish">
-                    <a href="/change-password"><div class="dashboard__fauxButton -rightLeftMarginMedium">Change</div></a>
-                </div>
-            </div>
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Email Address', unitValue: email, link: '/change-email', isKeyAdded: true, isUpgradeProperty: false }); %>
+            <%- include('includes/my-account-add-change.ejs', { unitKey: 'Password', unitValue: '[Password not displayed for your security.]', link: '/change-password', isKeyAdded: true, isUpgradeProperty: false }); %>
 
-            <div class="textSmall -topBottomPaddingLarge -rightLeftMarginMedium -rightAlign"><a href="/delete-your-account">Delete your account.</a></div>
+            <div class="myAccount__deleteAccountUnit"><a href="/delete-your-account">Delete your account.</a></div>
 
         </div>
 
     </main>
 
-    <%- include('includes/standard-screen-footer.ejs') %>
+    <%- include('includes/footer-standard.ejs') %>
 
 </body>
 </html>

@@ -1,0 +1,81 @@
+    <footer class="footer__container">
+
+        <div class="footer__internal">
+
+            <div class="footer__columns">
+
+                <nav class="footer__nav">
+                    <a href="/" 
+                    <% if (activeLink === 'index') { %> 
+                        class="footer__nav__activeUnit"
+                    <% } else { %>
+                        class="footer__nav__unit"
+                    <% } %>
+                    >HOME</a>
+
+                    <a href="/foreclosure-cleanup-vendor-list"
+                    <% if (activeLink === 'foreclosure-cleanup-vendor-list') { %> 
+                        class="footer__nav__activeUnit"
+                    <% } else { %>
+                        class="footer__nav__unit"
+                    <% } %>
+                    >VENDOR LIST</a>
+
+                <% if (loggedIn != true) { %>
+                    <a href="/register"
+                    <% if (activeLink === 'register') { %> 
+                        class="footer__nav__activeUnit"
+                    <% } else { %>
+                        class="footer__nav__unit"
+                    <% } %>
+                    >REGISTER</a>
+                <% } %>
+
+                    <a href="mailto:<%- contactEmail %>"
+                    <% if (activeLink === 'contact') { %> 
+                        class="footer__nav__activeUnit"
+                    <% } else { %>
+                        class="footer__nav__unit"
+                    <% } %>
+                    >CONTACT</a>
+
+                </nav>
+
+                <div>
+                    <div>
+                        <a href="/"><img src="images/foreclosure-cleanup-logo-bw.svg" alt="Foreclosure Cleanup logo" class="footer__logo"></a>
+                    </div>
+                    <div>
+                        <img src="images/pro-journal-logo-bw.svg" alt="Pro Journal logo" class="footer__logoProJournal">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="footer__privacyTerms">
+
+                <a href="/privacy-policy" class="
+                    <% if (activeLink === 'privacy-policy') { %>
+                        footer__privacyTerms__activeUnit
+                    <% } else { %>
+                        footer__privacyTerms__unit
+                    <% } %>
+                        ">Privacy Policy</a>
+                    
+                    |
+
+                <a href="/terms-of-service" class="
+                    <% if (activeLink === 'terms-of-service') { %>
+                            footer__privacyTerms__activeUnit
+                    <% } else { %>
+                            footer__privacyTerms__unit
+                    <% } %>
+                        ">Terms Of Service</a>
+
+            </div>
+
+            <%- include('copyright.ejs', { size: 'standard' }) %>
+            
+        </div>
+        
+    </footer>

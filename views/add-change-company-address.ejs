@@ -6,235 +6,239 @@
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
     
-    <script defer src="js/character-blocker.js"></script>
-    <script defer src="js/connect/company-address-character-blocker.js"></script>
 </head>
 <body>
 
-    <%- include('includes/dashboard-header.ejs') %>
+    <%- include('includes/my-account-header.ejs') %>
 
-    <main>
+    <main class="mainContainer__standard">
 
-        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="internalContainer__narrowVanish">
 
             <% if (showUspsNormalizedVsOriginal === true) { %>
 
-            <p class="dashboard__headline -bottomMarginLarge -rightLeftPaddingMedium">Address Normalization</p>
-            <p class="textMedium -green -bottomMarginMedium -rightLeftMarginMedium">If the top address is correct we recommend that you use <span class="-noWrap">US Postal Service</span> format to maximize search performance.</p>
-            <div class="addressNormalizationBox -rightLeftMarginMedium">
-                <p class="mediumText -greenColor -rightLeftMarginMedium -topMarginMedium -bottomMarginSmall">Recommended In Most Cases</p>
-                <p class="addressNormalization"><%= uspsNormalized.companyStreet %></p>
-                <% if (typeof uspsNormalized.companyStreetTwo === "string") { %>
-                    <p class="addressNormalization"><%= uspsNormalized.companyStreetTwo %></p>
-                <% } %>
-                <p class="addressNormalization -bottomMarginMedium"><%= uspsNormalized.companyCity %>, <%= uspsNormalized.companyState %> <%= uspsNormalized.companyZip %></p>
+            <div class="heading__container">
+                <p class="heading__headline">Address Normalization</p>
+            </div>
+
+            <div class="internalContainer__paddingTwo32Four">
+
+                <p class="font125 -greenColor -marginBottomTwo">If the top address is correct we recommend that you use <span class="-noWrap">US Postal Service</span> format to maximize search performance.</p>
+            
+
+                <div class="myAccount__addressNormalizationBox">
+                    <p class="font15 -greenColor -marginBottomOne">Recommended In Most Cases</p>
+                    <p class="font15"><%= uspsNormalized.companyStreet %></p>
+                    <% if (typeof uspsNormalized.companyStreetTwo === "string") { %>
+                        <p class="font15"><%= uspsNormalized.companyStreetTwo %></p>
+                    <% } %>
+                    <p class="font15 -marginBottomTwo"><%= uspsNormalized.companyCity %>, <%= uspsNormalized.companyState %> <%= uspsNormalized.companyZip %></p>
+
+                    <form action="/add-change-company-address" method="POST">
+                        <button class="button__uspsFormat">Use US Postal Service format</button>
+                        <input type="hidden" name="companyStreet" value="<%= uspsNormalized.companyStreet %>">
+                        <input type="hidden" name="companyStreetTwo" value="<%= uspsNormalized.companyStreetTwo %>">
+                        <input type="hidden" name="companyCity" value="<%= uspsNormalized.companyCity %>">
+                        <input type="hidden" name="companyState" value="<%= uspsNormalized.companyState %>">
+                        <input type="hidden" name="companyZip" value="<%= uspsNormalized.companyZip %>">
+                        <input type="hidden" name="useOriginalInput" value="false">
+                        <input type="hidden" name="deleteProperty" value="false">
+                    </form> 
+
+                </div>
+
+                <div class="myAccount__addressNormalizationBox -marginBottomFour">
+                    <p class="font15"><%= originalInput.companyStreet %></p>
+                    <% if (typeof originalInput.companyStreetTwo === "string") { %>
+                        <p class="font15"><%= originalInput.companyStreetTwo %></p>
+                    <% } %>
+                    <p class="font15 -marginBottomTwo"><%= originalInput.companyCity %>, <%= originalInput.companyState %> <%= originalInput.companyZip %></p>
+
+                        <form action="/add-change-company-address" method="POST">
+                        <button class="button__originalFormat">Keep original</button>
+                        <input type="hidden" name="companyStreet" value="<%= originalInput.companyStreet %>">
+                        <input type="hidden" name="companyStreetTwo" value="<%= originalInput.companyStreetTwo %>">
+                        <input type="hidden" name="companyCity" value="<%= originalInput.companyCity %>">
+                        <input type="hidden" name="companyState" value="<%= originalInput.companyState %>">
+                        <input type="hidden" name="companyZip" value="<%= originalInput.companyZip %>">
+                        <input type="hidden" name="useOriginalInput" value="true">
+                        <input type="hidden" name="deleteProperty" value="false">
+                    </form> 
+                
+                </div>
+
+                <div class="font125 -rightAlign"><a href="/add-change-company-address">Use Neither ></a></div>
+
+            </div>
+
+            <% } else { %>          
+
+            <script defer src="js/character-blocker.js"></script>
+            <script defer src="js/connect/company-address-character-blocker.js"></script>  
+
+            <div class="heading__container">
+                <p class="heading__headline"><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Your Company's Address</p>
+            </div>
+
+        <% if (addOrChangeProperty === "change") { %>
+            <div class="myAccount__defaultUnit">
+                <p class="myAccount__subHeadline">Current Company Address:</p>
+                <p class="myAccount__bodyTextLarge -marginBottomZero"><%- companyAddressMyAccountValue %></p>
+            </div>
+        <% } %>
+
+            <div class="internalContainer__paddingTwo32Four">
 
                 <form action="/add-change-company-address" method="POST">
-                    <div class="-bottomMarginMedium -rightLeftMarginMedium">
-                        <button class="uspsFormat__button">Use US Postal Service format</button>
-                    </div>
-                    <input type="hidden" name="companyStreet" value="<%= uspsNormalized.companyStreet %>">
-                    <input type="hidden" name="companyStreetTwo" value="<%= uspsNormalized.companyStreetTwo %>">
-                    <input type="hidden" name="companyCity" value="<%= uspsNormalized.companyCity %>">
-                    <input type="hidden" name="companyState" value="<%= uspsNormalized.companyState %>">
-                    <input type="hidden" name="companyZip" value="<%= uspsNormalized.companyZip %>">
+
+                    <p class="input__label">Company Address:</p>
+                    <p class="myAccount__bodyTextSmall -marginBottomTwo">This address is used on the <a href="/foreclosure-cleanup-vendor-list">National Vendor List</a> and allows customers to find your company.</p>
                     <input type="hidden" name="useOriginalInput" value="false">
                     <input type="hidden" name="deleteProperty" value="false">
-                </form> 
 
-            </div>
-
-            <div class="addressNormalizationBox -bottomMarginLarge -rightLeftMarginMedium">
-                <p class="addressNormalization -topMarginMedium"><%= originalInput.companyStreet %></p>
-                <% if (typeof originalInput.companyStreetTwo === "string") { %>
-                    <p class="addressNormalization"><%= originalInput.companyStreetTwo %></p>
-                <% } %>
-                <p class="addressNormalization -bottomMarginMedium"><%= originalInput.companyCity %>, <%= originalInput.companyState %> <%= originalInput.companyZip %></p>
-
-                <form action="/add-change-company-address" method="POST">
-                    <div class="-bottomMarginMedium -rightLeftMarginMedium">
-                        <button class="originalFormat__button">Keep original</button>
-                    </div>
-                    <input type="hidden" name="companyStreet" value="<%= originalInput.companyStreet %>">
-                    <input type="hidden" name="companyStreetTwo" value="<%= originalInput.companyStreetTwo %>">
-                    <input type="hidden" name="companyCity" value="<%= originalInput.companyCity %>">
-                    <input type="hidden" name="companyState" value="<%= originalInput.companyState %>">
-                    <input type="hidden" name="companyZip" value="<%= originalInput.companyZip %>">
-                    <input type="hidden" name="useOriginalInput" value="true">
-                    <input type="hidden" name="deleteProperty" value="false">
-                </form> 
-            
-            </div>
-
-            <div class="textMedium -rightAlign -rightLeftMarginMedium -bottomMarginLarge"><a href="/add-change-company-address">Use Neither ></a></div>
-
-            <% } else { %>            
-
-            <p class="dashboard__headline"><% if (addOrChangeProperty === "change") { %>Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %> Your Company's Address</p>
-
-            <% if (addOrChangeProperty === "change") { %>
-                <div class="dashboard__unit -bottomBorder">
-                    <div>
-                        <p class="dashboard__key -rightLeftMarginMedium">Current Company Address:</p>
-                        <p class="dashboard__value -rightLeftMarginMedium"><%= companyStreet %></p>
-                        <% if (typeof companyStreetTwo === "string") { %>
-                            <p class="dashboard__value -rightLeftMarginMedium"><%= companyStreetTwo %></p>
-                        <% } %>
-                        <p class="dashboard__value -rightLeftMarginMedium"><%= companyCity %>, <%= companyState %> <%= companyZip %></p>
-                    </div>
-                </div>
-            <% } %>
-
-            <form action="/add-change-company-address" method="POST">
-
-                <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Company Address:</p>
-                <p class="textSmall -bottomPaddingMedium -rightLeftPaddingMedium">This address is used on the <a href="/foreclosure-cleanup-vendor-list">vendor list search page</a> to help customers search for vendors near their location.</p>
-                <input type="hidden" name="useOriginalInput" value="false">
-                <input type="hidden" name="deleteProperty" value="false">
-
-                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyStreet" class="input__label">Street Address:</label>
-                    <input id="companyStreet" class="input__field
+                    <div class="input__unit -marginBottomTwo"> 
+                        <label for="companyStreet" class="input__label">Street Address:</label>
+                        <input id="companyStreet" class="input__field
+                            <% if (typeof companyStreetError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="companyStreet" <%= companyStreetAttributes %> value="<%= userInput.companyStreet %>" autofocus>
                         <% if (typeof companyStreetError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="companyStreet" <%= companyStreetAttributes %> value="<%= userInput.companyStreet %>" autofocus>
-                    <% if (typeof companyStreetError != "undefined") { %>
-                    <div class="input__error"><%= companyStreetError %></div>
-                    <% } %> 
-                </div>
+                        <div class="input__error"><%= companyStreetError %></div>
+                        <% } %> 
+                    </div>
 
-                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyStreetTwo" class="input__label">Street Address Line Two:</label>
-                    <input id="companyStreetTwo" class="input__field
+                    <div class="input__unit -marginBottomTwo">  
+                        <label for="companyStreetTwo" class="input__label">Street Address Line Two:</label>
+                        <input id="companyStreetTwo" class="input__field
+                            <% if (typeof companyStreetTwoError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="companyStreetTwo" <%= companyStreetTwoAttributes %> value="<%= userInput.companyStreetTwo %>">
                         <% if (typeof companyStreetTwoError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="companyStreetTwo" <%= companyStreetTwoAttributes %> value="<%= userInput.companyStreetTwo %>">
-                    <% if (typeof companyStreetTwoError != "undefined") { %>
-                    <div class="input__error"><%= companyStreetTwoError %></div>
-                    <% } %> 
-                </div>
+                        <div class="input__error"><%= companyStreetTwoError %></div>
+                        <% } %> 
+                    </div>
 
-                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyCity" class="input__label">City:</label>
-                    <input id="companyCity" class="input__field
+                    <div class="input__unit -marginBottomTwo"> 
+                        <label for="companyCity" class="input__label">City:</label>
+                        <input id="companyCity" class="input__field
+                            <% if (typeof companyCityError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="companyCity" <%= companyCityAttributes %> value="<%= userInput.companyCity %>">
                         <% if (typeof companyCityError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="companyCity" <%= companyCityAttributes %> value="<%= userInput.companyCity %>">
-                    <% if (typeof companyCityError != "undefined") { %>
-                    <div class="input__error"><%= companyCityError %></div>
-                    <% } %> 
-                </div>
+                        <div class="input__error"><%= companyCityError %></div>
+                        <% } %> 
+                    </div>
 
-                <div class="input__unit -topBottomMarginMedium -rightLeftMarginMedium"> 
-                    <label for="companyState" class="input__label">State:</label>
-                    <select id="companyState" class="input__field
+                    <div class="input__unit -marginBottomTwo"> 
+                        <label for="companyState" class="input__label">State:</label>
+                        <select id="companyState" class="input__field
+                            <% if (typeof companyStateError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="companyState">
+                            <option value="" selected disabled>Select Your State</option>
+                            <option value="AL" <% if (userInput.companyState === "AL") { %> selected <% } %>>AL</option>
+                            <option value="AK" <% if (userInput.companyState === "AK") { %> selected <% } %>>AK</option>
+                            <option value="AZ" <% if (userInput.companyState === "AZ") { %> selected <% } %>>AZ</option>
+                            <option value="AR" <% if (userInput.companyState === "AR") { %> selected <% } %>>AR</option>
+                            <option value="CA" <% if (userInput.companyState === "CA") { %> selected <% } %>>CA</option>
+                            <option value="CO" <% if (userInput.companyState === "CO") { %> selected <% } %>>CO</option>
+                            <option value="CT" <% if (userInput.companyState === "CT") { %> selected <% } %>>CT</option>
+                            <option value="DC" <% if (userInput.companyState === "DC") { %> selected <% } %>>DC</option>
+                            <option value="DE" <% if (userInput.companyState === "DE") { %> selected <% } %>>DE</option>
+                            <option value="FL" <% if (userInput.companyState === "FL") { %> selected <% } %>>FL</option>
+                            <option value="GA" <% if (userInput.companyState === "GA") { %> selected <% } %>>GA</option>
+                            <option value="HI" <% if (userInput.companyState === "HI") { %> selected <% } %>>HI</option>
+                            <option value="ID" <% if (userInput.companyState === "ID") { %> selected <% } %>>ID</option>
+                            <option value="IL" <% if (userInput.companyState === "IL") { %> selected <% } %>>IL</option>
+                            <option value="IN" <% if (userInput.companyState === "IN") { %> selected <% } %>>IN</option>
+                            <option value="IA" <% if (userInput.companyState === "IA") { %> selected <% } %>>IA</option>
+                            <option value="KS" <% if (userInput.companyState === "KS") { %> selected <% } %>>KS</option>
+                            <option value="KY" <% if (userInput.companyState === "KY") { %> selected <% } %>>KY</option>
+                            <option value="LA" <% if (userInput.companyState === "LA") { %> selected <% } %>>LA</option>
+                            <option value="ME" <% if (userInput.companyState === "ME") { %> selected <% } %>>ME</option>
+                            <option value="MD" <% if (userInput.companyState === "MD") { %> selected <% } %>>MD</option>
+                            <option value="MA" <% if (userInput.companyState === "MA") { %> selected <% } %>>MA</option>
+                            <option value="MI" <% if (userInput.companyState === "MI") { %> selected <% } %>>MI</option>
+                            <option value="MN" <% if (userInput.companyState === "MN") { %> selected <% } %>>MN</option>
+                            <option value="MS" <% if (userInput.companyState === "MS") { %> selected <% } %>>MS</option>
+                            <option value="MO" <% if (userInput.companyState === "MO") { %> selected <% } %>>MO</option>
+                            <option value="MT" <% if (userInput.companyState === "MT") { %> selected <% } %>>MT</option>
+                            <option value="NE" <% if (userInput.companyState === "NE") { %> selected <% } %>>NE</option>
+                            <option value="NV" <% if (userInput.companyState === "NV") { %> selected <% } %>>NV</option>
+                            <option value="NH" <% if (userInput.companyState === "NH") { %> selected <% } %>>NH</option>
+                            <option value="NJ" <% if (userInput.companyState === "NJ") { %> selected <% } %>>NJ</option>
+                            <option value="NM" <% if (userInput.companyState === "NM") { %> selected <% } %>>NM</option>
+                            <option value="NY" <% if (userInput.companyState === "NY") { %> selected <% } %>>NY</option>
+                            <option value="NC" <% if (userInput.companyState === "NC") { %> selected <% } %>>NC</option>
+                            <option value="ND" <% if (userInput.companyState === "ND") { %> selected <% } %>>ND</option>
+                            <option value="OH" <% if (userInput.companyState === "OH") { %> selected <% } %>>OH</option>
+                            <option value="OK" <% if (userInput.companyState === "OK") { %> selected <% } %>>OK</option>
+                            <option value="OR" <% if (userInput.companyState === "OR") { %> selected <% } %>>OR</option>
+                            <option value="PA" <% if (userInput.companyState === "PA") { %> selected <% } %>>PA</option>
+                            <option value="RI" <% if (userInput.companyState === "RI") { %> selected <% } %>>RI</option>
+                            <option value="SC" <% if (userInput.companyState === "SC") { %> selected <% } %>>SC</option>
+                            <option value="SD" <% if (userInput.companyState === "SD") { %> selected <% } %>>SD</option>
+                            <option value="TN" <% if (userInput.companyState === "TN") { %> selected <% } %>>TN</option>
+                            <option value="TX" <% if (userInput.companyState === "TX") { %> selected <% } %>>TX</option>
+                            <option value="UT" <% if (userInput.companyState === "UT") { %> selected <% } %>>UT</option>
+                            <option value="VT" <% if (userInput.companyState === "VT") { %> selected <% } %>>VT</option>
+                            <option value="VA" <% if (userInput.companyState === "VA") { %> selected <% } %>>VA</option>
+                            <option value="WA" <% if (userInput.companyState === "WA") { %> selected <% } %>>WA</option>
+                            <option value="WV" <% if (userInput.companyState === "WV") { %> selected <% } %>>WV</option>
+                            <option value="WI" <% if (userInput.companyState === "WI") { %> selected <% } %>>WI</option>
+                            <option value="WY" <% if (userInput.companyState === "WY") { %> selected <% } %>>WY</option>
+                        </select>
+
                         <% if (typeof companyStateError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="companyState">
-                        <option value="" selected disabled>Select Your State</option>
-                        <option value="AL" <% if (userInput.companyState === "AL") { %> selected <% } %>>AL</option>
-                        <option value="AK" <% if (userInput.companyState === "AK") { %> selected <% } %>>AK</option>
-                        <option value="AZ" <% if (userInput.companyState === "AZ") { %> selected <% } %>>AZ</option>
-                        <option value="AR" <% if (userInput.companyState === "AR") { %> selected <% } %>>AR</option>
-                        <option value="CA" <% if (userInput.companyState === "CA") { %> selected <% } %>>CA</option>
-                        <option value="CO" <% if (userInput.companyState === "CO") { %> selected <% } %>>CO</option>
-                        <option value="CT" <% if (userInput.companyState === "CT") { %> selected <% } %>>CT</option>
-                        <option value="DC" <% if (userInput.companyState === "DC") { %> selected <% } %>>DC</option>
-                        <option value="DE" <% if (userInput.companyState === "DE") { %> selected <% } %>>DE</option>
-                        <option value="FL" <% if (userInput.companyState === "FL") { %> selected <% } %>>FL</option>
-                        <option value="GA" <% if (userInput.companyState === "GA") { %> selected <% } %>>GA</option>
-                        <option value="HI" <% if (userInput.companyState === "HI") { %> selected <% } %>>HI</option>
-                        <option value="ID" <% if (userInput.companyState === "ID") { %> selected <% } %>>ID</option>
-                        <option value="IL" <% if (userInput.companyState === "IL") { %> selected <% } %>>IL</option>
-                        <option value="IN" <% if (userInput.companyState === "IN") { %> selected <% } %>>IN</option>
-                        <option value="IA" <% if (userInput.companyState === "IA") { %> selected <% } %>>IA</option>
-                        <option value="KS" <% if (userInput.companyState === "KS") { %> selected <% } %>>KS</option>
-                        <option value="KY" <% if (userInput.companyState === "KY") { %> selected <% } %>>KY</option>
-                        <option value="LA" <% if (userInput.companyState === "LA") { %> selected <% } %>>LA</option>
-                        <option value="ME" <% if (userInput.companyState === "ME") { %> selected <% } %>>ME</option>
-                        <option value="MD" <% if (userInput.companyState === "MD") { %> selected <% } %>>MD</option>
-                        <option value="MA" <% if (userInput.companyState === "MA") { %> selected <% } %>>MA</option>
-                        <option value="MI" <% if (userInput.companyState === "MI") { %> selected <% } %>>MI</option>
-                        <option value="MN" <% if (userInput.companyState === "MN") { %> selected <% } %>>MN</option>
-                        <option value="MS" <% if (userInput.companyState === "MS") { %> selected <% } %>>MS</option>
-                        <option value="MO" <% if (userInput.companyState === "MO") { %> selected <% } %>>MO</option>
-                        <option value="MT" <% if (userInput.companyState === "MT") { %> selected <% } %>>MT</option>
-                        <option value="NE" <% if (userInput.companyState === "NE") { %> selected <% } %>>NE</option>
-                        <option value="NV" <% if (userInput.companyState === "NV") { %> selected <% } %>>NV</option>
-                        <option value="NH" <% if (userInput.companyState === "NH") { %> selected <% } %>>NH</option>
-                        <option value="NJ" <% if (userInput.companyState === "NJ") { %> selected <% } %>>NJ</option>
-                        <option value="NM" <% if (userInput.companyState === "NM") { %> selected <% } %>>NM</option>
-                        <option value="NY" <% if (userInput.companyState === "NY") { %> selected <% } %>>NY</option>
-                        <option value="NC" <% if (userInput.companyState === "NC") { %> selected <% } %>>NC</option>
-                        <option value="ND" <% if (userInput.companyState === "ND") { %> selected <% } %>>ND</option>
-                        <option value="OH" <% if (userInput.companyState === "OH") { %> selected <% } %>>OH</option>
-                        <option value="OK" <% if (userInput.companyState === "OK") { %> selected <% } %>>OK</option>
-                        <option value="OR" <% if (userInput.companyState === "OR") { %> selected <% } %>>OR</option>
-                        <option value="PA" <% if (userInput.companyState === "PA") { %> selected <% } %>>PA</option>
-                        <option value="RI" <% if (userInput.companyState === "RI") { %> selected <% } %>>RI</option>
-                        <option value="SC" <% if (userInput.companyState === "SC") { %> selected <% } %>>SC</option>
-                        <option value="SD" <% if (userInput.companyState === "SD") { %> selected <% } %>>SD</option>
-                        <option value="TN" <% if (userInput.companyState === "TN") { %> selected <% } %>>TN</option>
-                        <option value="TX" <% if (userInput.companyState === "TX") { %> selected <% } %>>TX</option>
-                        <option value="UT" <% if (userInput.companyState === "UT") { %> selected <% } %>>UT</option>
-                        <option value="VT" <% if (userInput.companyState === "VT") { %> selected <% } %>>VT</option>
-                        <option value="VA" <% if (userInput.companyState === "VA") { %> selected <% } %>>VA</option>
-                        <option value="WA" <% if (userInput.companyState === "WA") { %> selected <% } %>>WA</option>
-                        <option value="WV" <% if (userInput.companyState === "WV") { %> selected <% } %>>WV</option>
-                        <option value="WI" <% if (userInput.companyState === "WI") { %> selected <% } %>>WI</option>
-                        <option value="WY" <% if (userInput.companyState === "WY") { %> selected <% } %>>WY</option>
-                    </select>
+                        <div class="input__error"><%= companyStateError %></div>
+                        <% } %> 
+                    </div>
 
-                    <% if (typeof companyStateError != "undefined") { %>
-                    <div class="input__error"><%= companyStateError %></div>
-                    <% } %> 
-                </div>
-
-                <div class="input__unit -topMarginMedium -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="companyZip" class="input__label">Zip Code:</label>
-                    <input id="companyZip" class="input__field
+                    <div class="input__unit -marginBottomFour"> 
+                        <label for="companyZip" class="input__label">Zip Code:</label>
+                        <input id="companyZip" class="input__field
+                            <% if (typeof companyZipError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="companyZip" <%= companyZipAttributes %> value="<%= userInput.companyZip %>">
                         <% if (typeof companyZipError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="companyZip" <%= companyZipAttributes %> value="<%= userInput.companyZip %>">
-                    <% if (typeof companyZipError != "undefined") { %>
-                    <div class="input__error"><%= companyZipError %></div>
-                    <% } %> 
-                </div>
+                        <div class="input__error"><%= companyZipError %></div>
+                        <% } %> 
+                    </div>
 
-                <div class="-bottomMarginLarge -rightLeftMarginMedium">
-                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
-                </div>  
+                    <button class="button__narrowScreen"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
 
-            </form>
+                </form>
 
-            <% if (addOrChangeProperty === "change") { %>
-            <form action="/add-change-company-address" method="POST">
-                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLinkMedium">Delete Your Company's Address</button>
-                </div>
-                <input type="hidden" name="companyStreet" value="">
-                <input type="hidden" name="companyStreetTwo" value="">
-                <input type="hidden" name="companyCity" value="">
-                <input type="hidden" name="companyState" value="">
-                <input type="hidden" name="companyZip" value="">
-                <input type="hidden" name="useOriginalInput" value="false">
-                <input type="hidden" name="deleteProperty" value="true">
-            </form>
-            <% } %>  
+                <% if (addOrChangeProperty === "change") { %>
+                <form action="/add-change-company-address" method="POST">
+                    <div class="-marginBottomFour -rightAlign">
+                        <button class="button__bodyTextMedium">Delete Your Company's Address</button>
+                    </div>
+                    <input type="hidden" name="companyStreet" value="">
+                    <input type="hidden" name="companyStreetTwo" value="">
+                    <input type="hidden" name="companyCity" value="">
+                    <input type="hidden" name="companyState" value="">
+                    <input type="hidden" name="companyZip" value="">
+                    <input type="hidden" name="useOriginalInput" value="false">
+                    <input type="hidden" name="deleteProperty" value="true">
+                </form>
+                <% } %>  
 
-            <%- include('includes/back-to-my-account.ejs') %>
+                <%- include('includes/back-to-my-account.ejs') %>
+
+            </div>
 
         <% } %>
         </div>
 
     </main>
 
-    <%- include('includes/standard-screen-footer.ejs') %>
+    <%- include('includes/footer-standard.ejs') %>
 
 </body>
 </html>

@@ -8,21 +8,21 @@
 
 <body>
 
-    <%- include('includes/standard-screen-header-boilerplate.ejs') %>
+    <%- include('includes/header-standard.ejs') %>
 
-    <main class="-topBottomPaddingLarge">
+    <main class="mainContainer__standard">
 
-        <div class="-standardWidth panel__container">
+        <div class="panel__container">
         
-            <div class="panel -topBottomMarginMedium -rightLeftMarginMedium">
+            <div class="panel__unit">
                 <p class="panel__headline"><a href="/foreclosure-cleanup-vendor-list">FIND A SERVICE PROVIDER</a></p>
-                <a href="/foreclosure-cleanup-vendor-list"><div class="panel__image -panelSearch"></div></a>
-                <p class="panel__text"><a href="/foreclosure-cleanup-vendor-list">Property Preservation service providers include trash-out, locksmith, pool, landscaping, handyman, painting, flooring, contractor, carpenter, electrical, HVAC & plumbing services.</a></p>
+                <a href="/foreclosure-cleanup-vendor-list"><div class="panel__image -panel__searchBackground"></div></a>
+                <p class="panel__text"><a href="/foreclosure-cleanup-vendor-list">Property Preservation service providers include boarding &amp; securing, debris removal &amp; trash-out, eviction management, field inspection, handyman &amp; general maintenance, landscaping, locksmith, rehab management, pool, winterization &amp; cleaning services.</a></p>
             </div>
             
-            <div class="panel -topBottomMarginMedium -rightLeftMarginMedium">
+            <div class="panel__unit">
                 <p class="panel__headline"><a href="/register">REGISTER YOUR COMPANY</a></p>
-                <a href="/register"><div class="panel__image -panelRegister"></div></a>
+                <a href="/register"><div class="panel__image -panel__registerBackground"></div></a>
                 <p class="panel__text"><a href="/register">Register your Property Preservation or Foreclosure Service Provider Company on the National Vendor List.</a></p>
             </div>
             
@@ -30,7 +30,7 @@
 
     </main>
 
-    <%- include('includes/standard-screen-footer.ejs') %>
+    <%- include('includes/footer-standard.ejs') %>
 
 </body>
 </html>

@@ -1,0 +1,25 @@
+                <div class="-marginLeft64Vanish">
+                    <a href="<%= link %>">
+                        <div class="
+                        <% if (isKeyAdded === true) { %>
+                            <% if (isUpgradeProperty === true) { %>
+                            button__fauxUpgradeChange
+                            <% } else { %>
+                            button__fauxChange
+                            <% } %>
+                        <% } else { %>
+                            <% if (isUpgradeProperty === true) { %>
+                            button__fauxUpgradeAdd
+                            <% } else { %>
+                            button__fauxAdd
+                            <% } %>
+                        <% } %>
+                        ">
+                        <% if (isKeyAdded === true) { %>
+                            Change
+                        <% } else { %>
+                            Add
+                        <% } %>
+                        </div>
+                    </a>
+                </div>

@@ -1,47 +1,6 @@
     <header>
-        <div class="rowOne backgroundColor32 -rightLeftPaddingMediumStatic">
-            <div class="rowOne__internal -standardWidth">
-                <h1 class="rowOne__left --font125">Foreclosure Cleanup<span class="textTiny">.org<span></h1>
-                <div class="rowOne__right">
-                    <% if (loggedIn === true) { %> 
-                        <p class="rowOne__rightText"><a href="my-account" id="targetLogInOutText">My Account</a></p>
-                        <div class="rowOne__vendorIcon"><a href="my-account"><img src="images/vendor-icon-white.svg" alt="my account" id="targetVendorIcon"></a></div>
-                        <div class="rowOne__rightBreak"></div>
-                        <p class="rowOne__rightText"><a href="logout">Log Out</a></p>
-                    <% } else { %>
-                        <p class="rowOne__rightText"><a href="login" id="targetLogInOutText">Vendor Log In</a></p>
-                        <div class="rowOne__vendorIcon"><a href="login"><img src="images/vendor-icon-white.svg" alt="my account" id="targetVendorIcon"></a></div>
-                    <% } %>
-                </div>
-            </div>
+        <div class="header__rowOneBlack">
+            <%- include('row-one-internal.ejs') %>
         </div>
-
-        <nav class="topNavigation__noTopBorder">
-            <div class="topNavigation__internal -standardWidth">
-
-                <% if (activeLink === 'index') { %> 
-                    <p class="topNavigation__activeUnit">
-                <% } else { %>
-                    <p class="topNavigation__unit">
-                <% } %>
-                    <a href="/">HOME</a></p>
-
-                <% if (activeLink === 'foreclosure-cleanup-vendor-list') { %> 
-                    <p class="topNavigation__activeUnit">
-                <% } else { %>
-                    <p class="topNavigation__unit">
-                <% } %>
-                    <a href="/foreclosure-cleanup-vendor-list">VENDOR LIST</a></p>
-
-                <% if (loggedIn != true) { %> 
-                    <% if (activeLink === 'register') { %> 
-                    <p class="topNavigation__activeUnit">
-                    <% } else { %>
-                    <p class="topNavigation__unit">
-                    <% } %>
-                    <a href="/register">REGISTER</a></p>
-                <% } %>
-
-            </div>
-        </nav>
+        <%- include('top-navigation.ejs') %> 
     </header>

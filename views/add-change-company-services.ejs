@@ -10,146 +10,154 @@
 </head>
 <body>
 
-    <%- include('includes/dashboard-header.ejs') %>
+    <%- include('includes/my-account-header.ejs') %>
 
-    <main>
+    <main class="mainContainer__standard">
 
-        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="internalContainer__narrowVanish">
 
-            <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %> The Services That You Company Offers</p>
+            <div class="heading__container">
+                <p class="heading__headline"><% if (addOrChangeProperty === "change") { %>Update <% } else if (addOrChangeProperty === "add") { %>Add <% } %> The Services That You Company Offers</p>
+            </div>
 
             <form action="/add-change-company-services" method="POST">
+                
+                <div class="myAccount__defaultUnit">
 
-                <p class="input__label -topMarginLarge -rightLeftPaddingMedium">Services:</p>
+                    <h2 class="heading__small">Services:</h2>
 
-                <% if (isAccountUpgraded === true) { %>
+                    <p class="myAccount__bodyTextSmall">Select the services that you'd like customers to know about. If you offer additional services or would like to include more detail about the services you offer
+                    <% if (isAccountUpgraded === true) { %>
 
-                    <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">Select the services that you'd like customers to know about. 
-                        If you offer additional services or would like to include more detail about the services you offer include that information on your company's
-                        <a href="/add-change-company-description">Description page</a>.</p>
+                        include that information on your company's <a href="/add-change-company-description">Description page</a>.
 
-                <% } else { %>
+                    <% } else { %>
 
-                    <p class="textSmall -bottomBorder -bottomPaddingMedium -rightLeftPaddingMedium">Select the services that you'd like customers to know about. 
-                        If you offer additional services or would like to include more detail about the services you offer <a href="/upgrade-extend-premium">upgrade to Premium</a> 
-                        and include that information on your your company's Description page.</p>
-                        
-                <% } %> 
+                        <a href="/upgrade-extend-premium">upgrade to Premium</a> and include that information on your your company's Description page.
+                            
+                    <% } %> 
+                    </p>
 
-                <div class="checkBox__largeContainer -rightLeftMarginMedium -topMarginSmall -topBottomPaddingSmall
+                </div>
+
+                <div class="checkBox__largeContainer
                     <% if (typeof companyServicesError != "undefined") { %>
-                        -errorBorder
-                    <% } else { %> 
-                        -bottomMarginMedium
-                    <% } %>  
+                        -borderError -marginBottomZero
+                    <% } %> 
                 ">
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="boardingSecuring" name="boardingSecuring" value="true"
                             <% if (userInput.boardingSecuring === "true") { %> checked<% } %>>
-                        <label for="boardingSecuring" class="checkBox__label"><%- labelBoardingSecuring %></label>
+                        <label for="boardingSecuring" class="checkRadio__label"><%- labelBoardingSecuring %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="debrisRemovalTrashout" name="debrisRemovalTrashout" value="true"
                             <% if (userInput.debrisRemovalTrashout === "true") { %> checked<% } %>>
-                        <label for="debrisRemovalTrashout" class="checkBox__label"><%- labelDebrisRemovalTrashout %></label>
+                        <label for="debrisRemovalTrashout" class="checkRadio__label"><%- labelDebrisRemovalTrashout %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="evictionManagement" name="evictionManagement" value="true"
                             <% if (userInput.evictionManagement === "true") { %> checked<% } %>>
-                        <label for="evictionManagement" class="checkBox__label"><%- labelEvictionManagement %></label>
+                        <label for="evictionManagement" class="checkRadio__label"><%- labelEvictionManagement %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="fieldInspection" name="fieldInspection" value="true"
                             <% if (userInput.fieldInspection === "true") { %> checked<% } %>>
-                        <label for="fieldInspection" class="checkBox__label"><%- labelFieldInspection %></label>
+                        <label for="fieldInspection" class="checkRadio__label"><%- labelFieldInspection %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="handymanGeneralMaintenance" name="handymanGeneralMaintenance" value="true"
                             <% if (userInput.handymanGeneralMaintenance === "true") { %> checked<% } %>>
-                        <label for="handymanGeneralMaintenance" class="checkBox__label"><%- labelHandymanGeneralMaintenance %></label>
+                        <label for="handymanGeneralMaintenance" class="checkRadio__label"><%- labelHandymanGeneralMaintenance %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="landscapeMaintenance" name="landscapeMaintenance" value="true"
                             <% if (userInput.landscapeMaintenance === "true") { %> checked<% } %>>
-                        <label for="landscapeMaintenance" class="checkBox__label"><%- labelLandscapeMaintenance %></label>
+                        <label for="landscapeMaintenance" class="checkRadio__label"><%- labelLandscapeMaintenance %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="lockChanges" name="lockChanges" value="true"
                             <% if (userInput.lockChanges === "true") { %> checked<% } %>>
-                        <label for="lockChanges" class="checkBox__label"><%- labelLockChanges %></label>
+                        <label for="lockChanges" class="checkRadio__label"><%- labelLockChanges %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="overseePropertyRehabilitation" name="overseePropertyRehabilitation" value="true"
                             <% if (userInput.overseePropertyRehabilitation === "true") { %> checked<% } %>>
-                        <label for="overseePropertyRehabilitation" class="checkBox__label"><%- labelOverseePropertyRehabilitation %></label>
+                        <label for="overseePropertyRehabilitation" class="checkRadio__label"><%- labelOverseePropertyRehabilitation %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="poolMaintenance" name="poolMaintenance" value="true"
                             <% if (userInput.poolMaintenance === "true") { %> checked<% } %>>
-                        <label for="poolMaintenance" class="checkBox__label"><%- labelPoolMaintenance %></label>
+                        <label for="poolMaintenance" class="checkRadio__label"><%- labelPoolMaintenance %></label>
                     </div>
 
-                    <div class="-bottomMarginSmall">
+                    <div class="-marginBottomOne">
                         <input type="checkbox" id="propertyCleaning" name="propertyCleaning" value="true"
                             <% if (userInput.propertyCleaning === "true") { %> checked<% } %>>
-                        <label for="propertyCleaning" class="checkBox__label"><%- labelPropertyCleaning %></label>
+                        <label for="propertyCleaning" class="checkRadio__label"><%- labelPropertyCleaning %></label>
                     </div>
 
                     <div>
                         <input type="checkbox" id="winterizations" name="winterizations" value="true"
                             <% if (userInput.winterizations === "true") { %> checked<% } %>>
-                        <label for="winterizations" class="checkBox__label"><%- labelWinterizations %></label>
+                        <label for="winterizations" class="checkRadio__label"><%- labelWinterizations %></label>
                     </div>
 
                 </div>  
 
+                <div class="-paddingRightLeft32">
+
                 <% if (typeof companyServicesError != "undefined") { %>
-                    <div class="input__error -rightLeftMarginMedium -bottomMarginLarge"><%= companyServicesError %></div>
+                    <div class="input__error -marginBottomFour"><%= companyServicesError %></div>
                 <% } %> 
 
-                <div class="-bottomMarginLarge -rightLeftMarginMedium">
-                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                    <button class="button__narrowScreen"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button> 
+
                 </div>
 
                 <input type="hidden" name="deleteProperty" value="false">
 
             </form>
 
-            <% if (addOrChangeProperty === "change") { %>
-            <form action="/add-change-company-services" method="POST">
-                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLinkMedium">Delete Your Company's Services</button>
-                </div>
-                <input type="hidden" name="boardingSecuring" value="false">
-                <input type="hidden" name="debrisRemovalTrashout" value="false">
-                <input type="hidden" name="evictionManagement" value="false">
-                <input type="hidden" name="fieldInspection" value="false">
-                <input type="hidden" name="handymanGeneralMaintenance" value="false">
-                <input type="hidden" name="landscapeMaintenance" value="false">
-                <input type="hidden" name="lockChanges" value="false">
-                <input type="hidden" name="overseePropertyRehabilitation" value="false">
-                <input type="hidden" name="poolMaintenance" value="false">
-                <input type="hidden" name="propertyCleaning" value="false">
-                <input type="hidden" name="winterizations" value="false">
-                <input type="hidden" name="deleteProperty" value="true">
-            </form>
-            <% } %>  
+            <div class="-paddingRightLeft32 -marginBottomFour">
 
-            <%- include('includes/back-to-my-account.ejs') %>
+                <% if (addOrChangeProperty === "change") { %>
+                <form action="/add-change-company-services" method="POST">
+                    <div class="-marginBottomFour -rightAlign">
+                        <button class="button__bodyTextMedium">Delete Your Company's Services</button>
+                    </div>
+                    <input type="hidden" name="boardingSecuring" value="false">
+                    <input type="hidden" name="debrisRemovalTrashout" value="false">
+                    <input type="hidden" name="evictionManagement" value="false">
+                    <input type="hidden" name="fieldInspection" value="false">
+                    <input type="hidden" name="handymanGeneralMaintenance" value="false">
+                    <input type="hidden" name="landscapeMaintenance" value="false">
+                    <input type="hidden" name="lockChanges" value="false">
+                    <input type="hidden" name="overseePropertyRehabilitation" value="false">
+                    <input type="hidden" name="poolMaintenance" value="false">
+                    <input type="hidden" name="propertyCleaning" value="false">
+                    <input type="hidden" name="winterizations" value="false">
+                    <input type="hidden" name="deleteProperty" value="true">
+                </form>
+                <% } %>  
+
+                <%- include('includes/back-to-my-account.ejs') %>
+
+            </div>
 
         </div>
 
     </main>
 
-    <%- include('includes/standard-screen-footer.ejs') %>
+    <%- include('includes/footer-standard.ejs') %>
 
 </body>
 </html>

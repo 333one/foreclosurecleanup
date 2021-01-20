@@ -14,63 +14,65 @@
 </head>
 <body>
 
-    <%- include('includes/dashboard-header.ejs') %>
+    <%- include('includes/my-account-header.ejs') %>
 
-    <main>
+    <main class="mainContainer__standard">
 
-        <div class="-narrowWidthVanish -thinLineShadowBorder -topBottomMarginLarge">
+        <div class="internalContainer__narrowVanish">
 
-            <p class="dashboard__headline -rightLeftPaddingMedium"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Phone</p>
+            <div class="heading__container">
+                <p class="heading__headline"><% if (addOrChangeProperty === "change") { %>Change <% } else if (addOrChangeProperty === "add") { %>Add <% } %> Your Company's Phone</p>
+            </div>
 
             <% if (addOrChangeProperty === "change") { %>
-            <div class="dashboard__unit -bottomBorder">
-                <div>
-                    <p class="dashboard__key -rightLeftMarginMedium">Current Company Phone:</p>
-                    <p class="dashboard__value -rightLeftMarginMedium"><%= companyPhone %></p>
-                </div>
+            <div class="myAccount__defaultUnit">
+                <p class="myAccount__subHeadline">Current Company Phone:</p>
+                <p class="myAccount__bodyTextLarge -marginBottomZero"><%= companyPhone %></p>
             </div>
             <% } %>
 
-            <form action="/add-change-company-phone" method="POST">
+            <div class="internalContainer__paddingTwo32Four">
 
-                <input type="hidden" name="deleteProperty" value="false">
+                <form action="/add-change-company-phone" method="POST">
 
-                <div class="input__unit <% if (addOrChangeProperty === "change") { %> -topMarginMedium <% } else if (addOrChangeProperty === "add") { %> -topMarginLarge <% } %> -bottomMarginLarge -rightLeftMarginMedium"> 
-                    <label for="companyPhone" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Phone:</label>
-                    <p class="textSmall -bottomMarginSmall">Include the phone number that customers can reach you at.</p>
-                    <input id="companyPhone" class="input__field
+                    <input type="hidden" name="deleteProperty" value="false">
+
+                    <div class="input__unit -marginBottomFour">
+                        <label for="companyPhone" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Phone:</label>
+                        <p class="myAccount__bodyTextSmall -marginBottomOne">Include the phone number that customers can reach you at.</p>
+                        <input id="companyPhone" class="input__field
+                            <% if (typeof companyPhoneError != "undefined") { %>
+                                -borderError
+                            <% } %>
+                            " name="companyPhone" <%= companyPhoneAttributes %> value="<%= userInput.companyPhone %>" autofocus>
                         <% if (typeof companyPhoneError != "undefined") { %>
-                            -errorBorder
-                        <% } %>
-                        " name="companyPhone" <%= companyPhoneAttributes %> value="<%= userInput.companyPhone %>" autofocus>
-                    <% if (typeof companyPhoneError != "undefined") { %>
-                    <div class="input__error"><%= companyPhoneError %></div>
-                    <% } %> 
-                </div>
+                        <div class="input__error"><%= companyPhoneError %></div>
+                        <% } %> 
+                    </div>
+                    
+                    <button class="button__narrowScreen"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button> 
 
-                <div class="-bottomMarginLarge -rightLeftMarginMedium">
-                    <button id="narrowScreen__button"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
-                </div>  
+                </form>
 
-            </form>
+                <% if (addOrChangeProperty === "change") { %>
+                <form action="/add-change-company-phone" method="POST">
+                    <div class="-marginBottomFour -rightAlign">
+                        <button class="button__bodyTextMedium">Delete Your Company's Phone Number</button>
+                    </div>
+                    <input type="hidden" name="companyPhone" value="">
+                    <input type="hidden" name="deleteProperty" value="true">
+                </form>
+                <% } %>  
 
-            <% if (addOrChangeProperty === "change") { %>
-            <form action="/add-change-company-phone" method="POST">
-                <div class="-bottomMarginLarge -rightLeftMarginMedium -rightAlign">
-                    <button class="button_fauxLinkMedium">Delete Your Company's Phone Number</button>
-                </div>
-                <input type="hidden" name="companyPhone" value="">
-                <input type="hidden" name="deleteProperty" value="true">
-            </form>
-            <% } %>  
+                <%- include('includes/back-to-my-account.ejs') %>
 
-            <%- include('includes/back-to-my-account.ejs') %>
+            </div>
 
         </div>
 
     </main>
 
-    <%- include('includes/standard-screen-footer.ejs') %>
+    <%- include('includes/footer-standard.ejs') %>
 
 </body>
 </html>

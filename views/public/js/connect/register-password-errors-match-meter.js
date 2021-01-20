@@ -20,10 +20,10 @@ eventArray.forEach(function(event) {
 
 });
 
-document.getElementById('privacyPolicyTermsOfService').addEventListener('change', function() {
+document.getElementById('privacyTerms').addEventListener('change', function() {
 
-    if (document.getElementById('privacyPolicyTermsOfService').checked && document.getElementById('targetPrivacyPolicyTermsOfServiceError')) {
-        removeError('privacyPolicyTermsOfService');
+    if (document.getElementById('privacyTerms').checked && document.getElementById('targetPrivacyTermsError')) {
+        removeError('privacyTerms');
     }
 
 }); 

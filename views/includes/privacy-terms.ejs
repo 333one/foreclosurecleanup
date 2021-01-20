@@ -1,0 +1,13 @@
+                        <div id="privacyTermsContainer" class="input__borderContainerSingleCheck
+                        <% if (typeof privacyTermsError === "undefined") { %>
+                            -borderClear -marginBottomFour
+                        <% } else { %>
+                            -borderError 
+                        <% } %>
+                            ">
+                            <input type="checkbox" id="privacyTerms" class="input__SingleCheck" name="privacyTerms" value="isChecked">
+                            <label class="fontOne" for="privacyTerms">By clicking "<%= buttonTitle %>" I acknowledge that I have read and agree to the <a href="/privacy-policy">Privacy Policy</a> and <a href="/terms-of-service">Terms Of Service</a>.</label>   
+                        </div>
+                    <% if (typeof privacyTermsError !== "undefined") { %>
+                        <p id="targetPrivacyTermsError" class="vendorList__error"><%= privacyTermsError %></p>
+                    <% } %> 

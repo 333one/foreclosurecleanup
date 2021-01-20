@@ -2,8 +2,16 @@
 
 if (document.querySelector('#searchZipCodeError')) {
 
-    document.querySelector('#searchZipCode').addEventListener('change', function() {
-        processSearchError('#searchZipCodeContainer', '#searchZipCodeError');
+    document.querySelector('#searchZipCode').addEventListener('input', function() {
+
+        let zipCode = document.querySelector('#searchZipCode').value;
+
+        let isZipCodeNumber = !isNaN(zipCode) && zipCode !== '' ? true : false;
+
+        if (isZipCodeNumber === true) {
+            removeSearchError('#searchZipCodeContainer', '#searchZipCodeError');
+        }
+
     });
 
 }
@@ -15,7 +23,7 @@ if (document.querySelector('#searchRadiusError')) {
     idArray.forEach(function(element) {
 
         document.querySelector(element).addEventListener('change', function() {
-            processSearchError('#searchRadiusContainer', '#searchRadiusError');
+            removeSearchError('#searchRadiusContainer', '#searchRadiusError');
         });
 
     });
@@ -41,25 +49,27 @@ if (document.querySelector('#searchServicesError')) {
     idArray.forEach(function(element) {
 
         document.querySelector(element).addEventListener('change', function() {
-            processSearchError('#searchServicesContainer', '#searchServicesError');
+            removeSearchError('#searchServicesContainer', '#searchServicesError');
         });
 
     });
 
 }
 
-if (document.querySelector('#privacyTermsError')) {
+if (document.querySelector('#targetPrivacyTermsError')) {
 
     document.querySelector('#privacyTerms').addEventListener('change', function() {
-        processSearchError('#privacyTermsContainer', '#privacyTermsError');
+        removeSearchError('#privacyTermsContainer', '#targetPrivacyTermsError');
     });
 
 }
 
-function processSearchError(container, error) {
+function removeSearchError(container, error) {
+
     document.querySelector(container).classList.remove('-borderError');
-    document.querySelector(container).classList.add('-borderNoError');
-    document.querySelector(container).classList.add('-bottomMarginLarge');
+    document.querySelector(container).classList.add('-borderClear');
+    document.querySelector(container).classList.add('-marginBottomFour');
 
     document.querySelector(error).style.display = 'none';
+
 }

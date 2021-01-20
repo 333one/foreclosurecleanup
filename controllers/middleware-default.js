@@ -20,7 +20,7 @@ exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res) {
     // For rendering.
     // Normally this goes at the bottom but in this case because these values are used on both sides of an if statement they go up here.
     let activeLink = 'foreclosure-cleanup-vendor-list';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     let searchZipAttributes = renderValue.searchZipField.attributes;
@@ -127,8 +127,8 @@ exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res) {
             let freeAccounts = logicDefault.separateAccountTypes(searchResults, defaultValue.accountDefault);
             let premiumAccounts = logicDefault.separateAccountTypes(searchResults, defaultValue.accountUpgrade);
 
-            let freeAccountsProcessed = logicDefault.processCompanyServices(freeAccounts);
-            let premiumAccountsProcessed = logicDefault.processCompanyServices(premiumAccounts);
+            let freeAccountsProcessed = logicDefault.processCompanyForViewing(freeAccounts);
+            let premiumAccountsProcessed = logicDefault.processCompanyForViewing(premiumAccounts, defaultValue.accountUpgrade);
 
             let searchAgainNamesValues = logicDefault.getSearchAgainNamesValues(cleanedQueryWithBoolean);
 
@@ -203,20 +203,22 @@ exports.homePage = wrapAsync(async function(req, res) {
     
     // For rendering.
     let activeLink = 'index';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('index', { activeLink, contactEmail, loggedIn });
+
 });
 
 exports.pageNotFound = wrapAsync(async function(req, res) {
 
     // For rendering.
     let activeLink = 'page-not-found';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
     
     res.status(404).render('page-not-found', { activeLink, contactEmail, loggedIn });
+
 });
 
 exports.postForeclosureCleanupVendorList = wrapAsync(async function(req, res) { 
@@ -251,18 +253,20 @@ exports.privacyPolicy = wrapAsync(async function(req, res) {
     
     // For rendering.
     let activeLink = 'privacy-policy';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('privacy-policy', { activeLink, contactEmail, loggedIn });
+
 });
 
 exports.termsOfService = wrapAsync(async function(req, res) {
     
     // For rendering.
     let activeLink = 'terms-of-service';
-    let contactEmail = siteValue.contactEmail;
+    let contactEmail = siteValue.contactEmail.email;
     let loggedIn = req.session.userValues ? true : false;
 
     res.render('terms-of-service', { activeLink, contactEmail, loggedIn });
+
 });

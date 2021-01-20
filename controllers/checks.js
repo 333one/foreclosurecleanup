@@ -10,36 +10,48 @@ exports.checkAreAllAccountPropertiesFilled = function(sessionUserValues, current
 
     let userProperties = JSON.parse(JSON.stringify(sessionUserValues));
 
-    // These 3 are allowed to be empty so delete them.
-    delete userProperties.companyDescription;
-    delete userProperties.companyStreetTwo;
-    delete userProperties.companyWebsite;
-
-    // The current property has a value or you wouldn't get here.  However it hasn't been updated on the session so it is allowed to be empty.  Delete that property.
+    // The current property has a value or you wouldn't get here.  However this property hasn't been updated on the session yet so it is allowed to be empty at this point.  Check the other properties required to be live, not counting services.  If anything is empty return false.
     if (currentProperty === 'companyAddress') {
 
-        delete userProperties.companyCity;
-        delete userProperties.companyState;
-        delete userProperties.companyStreet;
-        delete userProperties.companyZip;
-        delete userProperties.companyLatitude;
-        delete userProperties.companyLongitude;
+        if (
+            userProperties.companyName === '' ||
+            userProperties.companyPhone === ''
+            ) return false;
 
-    } else if (currentProperty !== 'companyServices') {
+    } else if (currentProperty === 'companyName') {
 
-        delete userProperties[currentProperty];
+        if (
+            userProperties.companyPhone === '' ||
+            userProperties.companyCity === '' ||
+            userProperties.companyState === '' ||
+            userProperties.companyStreet === '' ||
+            userProperties.companyZipCode === '' 
+            ) return false;
+    
+    } else if (currentProperty === 'companyPhone') {
+
+        if (
+            userProperties.companyName === '' ||
+            userProperties.companyCity === '' ||
+            userProperties.companyState === '' ||
+            userProperties.companyStreet === '' ||
+            userProperties.companyZipCode === '' 
+            ) return false;
+
+    } else if (currentProperty === 'companyServices') {
+
+        if (
+            userProperties.companyName === '' ||
+            userProperties.companyPhone === '' ||
+            userProperties.companyCity === '' ||
+            userProperties.companyState === '' ||
+            userProperties.companyStreet === '' ||
+            userProperties.companyZipCode === '' 
+            ) return false;
 
     }
 
-    // If any remaining property is empty return false.
-    for (var key in userProperties) {
-
-        if (userProperties[key] === '') return false;
-            
-    }
-
-    // Company services have to be checked separately.  Don't check if you are at postAddChangeCompanyServices.
-    // In postAddChangeCompanyServices you wouldn't get here if all company services were empty because isAtLeastOneCompanyServiceFilled would redirect you.
+    // Company services have to be checked separately.  If you've gotten this far without returning false every other property has a value.
     if (currentProperty !== 'companyServices') {
 
         let companyServiceProperties = [...formFields.addChangeCompanyServices];
@@ -58,6 +70,7 @@ exports.checkAreAllAccountPropertiesFilled = function(sessionUserValues, current
 
     }
 
+    // If currentProperty === companyServices and every other property had a value you'll get here.  For other properties the boolean is determined in the block above.
     return true;
 
 }

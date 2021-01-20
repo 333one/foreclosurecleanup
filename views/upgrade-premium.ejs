@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Upgrade To A <%= upgradedProfileName %></title>
+    <%- include('includes/head-boilerplate.ejs') %>
+    <%- include('includes/log-in-out-rollover.ejs') %>
+
+</head>
+<body>
+
+    <%- include('includes/my-account-header.ejs') %>
+
+    <main class="mainContainer__standard">
+
+        <div class="internalContainer__standard">
+
+            <div class="heading__containerPremium -marginBottomFour">
+                <p class="heading__headlinePremium"><%= defaultProfileName %> And <%= upgradedProfileName %> Comparison</p>
+            </div>
+
+            <div class="centered__standard">
+
+            <h2 class="font15 -bold -marginBottomOne"><span class="-standard__highlight"><%= defaultProfileName %></span></h2>
+            <ul class="unorderedList font125 -marginBottomTwo">
+                <li class="-marginBottomOne">Includes your company's phone number.</li>
+                <li class="-marginBottomOne">Includes your company's address so it can be found in search results.</li>
+                <li>Includes a list of the standard services that your company offers.</li>
+            </ul>
+            <p class="font125 -bold -marginBottomOne"><%= defaultProfileName %> Example</p>
+            <div class="vendorList__free">
+                <div class="vendorList__free__headlineContainer">
+                    <p class="vendorList__searchResult__headline">Property Pros</p>
+                </div>
+                <div class="vendorList__searchResult__container -vendorList__bottomBorder">
+                    <p class="vendorList__searchResult__heading">Contact:</p>
+                    <p class="vendorList__searchResult__bodyTextTelephone">555-123-4567</p>
+                    <p class="vendorList__searchResult__bodyText"><a href="https://maps.google.com/?q=400+Bizzell+St+College+Station+TX+77843" target="_blank">400 Bizzell St, College Station, TX 77843</a></p>
+                </div>
+                <div class="vendorList__searchResult__container">
+                    <p class="vendorList__searchResult__heading">Services We Offer:</p>
+                    <p class="vendorList__searchResult__bodyText">Boarding&nbsp;&amp;&nbsp;Securing, Debris&nbsp;Removal&nbsp;&amp;&nbsp;Trashout, Eviction&nbsp;Management, Field&nbsp;Inspection, Handyman&nbsp;&amp;&nbsp;General&nbsp;Maintenance, Landscape&nbsp;Maintenance, Lock&nbsp;Changes, Oversee&nbsp;Property&nbsp;Rehabilitation, Pool&nbsp;Maintenance, Property&nbsp;Cleaning, Winterizations</p>
+                </div>
+            </div>
+
+            <h2 class="font15 -bold -marginBottomOne"><span class="-premium__highlight"><%= upgradedProfileName %></span></h2>
+            <ul class="unorderedList font125 -marginBottomTwo">
+                <li class="-marginBottomOne">Listed before <%= defaultProfileName %>s with gold header in search results.</li>
+                <li class="-marginBottomOne">Includes a link to your company website or social media page.</li>
+                <li class="-marginBottomOne">Includes your logo or image that is linked to your company website or social media page.</li>
+                <li class="-marginBottomOne">Includes an "About Us" section used to describe your company and what it has to offer.</li>
+                <li class="-marginBottomOne">Includes your company's phone number.</li>
+                <li class="-marginBottomOne">Includes your company's address so it can be found in search results.</li>
+                <li class="-marginBottomOne">Includes a list of the standard services that your company offers.</li>
+                <li>Costs <%= costInDollarsProduct_1 %> per year. There are no contracts or recurring billing.</li>
+            </ul>
+            <p class="font125 -bold -marginBottomOne"><%= upgradedProfileName %> Example</p>
+            <div class="vendorList__premium">
+                <div class="premiumSearchResult__nameContainer">
+                    <p class="vendorList__searchResult__headline"><a href="">Property Pros</a></p>
+                </div>
+
+                <div class="vendorList__premium__logoContactServicesContainer">  
+                    <div class="vendorList__premium__logoContainer">
+                        <a href=""><img src="images/generic-logo.png" width="200" height="200"></a>
+                    </div>
+                    <div class="vendorList__premium__contactServicesContainer">
+                        <div class="vendorList__searchResult__container -vendorList__bottomBorder">
+                            <p class="vendorList__searchResult__heading">Contact:</p>
+                            <p class="vendorList__searchResult__bodyText"><a href="">www.propertypros.com</a></p>
+                            <p class="vendorList__searchResult__bodyTextTelephone">555-123-4567</p>
+                            <p class="vendorList__searchResult__bodyText"><a href="https://maps.google.com/?q=400+Bizzell+St+College+Station+TX+77843" target="_blank">400 Bizzell St, College Station, TX 77843</a></p>
+                        </div>
+                        <div class="premiumSearchResult__servicesContainer">                                    
+                            <p class="vendorList__searchResult__heading">Services We Offer:</p>
+                            <p class="vendorList__searchResult__bodyText">Boarding&nbsp;&amp;&nbsp;Securing, Debris&nbsp;Removal&nbsp;&amp;&nbsp;Trashout, Eviction&nbsp;Management, Field&nbsp;Inspection, Handyman&nbsp;&amp;&nbsp;General&nbsp;Maintenance, Landscape&nbsp;Maintenance, Lock&nbsp;Changes, Oversee&nbsp;Property&nbsp;Rehabilitation, Pool&nbsp;Maintenance, Property&nbsp;Cleaning, Winterizations</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="vendorList__searchResult__container">
+                    <p class="vendorList__searchResult__heading">About Us:</p>
+                    <p class="vendorList__searchResult__bodyText">Property Pros began serving the property preservation industry during the 2008 recession. Our prices are affordable and our crews are experienced. We pride ourselves on quality service and excellent communication. We promise you a great experience on your next property preservation project.</p>
+                </div>
+            </div>
+
+            <button id="checkout-button" class="button__inactive">Available Soon</button>
+            
+            </div>
+
+        </div>
+
+    </main>
+
+    <%- include('includes/footer-standard.ejs') %>
+
+</body>
+</html>

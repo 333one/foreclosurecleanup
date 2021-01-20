@@ -1,0 +1,31 @@
+        <nav class="header__nav">
+            <div class="header__nav__internal">
+
+                <a href="/"
+                <% if (activeLink === 'index') { %> 
+                    class="header__nav__activeUnit"
+                <% } else { %>
+                    class="header__nav__unit"
+                <% } %>
+                    >HOME</a>
+
+                <a href="/foreclosure-cleanup-vendor-list"
+                <% if (activeLink === 'foreclosure-cleanup-vendor-list') { %> 
+                    class="header__nav__activeUnit"
+                <% } else { %>
+                    class="header__nav__unit"
+                <% } %>
+                    >VENDOR LIST</a>
+
+            <% if (loggedIn != true) { %> 
+                <a href="/register"
+                <% if (activeLink === 'register') { %> 
+                    class="header__nav__activeUnit"
+                <% } else { %>
+                    class="header__nav__unit"
+                <% } %>
+                    >REGISTER</a>
+                <% } %>
+
+            </div>
+        </nav>

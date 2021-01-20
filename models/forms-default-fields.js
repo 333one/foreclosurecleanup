@@ -35,4 +35,4 @@ exports.passwordReset = ['changedPassword', 'confirmationPassword'];
 
 exports.passwordResetRequest = ['currentEmail'];
 
-exports.register = ['newEmail', 'newPassword', 'confirmationPassword', 'privacyPolicyTermsOfService'];
+exports.register = ['newEmail', 'newPassword', 'confirmationPassword', 'privacyTerms'];
