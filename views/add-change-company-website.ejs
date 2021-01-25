@@ -46,7 +46,7 @@
                         <% } %> 
                     </div>
 
-                    <button class="button__narrowScreen"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button>
+                    <%- include('includes/button-narrow-screen.ejs') %>
 
                 </form>
                 
@@ -58,9 +58,7 @@
                     <input type="hidden" name="companyWebsite" value="">
                     <input type="hidden" name="deleteProperty" value="true">
                 </form>
-                <% } %>  
-
-                <%- include('includes/back-to-my-account.ejs') %>
+                <% } %>
 
             </div>
 

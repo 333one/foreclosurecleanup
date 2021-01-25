@@ -13,7 +13,7 @@
 
     <%- include('includes/my-account-header.ejs') %>
 
-    <main class="mainContainer__standard">
+    <main id="checker" class="mainContainer__standard">
 
         <div class="internalContainer__narrowVanish">
 
@@ -44,71 +44,85 @@
                             <li>Please use an image that is less than 2 megabytes.</li>
                             <li>Animated images are not allowed.</li>
                             <li>Images that are offensive, violent or pornographic are not allowed.</li>
-                            <li>Logos used in the National Vendors List are displayed at 200 x 200 pixels.  For best results select an image that is 200 x 200 or square shaped.</li>
+                            <li>Logos used in the <a href="/foreclosure-cleanup-vendor-list">National Vendors List</a> are displayed in a square that is 200 pixels wide by 200 pixels high.  For best results select an image that is 200 x 200 or square shaped.</li>
                         </ul>
+
 
                         <h2 class="heading__small">Upload Instructions:</h2>
                         <ul class="unorderedListSmall">
-                            <li>Click the button that reads "Browse Your Device" and select your image.</li>
-                            <li>Once the image is displayed in the browser it is ready to be uploaded.</li>
-                            <li>If you are not happy with your image please select a new image.</li>
-                            <li>Once you are happy with your image click the large button at the bottom that reads "Upload My image".</li>
+                            <div id="uploadInstructions">
+                                <li>Click the button that reads "Select Your Image" and browse your device to select your image.</li>
+                                <li>Once the image is displayed in the browser it is ready to be uploaded.</li>
+                                <li>If you are not happy with your image select a new image or click "Undo" to remove your current selection.</li>
+                                <li>Once you are happy with your image click the large button at the bottom that reads "Upload My image".</li>
+                            </div>
+                            <noscript>
+                                <li>Click the button below and browse your device to select your image.</li>
+                                <li>Once you have chosen your image click the large button at the bottom that reads "Upload My image".</li>
+                            </noscript>
                             <li>That's it you're done!  You can always replace your image if you need to.</li>
                         </ul>
-
                     </div>
 
-                    <form action="/add-change-company-logo" method="POST">
+                    <form action="/add-change-company-logo" method="POST" enctype="multipart/form-data">
 
-                        <div id="imageContainer" class="imageUpload__container -marginBottomFour
+                        <div id="imageContainer" class="imageUpload__container
                             <% if (typeof imageUploadError === "undefined") { %>
-                                    -borderNoError
+                                    -borderClear -marginBottomFour
                             <% } else { %>
                                     -borderError
                             <% } %>                        
                         ">
 
-                            <div class="imageUpload__interiorContainer">
-
-                                <div class="imageUpload__leftColumn">
-                                    <input type="file" name="imageFile" accept=".gif,.jpg,.jpeg,.png" id="imageFile" class="imageUpload__input">
-                                    <div id="imageUploading"></div>
-                                    <div class="imageUpload__icon"><img src="images/icon-upload-image.svg" width="100" height="75"></div>
-                                    <div class="imageUpload__bottomContainer">
-                                        <label for="imageFile" id="imageButton" class="imageUpload__button">Select Your Image</label>
-                                    </div>                                
+                            <noscript>
+                                <label for="inputElement" class="imageUpload__selectLabel">Select Your Image</label>
+                                <div class="test__container ">
+                                    <input type="file" name="companyLogo" accept=".gif,.jpg,.jpeg,.png" class="imageUpload__noScriptButton">
                                 </div>
-                                <div class="imageUpload__rightColumn">
-                                    <div class="imageUpload__imageContainer"><img src="" id="imageDisplay" width="0" height="0"></div>
-                                    <div>undo</div>
+                                
+                            </noscript>
+
+                            <div id="imageInteriorContainer" class="imageUpload__interiorContainer">
+
+                                <div id="leftColumnExterior" class="imageUpload__leftColumnExterior">
+                                    <div id="leftColumnInterior" class="imageUpload__leftColumnInterior">
+                                        <input type="file" name="companyLogo" accept=".gif,.jpg,.jpeg,.png" id="inputElement" class="imageUpload__input">
+                                        <div class="imageUpload__iconContainer"><img src="images/icon-upload-image.svg" class="imageUpload__icon"></div>
+                                        <label for="inputElement" id="imageSelect" class="imageUpload__selectButton">Select Your Image</label>
+                                    </div>
+                                </div>
+                                <div id="rightColumn" class="imageUpload__rightColumn">
+                                    <div class="imageUpload__imageContainer"><img src="" width="0" height="0" id="imageDisplay"></div>
+                                    <div id="undoButton" class="imageUpload__undoButtonContainer">
+                                        <p class="imageUpload__undo">Undo</p>
+                                        <img src="images/x-red.svg" class="imageUpload__undoX">
+                                    </div> 
                                 </div>
 
                             </div>
                         
                         </div>
 
-                        <div id="imageUploadError"
+                        <div id="imageError"
                             <% if (typeof companyLogoError != "undefined") { %>
-                                class="input__error -rightLeftMarginMedium__imageUpload -bottomMarginMedium"><%= companyLogoError %>
+                                class="input__error -marginBottomFour"><%= companyLogoError %>
                             <% } %> 
                             >
                         </div>
 
-                        <button class="button__narrowScreen">Upload My Image</button>
+                        <%- include('includes/button-narrow-screen.ejs') %>
 
                     </form>
 
                     <% if (addOrChangeProperty === "change") { %>
                     <form action="/add-change-company-logo" method="POST">
-                        <div class="-marginBottomFour -rightAlign">
+                        <div class="-rightAlign">
                             <button class="button__bodyTextMedium">Delete Your Company's Logo</button>
                         </div>
                         <input type="hidden" name="companyLogo" value="">
                         <input type="hidden" name="deleteProperty" value="true">
                     </form>
                     <% } %>  
-
-                <%- include('includes/back-to-my-account.ejs') %>
 
             </div>
 

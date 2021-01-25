@@ -1,117 +1,85 @@
 'use strict';
 
-// setup
-
-document.getElementById('button__submit').style.backgroundColor = 'var(--grey192)';
-document.getElementById('button__submit').style.color = 'var(--white)';
-document.getElementById('button__submit').disabled = true;
-document.getElementById('button__submit').style.cursor = 'default';
-
-let imageFile = document.querySelector('#imageFile');
+let buttonSubmit = document.querySelector('#buttonSubmit');
+let buttonUndo = document.querySelector('#undoButton');
+let imageContainer = document.querySelector('#imageContainer');
+let imageInteriorContainer = document.querySelector('#imageInteriorContainer');
 let imageDisplay = document.querySelector('#imageDisplay');
+let imageError = document.querySelector('#imageError');
+let inputElement = document.querySelector('#inputElement');
+let imageSelect = document.querySelector('#imageSelect');
+let leftColumnExterior = document.querySelector('#leftColumnExterior');
+let leftColumnInterior = document.querySelector('#leftColumnInterior');
+let rightColumn = document.querySelector('#rightColumn');
+let uploadInstructions = document.querySelector('#uploadInstructions');
 
-let border = document.querySelector('#imageContainer');
-let imageError = document.querySelector('#imageUploadError');
+let addHighlightActions = ['dragenter', 'dragover'];
+let removeHighlightActions = ['dragleave', 'drop'];
 
-imageFile.addEventListener('input', function(event) {
+// If JS is turned on enable these, otherwise noscript version is used.
+enableImageInteriorContainer();
+enableUploadInstructions();
 
-    let uploadedFile = event.target.files[0];
+// Start disabled
+disableSubmitButton(buttonSubmit);
 
-    let fileName = uploadedFile.name;
-    let validFileNames = [
-        '.gif',
-        '.jpg',
-        '.jpeg',
-        '.png'
-    ];
+inputElement.addEventListener('input', uploadFileRoutine);
 
-    let isFileNameValid = checkIfFileNameValid(fileName, validFileNames);
-
-    let bytesToMegabytes = 1048576;
-    let uploadedFileSize = (uploadedFile.size / bytesToMegabytes).toFixed(2);
-    let maximumFileSize = 1; // 5 megabytes
-
-    let isFileSizeUnderLimit = uploadedFileSize < maximumFileSize ? true : false;
-
-
-    if (isFileNameValid === false) {
-
-        let errorText = `We are sorry but your image file, ${ fileName } is not saved in a format we can accept.  Please upload an image in jpg, png or gif format.`;
-        addError(errorText);
-
-    }
-
-    if (isFileSizeUnderLimit === false) {
-
-        let errorText = `We are sorry but your image file is ${ uploadedFileSize } megabytes which is over the maximum limit of ${ maximumFileSize } megabytes.  Please compress your image and try again or use a new image.`;
-
-        addError(errorText);
-
-    }
-
-    if (isFileNameValid === true && isFileSizeUnderLimit === true) {
-
-        let uploadedImage = new Image();
-        uploadedImage.src = URL.createObjectURL(uploadedFile);
-
-        uploadedImage.addEventListener('load', function getHeight(e) {
-
-            let imageWidth = uploadedImage.naturalWidth;
-            let imageHeight = uploadedImage.naturalHeight;
-            
-            let displayWidth, displayHeight;
-
-            if (imageWidth === imageHeight) {
-
-                displayWidth = 200;
-                displayHeight = 200;
-
-            } else if (imageWidth > imageHeight) {
-
-                displayWidth = 200;
-                displayHeight = Math.round(imageHeight/imageWidth * 200);
-
-            } else {
-
-                displayWidth = Math.round(imageWidth/imageHeight * 200);
-                displayHeight = 200;
-            }
-
-            imageDisplay.setAttribute('width', displayWidth);
-            imageDisplay.setAttribute('height', displayHeight);
-            imageDisplay.src = uploadedImage.src;
-
-            document.getElementById('button__submit').style.backgroundColor = 'var(--grey32)';
-            document.getElementById('button__submit').style.color = 'var(--gold)';
-            document.getElementById('button__submit').disabled = false;
-            document.getElementById('button__submit').style.cursor = 'pointer';
-
-        });
-
-        uploadedImage.removeEventListener(e.type, getHeight);
-
-    }
-
+addHighlightActions.forEach(function(element) {
+    leftColumnInterior.addEventListener(element, addHighlight);
 });
 
-function addError(errorText) {
+removeHighlightActions.forEach(function(element) {
+    leftColumnInterior.addEventListener(element, removeHighlight);
+});
 
-    border.classList.add('-borderError');
-    border.classList.remove('-bottomMarginMedium');
+// Main function
+function uploadFileRoutine(e) {
 
-    imageError.classList.add('input__error');
-    imageError.classList.add('-rightLeftMarginMedium__imageUpload');
-    imageError.classList.add('-bottomMarginMedium');
+    if (e.target.files[0]) {
 
-    imageError.innerText = errorText;
+        let uploadedFile = e.target.files[0];
 
-    imageDisplay.setAttribute('width', 200);
-    imageDisplay.setAttribute('height', 200);
-    imageDisplay.src = 'images/image-upload-error.png';
+        let fileName = uploadedFile.name;
+        let fileSize = uploadedFile.size;
+    
+        let isFileNameValid = checkIfFileNameValid(fileName);
+        let fileSizeUnderLimitObject = checkIfFileSizeUnderLimit(fileSize);
+    
+        if (isFileNameValid === false || fileSizeUnderLimitObject.isFileSizeUnderLimit === false) {
+    
+            let errorText = getErrorText(isFileNameValid, fileName, fileSizeUnderLimitObject);
+            displayError(errorText);
+            removeUndoButton(e);
+            return;
+    
+        }
+    
+        // no errors gets you here
+        createDisplayImage(e, uploadedFile);
+
+    }
 
 }
 
-function checkIfFileNameValid(fileName, validFileNames) {
+// All other functions
+function addHighlight() {
+
+    leftColumnInterior.classList.add('-greenBorder');
+    leftColumnExterior.classList.add('-greenBorder');
+
+}
+
+function removeHighlight() {
+
+    leftColumnInterior.classList.remove('-greenBorder');
+    leftColumnExterior.classList.remove('-greenBorder');
+
+}
+
+function checkIfFileNameValid(fileName) {
+
+    let validFileNames = ['.gif', '.jpg', '.jpeg', '.png'];
 
     for (const value of validFileNames) {
         
@@ -124,15 +92,188 @@ function checkIfFileNameValid(fileName, validFileNames) {
 
 }
 
-function removeError(errorText) {
+function checkIfFileSizeUnderLimit(fileSize) {
 
-    border.classList.remove('-borderError');
-    border.classList.add('-bottomMarginMedium');
+    let bytesToMegabytes = 1048576;
+
+    let maximumFileSize = 1; // 5 megabytes
+    let fileSizeInMegabytes = (fileSize / bytesToMegabytes).toFixed(2);
+    let isFileSizeUnderLimit = fileSizeInMegabytes < maximumFileSize ? true : false;
+
+    return { maximumFileSize, fileSizeInMegabytes, isFileSizeUnderLimit } ;        
+
+}
+
+function createDisplayImage(e, uploadedFile) {
+
+    let uploadedImage = new Image();
+    uploadedImage.src = URL.createObjectURL(uploadedFile);
+
+    uploadedImage.addEventListener('load', function(e) {
+
+        removeError();
+        displayImage(uploadedImage);
+        enableSubmitButton(buttonSubmit);
+        removeGreyBackground();
+        displayUndoButton();
+
+    });
+
+}
+
+function disableSubmitButton(buttonToDisable) {
+
+    buttonToDisable.style.backgroundColor = 'var(--grey192)';
+    buttonToDisable.style.color = 'var(--white)';
+    buttonToDisable.disabled = true;
+    buttonToDisable.style.cursor = 'default';
+
+}
+
+function displayError(errorText) {
+
+    imageContainer.classList.remove('-borderClear');
+    imageContainer.classList.remove('-marginBottomFour');
+    imageContainer.classList.add('-borderError');
+
+    imageError.classList.add('input__error');
+    imageError.classList.add('-marginBottomFour');
+    imageError.innerText = errorText;
+
+    imageDisplay.setAttribute('width', 200);
+    imageDisplay.setAttribute('height', 200);
+    imageDisplay.src = 'images/image-upload-error.png';
+
+}
+
+function displayImage(uploadedImage) {
+
+    let imageWidth = uploadedImage.naturalWidth;
+    let imageHeight = uploadedImage.naturalHeight;
+    
+    let displayWidth, displayHeight;
+
+    if (imageWidth === imageHeight) {
+
+        displayWidth = 200;
+        displayHeight = 200;
+
+    } else if (imageWidth > imageHeight) {
+
+        displayWidth = 200;
+        displayHeight = Math.round(imageHeight/imageWidth * 200);
+
+    } else {
+
+        displayWidth = Math.round(imageWidth/imageHeight * 200);
+        displayHeight = 200;
+    }
+
+    imageDisplay.setAttribute('width', displayWidth);
+    imageDisplay.setAttribute('height', displayHeight);
+    imageDisplay.src = uploadedImage.src;
+
+}
+
+function displayUndoButton() {
+
+    buttonUndo.style.visibility = 'visible';
+    buttonUndo.addEventListener('click', removeImageClearButtons);
+
+}
+
+function enableImageInteriorContainer() {
+
+    imageInteriorContainer.style.display = 'flex';
+
+}
+
+function enableUploadInstructions() {
+
+    uploadInstructions.style.display = 'block';
+
+}
+
+function enableSubmitButton(buttonToEnable) {
+
+    buttonToEnable.style.backgroundColor = 'var(--grey32)';
+    buttonToEnable.style.color = 'var(--gold)';
+    buttonToEnable.disabled = false;
+    buttonToEnable.style.cursor = 'pointer';
+
+}
+
+function getErrorText(isFileNameValid, fileName, fileSizeUnderLimitObject) {
+
+    let errorText;
+
+    if (isFileNameValid === false) {
+
+        errorText = `We are sorry but your image file, ${ fileName } is not saved in a format we can accept.  Please upload an image in jpg, png or gif format.`;
+        
+        return errorText;
+
+    }
+
+    let { maximumFileSize, fileSizeInMegabytes, isFileSizeUnderLimit } = fileSizeUnderLimitObject;
+
+    if (isFileSizeUnderLimit === false) {
+
+        errorText = `We are sorry but your image file, ${ fileName } is ${ fileSizeInMegabytes } megabytes which is over the maximum limit of ${ maximumFileSize } megabytes.  Please compress your image and try again or select a new image.`;
+
+        return errorText;
+
+    }
+
+}
+
+function removeError() {
+
+    imageContainer.classList.remove('-borderError');
+    imageContainer.classList.add('-borderClear');
+    imageContainer.classList.add('-marginBottomFour');
 
     imageError.classList.remove('input__error');
-    imageError.classList.remove('-rightLeftMarginMedium__imageUpload');
-    imageError.classList.remove('-bottomMarginMedium');
+    imageError.classList.remove('-marginBottomFour');
+    imageError.innerText = '';
 
-    imageError.innerText = errorText;
+}
+
+function returnToGreyBackground() {
+
+    rightColumn.classList.remove('-whiteBackground');
+
+}
+
+function removeGreyBackground() {
+
+    rightColumn.classList.add('-whiteBackground');
+
+}
+
+function removeImage() {
+
+    imageDisplay.setAttribute('width', 0);
+    imageDisplay.setAttribute('height', 0);
+    imageDisplay.src = '';
+
+    // This has to be removed as well or it sits in the cache.
+    inputElement.value = '';
+    
+}
+
+function removeImageClearButtons(e) {
+
+    removeImage();
+    returnToGreyBackground();
+    removeUndoButton(e);
+    disableSubmitButton(buttonSubmit);
+
+}
+
+function removeUndoButton(e) {
+
+    buttonUndo.removeEventListener(e.type, removeImageClearButtons);
+    buttonUndo.style.visibility = 'hidden';
 
 }

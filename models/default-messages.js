@@ -101,6 +101,7 @@ exports.successfulChange = function(companyProperty, changeVerb) {
     if (
         companyProperty === 'address' ||
         companyProperty === 'description' ||
+        companyProperty === 'logo' ||
         companyProperty === 'name'  ||
         companyProperty === 'phone number' ||
         companyProperty === 'website'

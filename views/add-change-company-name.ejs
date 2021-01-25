@@ -47,21 +47,19 @@
                         <% } %> 
                     </div>
 
-                    <button class="button__narrowScreen"><% if (addOrChangeProperty === "change") { %>Save Change<% } else if (addOrChangeProperty === "add") { %>Add<% } %></button> 
+                    <%- include('includes/button-narrow-screen.ejs') %>
 
                 </form>
 
                 <% if (addOrChangeProperty === "change") { %>
                 <form action="/add-change-company-name" method="POST">
-                    <div class="-marginBottomFour -rightAlign">
+                    <div class="-rightAlign">
                         <button class="button__bodyTextMedium">Delete Your Company's Name</button>
                     </div>
                     <input type="hidden" name="companyName" value="">
                     <input type="hidden" name="deleteProperty" value="true">
                 </form>
                 <% } %>  
-
-                <%- include('includes/back-to-my-account.ejs') %>
 
             </div>
 

@@ -123,13 +123,13 @@
                         </div>
 
                         <% if (typeof searchServicesError !== "undefined") { %>
-                            <p id="searchServicesError" class="vendorList__error  -marginBottomFour"><%= searchServicesError %></p>
+                            <p id="searchServicesError" class="vendorList__error -marginBottomFour"><%= searchServicesError %></p>
                         <% } %> 
 
                         <%- include('includes/privacy-terms.ejs', { buttonTitle : 'Search' }) %>
 
                         <input type="hidden" name="searchType" value="new">
-                        <button class="button__narrowScreen">Search</button>
+                        <button class="button__narrowScreen -marginBottomFour">Search</button>
 
                     </form>
 

@@ -5,6 +5,9 @@
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
 
+    <script defer src="https://js.stripe.com/v3/"></script>
+    <script defer src="js/checkout.js"></script>
+
 </head>
 <body>
 
@@ -82,7 +85,7 @@
                 </div>
             </div>
 
-            <button id="checkout-button" class="button__inactive">Available Soon</button>
+            <button id="checkout-button" class="button__fullScreen">Upgrade To A <%= upgradedProfileName %></button>
             
             </div>
 

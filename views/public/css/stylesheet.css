@@ -178,9 +178,6 @@
 }
 
 .header__rowTwo {
-	justify-content: initial;
-	align-items: center;
-	flex-direction: column;
 	padding: var(--two) var(--px32);
 }
 
@@ -208,6 +205,7 @@
 	margin: 0;
 	padding: 0;
 	font-size: var(--font25);
+	font-weight: 600;
 }
 
 .header__rowTwo__companyName a:link,
@@ -492,8 +490,6 @@
 /* My Account */
 
 .myAccount__header {
-	position: relative;
-	z-index: 10;
 	background-color: var(--grey224);
 	border-bottom: 0.0625rem solid var(--grey192);
 }
@@ -504,6 +500,7 @@
 	margin-right: auto;
 	margin-left: auto;
 	width: var(--standardWidth);
+	max-width: 100%;
 }
 
 .myAccount__headerLeft {
@@ -682,6 +679,7 @@
 
 .myAccount__barInternal {
 	width: var(--standardWidth);
+	max-width: 100%;
 }
 
 .myAccount__addressNormalizationBox {
@@ -799,74 +797,134 @@
 	border-color: var(--grey224);
 }
 
-.imageUpload__interiorContainer {
-	display: flex;
-	height: 250px;
-	border: 0.0625rem solid var(--grey192);
-}
-
-.imageUpload__leftColumn {
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-end;
-	position: relative;
-	flex-grow: 1;
-	border-right: 0.0625rem solid var(--grey192);
-}
-
-.imageUpload__rightColumn {
-	width: 220px;
-	min-width: 220px;
-}
-
-.imageUpload__icon {
-	width: 100px;
-	height: 75px;
-}
-
-.imageUpload__input {
-	display: none;
-}
-
-.imageUpload__bottomContainer {
-	height: 50px;
-}
-
-.imageUpload__button,
-.imageUploadUndo__undoButton {
-	display: block;
-	text-align: center;
-	margin: 8px;
-	padding: 4px;
-	font-size: 16px;
-	cursor: pointer;
-}
-
-.imageUpload__button {
-	color: var(--blue);
-	border: 1px solid var(--blue);
-	background-color: var(--ultraLightBlue);
-}
-
-.imageUpload__undoButton {
-	color: var(--red);
-	border: 1px solid var(--red);
-	background-color: var(--ultraLightRed);
-}
-
-.imageUpload__imageContainer {
-	margin: 10px;
-	width: 200px;
-	height: 200px;
-}
-
 .imageUpload__container {
+	padding: 4px;
 	border-width: 3px;
 	border-style: solid;
 }
 
-.imageUpload__container {
+.imageUpload__interiorContainer {
+	display: none;
+	height: 18rem;
+}
+
+.imageUpload__leftColumnInterior,
+.imageUpload__rightColumn {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: var(--one) var(--px16);
+}
+
+.imageUpload__leftColumnInterior {
+	position: relative;
+	flex-grow: 1;
+	border-width: 0.0625rem;
+	border-style: dashed;
+	border-color: var(--blue);
+}
+
+.imageUpload__leftColumnExterior {
+	display: flex;
+	flex-grow: 1;
 	padding: 4px;
+	border: 0.0625rem solid var(--blue);
+}
+
+.imageUpload__rightColumn {
+	width: 12.5rem;
+	background-color: var(--grey252);
+	border-top: 0.0625rem solid var(--grey224);
+	border-right: 0.0625rem solid var(--grey224);
+	border-bottom: 0.0625rem solid var(--grey224);
+}
+
+.imageUpload__iconContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-grow: 1;
+	margin-bottom: 1rem;
+}
+
+.imageUpload__icon {
+	width: 6.25rem;
+	height: 4.5rem;
+}
+
+.imageUpload__imageContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 12.5rem;
+	height: 12.5rem;
+}
+
+.imageUpload__topContainer {
+	height: 12.5rem;
+}
+
+.imageUpload__input {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	opacity: 0;
+}
+
+.imageUpload__selectButton,
+.imageUpload__undoButtonContainer {
+	text-align: center;
+	padding: 0.25rem;
+	cursor: pointer;
+	font-size: var(--font125);
+}
+
+.imageUpload__selectButton {
+	display: block;
+	color: var(--blue);
+	border: 0.0625rem solid var(--blue);
+	background-color: var(--ultraLightBlue);
+}
+
+.imageUpload__selectLabel {
+	display: block;
+	margin-bottom: var(--one);
+	cursor: pointer;
+	font-size: var(--font15);
+}
+
+.imageUpload__noScriptButton {
+	cursor: pointer;
+	font: var(--font15);
+}
+
+.imageUpload__undoButtonContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+	border: 0.0625rem solid var(--red);
+	background-color: var(--ultraLightRed);
+}
+
+.imageUpload__undo {
+	margin: 0 8px 0 0;
+	padding: 0;
+	color: var(--red);
+}
+
+.imageUpload__undoX {
+	margin: 0;
+	padding: 0;
+	width: 0.9375rem;
+	height: 0.9375rem;
+}
+
+#uploadInstructions {
+	display: none;
 }
 
 /* Shared elements */
@@ -915,7 +973,6 @@ select:-webkit-autofill:active {
 .button__narrowScreen,
 .button__fullScreen,
 .button__inactive {
-	margin-bottom: var(--four);
 	padding-top: var(--half);
 	padding-bottom: var(--half);
 	max-width: 100%;
@@ -931,6 +988,7 @@ select:-webkit-autofill:active {
 
 .button__fullScreen,
 .button__inactive {
+	margin-bottom: var(--four);
 	display: block;
 	margin-right: auto;
 	margin-left: auto;
@@ -1124,6 +1182,7 @@ select:-webkit-autofill:active {
 
 .internalContainer__standard {
 	width: var(--standardWidth);
+	max-width: 100%;
 }
 
 .internalContainer__narrow,
@@ -1249,7 +1308,10 @@ select:-webkit-autofill:active {
 .myAccount__bodyTextSmall a:hover,
 .myAccount__deleteAccountUnit a:link,
 .myAccount__deleteAccountUnit a:visited,
-.myAccount__deleteAccountUnit a:hover {
+.myAccount__deleteAccountUnit a:hover,
+li a:link,
+li a:visited,
+li a:hover {
 	color: var(--blue);
 	text-decoration: underline;
 }
@@ -1265,7 +1327,8 @@ select:-webkit-autofill:active {
 .font1 a:active,
 .font75 a:active,
 .myAccount__bodyTextSmall a:active,
-.myAccount__deleteAccountUnit a:active {
+.myAccount__deleteAccountUnit a:active,
+li a:active {
 	color: var(--blue);
 	text-decoration: underline;
 }
@@ -1275,9 +1338,18 @@ select:-webkit-autofill:active {
 	padding-left: 40px;
 }
 
+.unorderedList li {
+	margin-bottom: var(--one);
+}
+
 .unorderedListSmall {
 	margin: 0;
+	padding-left: 20px;
 	font: var(--font1);
+}
+
+.unorderedListSmall li {
+	margin-bottom: var(--half);
 }
 
 /* Single page site */
@@ -1915,6 +1987,14 @@ select:-webkit-autofill:active {
 
 	/* Header & Footer */
 
+	.header__rowTwo__branding {
+		flex-direction: column;
+	}
+
+	.header__rowTwo__companyName {
+		margin-top: var(--one);
+	}
+
 	.footer__columns {
 		flex-direction: column;
 		justify-content: initial;
@@ -2157,6 +2237,10 @@ select:-webkit-autofill:active {
 	text-align: center;
 }
 
+.-greenBorder {
+	border-color: var(--green200);
+}
+
 .-inlineBlock {
 	display: inline-block;
 }
@@ -2167,6 +2251,10 @@ select:-webkit-autofill:active {
 
 .-rightAlign {
 	text-align: right;
+}
+
+.-whiteBackground {
+	background-color: var(--white);
 }
 
 /* Modifiers Font */

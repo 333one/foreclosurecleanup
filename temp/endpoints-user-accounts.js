@@ -3,8 +3,6 @@ const express = require('express');
 const multer = require('multer');
 const upload = multer({dest: __dirname + '../uploads/images'});
 
-console.log(__dirname + '../uploads/images');
-
 const middlewareUserAccounts = require('./middleware-user-accounts');
 const { redirectIfNoUpgrade, redirectLogin, redirectMyAccount } = require('./middleware-user-accounts'); 
 
