@@ -5,19 +5,25 @@ let { projectStatus } = siteValue;
 
 exports.logoutUser = wrapAsync( async function(req, res, destination) {
 
-    if (projectStatus === 'staging' || projectStatus === 'production') {
+    // Triple redundancy,
+    // clearCookie deletes cookie in the browser
+    // session.destroy() deletes the session 
+    // unset: 'destroy' is set in the cookie so .destroy() deletes the reference in the redis DB.
+    res.clearCookie(process.env.SESSION_NAME);
+    req.session.destroy();
+    
+    return res.redirect(destination);
 
-        let redisClient = req.app.get('referenceToRedisClient');
-        await redisClient.del(req.session.id);
+    // This is the old way.  Keeping in case problems are discovered with the new way.
+    // if (projectStatus === 'staging' || projectStatus === 'production') {
 
-    }
+    //     let redisClient = req.app.get('referenceToRedisClient');
+    //     redisClient.del(req.session.id);
 
-    req.session.destroy( function(error) {
+    // }
 
-        if (error) res.clearCookie(process.env.SESSION_NAME);
-
-        if (destination) return res.redirect(destination);
-
-    });
+    // req.session.destroy( function(error) {
+    //     if (error) res.clearCookie(process.env.SESSION_NAME);
+    // });
 
 });

@@ -19,7 +19,7 @@ exports.addMissingServicesToSubmission = function(submission) {
 
 exports.cleanForm = function(defaultFormFields, reqBody) {
 
-    // This function is used at the beginning of every POST request to deal with the submission of sloppy, erroneous or malicious data.
+    // This function is used at the beginning of every POST request (not including those that contain images) to deal with the submission of sloppy, erroneous or malicious data.
 
     // Trim white space from each property.
     let trimmedReqBody = {};

@@ -6,7 +6,7 @@ let imageContainer = document.querySelector('#imageContainer');
 let imageInteriorContainer = document.querySelector('#imageInteriorContainer');
 let imageDisplay = document.querySelector('#imageDisplay');
 let imageError = document.querySelector('#imageError');
-let inputElement = document.querySelector('#inputElement');
+let companyLogo = document.querySelector('#companyLogo');
 let imageSelect = document.querySelector('#imageSelect');
 let leftColumnExterior = document.querySelector('#leftColumnExterior');
 let leftColumnInterior = document.querySelector('#leftColumnInterior');
@@ -23,7 +23,7 @@ enableUploadInstructions();
 // Start disabled
 disableSubmitButton(buttonSubmit);
 
-inputElement.addEventListener('input', uploadFileRoutine);
+companyLogo.addEventListener('input', uploadFileRoutine);
 
 addHighlightActions.forEach(function(element) {
     leftColumnInterior.addEventListener(element, addHighlight);
@@ -79,7 +79,7 @@ function removeHighlight() {
 
 function checkIfFileNameValid(fileName) {
 
-    let validFileNames = ['.gif', '.jpg', '.jpeg', '.png'];
+    let validFileNames = ['.jpg', '.jpeg', '.png'];
 
     for (const value of validFileNames) {
         
@@ -96,7 +96,7 @@ function checkIfFileSizeUnderLimit(fileSize) {
 
     let bytesToMegabytes = 1048576;
 
-    let maximumFileSize = 1; // 5 megabytes
+    let maximumFileSize = 5; // 5 megabytes
     let fileSizeInMegabytes = (fileSize / bytesToMegabytes).toFixed(2);
     let isFileSizeUnderLimit = fileSizeInMegabytes < maximumFileSize ? true : false;
 
@@ -209,7 +209,7 @@ function getErrorText(isFileNameValid, fileName, fileSizeUnderLimitObject) {
 
     if (isFileNameValid === false) {
 
-        errorText = `We are sorry but your image file, ${ fileName } is not saved in a format we can accept.  Please upload an image in jpg, png or gif format.`;
+        errorText = `Your file, ${ fileName } is not saved in a format we can accept.  Please upload an image in jpg or png format.`;
         
         return errorText;
 
@@ -219,7 +219,7 @@ function getErrorText(isFileNameValid, fileName, fileSizeUnderLimitObject) {
 
     if (isFileSizeUnderLimit === false) {
 
-        errorText = `We are sorry but your image file, ${ fileName } is ${ fileSizeInMegabytes } megabytes which is over the maximum limit of ${ maximumFileSize } megabytes.  Please compress your image and try again or select a new image.`;
+        errorText = `Your image file, ${ fileName } is ${ fileSizeInMegabytes } megabytes which is over the maximum limit of ${ maximumFileSize } megabytes.  Please compress your image and try again or select a new image.`;
 
         return errorText;
 
@@ -258,7 +258,7 @@ function removeImage() {
     imageDisplay.src = '';
 
     // This has to be removed as well or it sits in the cache.
-    inputElement.value = '';
+    companyLogo.value = '';
     
 }
 

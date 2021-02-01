@@ -138,6 +138,8 @@ exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res) {
             searchOutput.free = Array.isArray(freeAccountsProcessed) === true ? true : false;
             searchOutput.premium = Array.isArray(premiumAccountsProcessed) === true ? true : false;
 
+            let companyLogoPath = defaultValue.vendorLogoViewFolder;
+
             return res.render('foreclosure-cleanup-vendor-list', {
                 activeLink,
                 contactEmail,
@@ -151,6 +153,7 @@ exports.foreclosureCleanupVendorList = wrapAsync(async function(req, res) {
                 premiumAccountsProcessed,
                 searchOutput,
                 searchRadius,
+                companyLogoPath,
                 searchAgainNamesValues
             });
 

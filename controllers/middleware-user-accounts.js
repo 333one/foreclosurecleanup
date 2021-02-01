@@ -1,3 +1,5 @@
+const path = require('path');
+
 const bcrypt = require('bcryptjs');
 
 const cryptoRandomString = require('crypto-random-string');
@@ -6,10 +8,14 @@ const emailValidator = require('email-validator');
 const Filter = require('bad-words');
 const filter = new Filter();
 
+const fs = require("fs");
+
 const MapboxClient = require('mapbox');
 const client = new MapboxClient(process.env.MAPBOX_DEFAULT_PUBLIC_TOKEN);
 
 const objectHash = require('object-hash');
+const sizeOf = require('image-size');
+const sharp = require('sharp');
 
 const USPS = require('usps-webtools-promise').default;
 const usps = new USPS({
@@ -264,21 +270,14 @@ exports.addChangeCompanyDescription = wrapAsync(async function(req, res) {
 
 exports.addChangeCompanyLogo = wrapAsync(async function(req, res) {
 
-    // Create these now and set the value in the if block below.
-    let inputFields = {};
-    let addOrChangeProperty = req.session.userValues.companyDescription ? 'change' : 'add';
+    // Create this now and set the value in the if block below.
+    let addOrChangeProperty = req.session.userValues.companyLogo.fileName ? 'change' : 'add';
 
     // Grab the data from req.session and then delete it.
     if (req.session.transfer) {
 
-        var { cleanedForm, companyLogoError } = req.session.transfer;
+        var { companyLogoError } = req.session.transfer;
         delete req.session.transfer;
-
-        // Set object to previous form input.
-        inputFields = cleanedForm;
-
-    } else {
-
 
     } 
 
@@ -291,16 +290,25 @@ exports.addChangeCompanyLogo = wrapAsync(async function(req, res) {
     let loggedIn = true;
     let { projectStatus } = siteValue;
 
-    let companyLogo = 'images/generic-logo.png';
+    let companyLogoPath = defaultValue.vendorLogoViewFolder;
+    let companyLogoFileName = req.session.userValues.companyLogo.fileName;
+    let companyLogoWidth = req.session.userValues.companyLogo.width;
+    let companyLogoHeight = req.session.userValues.companyLogo.height;
+    let companyLogoName = formFields.addChangeCompanyLogo[0];
+    let companyLogoField = renderValue.companyLogoField;
 
     res.render('add-change-company-logo', {
-        userInput: inputFields,
         activeLink,
         contactEmail,
         loggedIn,
         projectStatus,
         addOrChangeProperty,
-        companyLogo,
+        companyLogoPath,
+        companyLogoFileName,
+        companyLogoWidth,
+        companyLogoHeight,
+        companyLogoName,
+        companyLogoField,
         companyLogoError,
         htmlTitle
     });
@@ -843,7 +851,7 @@ exports.loginFailureLimitReached = wrapAsync(async function(req, res) {
 
 exports.logout = wrapAsync(async function(req, res) {
 
-    return logoutSteps.logoutUser(req, res, '/index');
+    return logoutSteps.logoutUser(req, res, '/');
 
 });
 
@@ -878,6 +886,10 @@ exports.myAccount = wrapAsync(async function(req, res) {
         shouldBrowserFocusOnURLNotActiveError,
         urlNotActiveError
     } = req.session.userValues;
+
+    let companyLogoFileName = req.session.userValues.companyLogo.fileName;
+    let companyLogoWidth = req.session.userValues.companyLogo.width;
+    let companyLogoHeight = req.session.userValues.companyLogo.height;
 
     let isAccountUpgraded = companyProfileType === defaultValue.accountUpgrade ? true : false;
 
@@ -1031,6 +1043,7 @@ exports.myAccount = wrapAsync(async function(req, res) {
 
     // The next steps are used to determine if the account is Live and for rendering.
     let companyDescriptionMyAccountValue = companyDescription ? companyDescription : defaultMessage.myAccountInformationEmpty;
+    let companyLogoMyAccountValue = companyLogoFileName ? companyLogoFileName : defaultMessage.myAccountInformationEmpty;
     let companyNameMyAccountValue = companyName ? companyName : defaultMessage.myAccountInformationEmpty;
     let companyPhoneMyAccountValue = companyPhone ? companyPhone : defaultMessage.myAccountInformationEmpty;
     let companyWebsiteMyAccountValue = companyWebsite ? companyWebsite : defaultMessage.myAccountInformationEmpty;
@@ -1048,6 +1061,7 @@ exports.myAccount = wrapAsync(async function(req, res) {
     // Check to see if properties were added.  During rendering, typeof === string check won't work because all accountValues store a string even if it is empty ''.
     let isCompanyAddressAdded = companyAddressMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyDescriptionAdded = companyDescriptionMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
+    let isCompanyLogoAdded = companyLogoMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyNameAdded = companyNameMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyPhoneAdded = companyPhoneMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
     let isCompanyServicesAdded = companyServicesMyAccountValue === defaultMessage.myAccountInformationEmpty ? false : true;
@@ -1068,14 +1082,13 @@ exports.myAccount = wrapAsync(async function(req, res) {
         isCompanyServicesAdded
         );
 
-    let companyLogoMyAccountValue = defaultMessage.myAccountInformationEmpty;
-    let isCompanyLogoAdded = false;
-
     // For rendering.
     let activeLink = 'my-account';
     let contactEmail = siteValue.contactEmail.email;
     let loggedIn = true;
     let { projectStatus } = siteValue;
+
+    let companyLogoPath = defaultValue.vendorLogoViewFolder;
 
     res.render('my-account', {
         activeLink,
@@ -1086,6 +1099,10 @@ exports.myAccount = wrapAsync(async function(req, res) {
         companyAddressMyAccountValue,
         companyDescriptionMyAccountValue,
         companyNameMyAccountValue,
+        companyLogoPath,
+        companyLogoMyAccountValue,
+        companyLogoWidth,
+        companyLogoHeight,
         companyPhoneMyAccountValue,
         companyProfileType,
         companyPropertiesUnfilled,
@@ -1099,6 +1116,7 @@ exports.myAccount = wrapAsync(async function(req, res) {
         isAccountUpgraded,
         isCompanyAddressAdded,
         isCompanyDescriptionAdded,
+        isCompanyLogoAdded,
         isCompanyNameAdded,
         isCompanyPhoneAdded,
         isCompanyServicesAdded,
@@ -1115,9 +1133,7 @@ exports.myAccount = wrapAsync(async function(req, res) {
         upgradeCheckItOut: defaultMessage.upgradeCheckItOut,
         upgradeRequired: defaultMessage.upgradeRequired,
         upgradeSalesPitch: defaultMessage.upgradeSalesPitch,
-        urlNotActiveMessage,
-        companyLogoMyAccountValue,
-        isCompanyLogoAdded
+        urlNotActiveMessage
     });
 
 });
@@ -1893,7 +1909,7 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
 
     if (deleteProperty === 'true') {
 
-        await User.updateOne({ email }, { companyDescription: '', live: false });
+        await User.updateOne({ email }, { companyDescription: '' });
 
         req.session.userValues.companyDescription = '';
 
@@ -1991,24 +2007,119 @@ exports.postAddChangeCompanyDescription = wrapAsync(async function(req, res) {
 
 exports.postAddChangeCompanyLogo = wrapAsync(async function(req, res) {
 
-    // let whatIsSubmission = typeof req.body.companyLogo;
+    // If the submission went through properly this should exist.
+    if (req.file) {
+        var { filename, mimetype, originalname, size } = req.file;
+    }
 
+    let { email } = req.session.userValues;
+    let { deleteProperty } = req.body;
+    let { maxVendorLogoUploadFileSize, vendorLogoValidMimeTypes, vendorLogoPasteToFolder, vendorLogoUploadFolder } = defaultValue;
+    let { addChangeCompanyLogo } = formFields;
+
+    // Process deletes first.
     let changeProperty = 'logo';
+    let changeVerb;
 
-    let isFileTypeValid;
-    let isFileSizeUnderLimit;
-    let isFileGenuine;
+    if (deleteProperty === 'true') {
 
-    // let typeOfFile = logicUserAccounts.checkFileTypeAfterSubmission(req.body.companyLogo);
-    
+        await User.updateOne({ email }, {
+            'companyLogo.fileName': '',
+            'companyLogo.width': '',
+            'companyLogo.height': '',
+        });
 
-    let wasCompanyLogoAdded = req.session.userValues.companyLogo === '' ? true : false;
-    changeVerb = wasCompanyLogoAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
-    req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+        let deleteOldVendorLogoFilePath = path.join(vendorLogoPasteToFolder, req.session.userValues.companyLogo.fileName);
+        fs.unlinkSync(deleteOldVendorLogoFilePath);
 
-    req.session.userValues.companyLogo = '';
+        req.session.userValues.companyLogo.fileName = '';
+        req.session.userValues.companyLogo.width = '';
+        req.session.userValues.companyLogo.height = '';
 
-    return res.redirect('/my-account');
+        changeVerb = defaultMessage.companyPropertyChangeVerb.delete;
+        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+
+        return res.redirect('/my-account');
+
+    }
+
+    let wereReqFieldsValid = checks.checkIfVendorLogoReqFieldsValid(req.body, req.file, addChangeCompanyLogo);
+    let wasCompanyLogoSubmitted = req.file ? true : false;
+    let isFileAnImage = checks.checkIfVendorLogoFileIsImage(filename, vendorLogoUploadFolder);
+    let isFileTypeValid = checks.checkIfVendorLogoMimeTypeValid(mimetype, vendorLogoValidMimeTypes);
+    let isFileSizeUnderLimit = checks.checkIfVendorLogoFileSizeUnderLimit(size, maxVendorLogoUploadFileSize);
+
+    let currentFilePath = path.join(vendorLogoUploadFolder, filename);
+
+    // Typically this is used at the end of route but in this case it is needed to help build the mongoose save object.
+    let wasCompanyLogoAdded = req.session.userValues.companyLogo.fileName === '' ? true : false;
+
+    if (
+        wereReqFieldsValid === true &&
+        wasCompanyLogoSubmitted === true &&
+        isFileAnImage === true &&
+        isFileTypeValid === true &&
+        isFileSizeUnderLimit === true
+        ) {
+
+        let successFilePath = path.join(vendorLogoPasteToFolder, filename);
+
+        let imageDimensions = sizeOf(currentFilePath);
+        let { width, height } = imageDimensions;
+        let displayDimensions = logicUserAccounts.getDisplayDimensions(width, height);
+
+        // Modify the file and copy it to the view folder.
+        await sharp(currentFilePath)
+            .resize(displayDimensions.width, displayDimensions.height)
+            .toFile(successFilePath);
+
+        // If there is an existing image push the name into the DB and then delete it from the folder.  The reason the old file name is saved is because just in case something throws an error you've got the old file name if you have to go in by hand and find it.
+
+        let mongooseSaveVendorImageObject = mongooseLogic.createMongooseSaveVendorImageObject(filename, displayDimensions.width, displayDimensions.height, req.session.userValues.companyLogo, wasCompanyLogoAdded);
+        await User.updateOne({ email }, mongooseSaveVendorImageObject);
+
+        if (wasCompanyLogoAdded === false) {
+
+            let deleteOldVendorLogoFilePath = path.join(vendorLogoPasteToFolder, req.session.userValues.companyLogo.fileName);
+            fs.unlinkSync(deleteOldVendorLogoFilePath);
+
+        }
+
+        // Delete the original upload file.
+        fs.unlinkSync(currentFilePath);
+
+        changeVerb = wasCompanyLogoAdded === true ? defaultMessage.companyPropertyChangeVerb.add : defaultMessage.companyPropertyChangeVerb.update;
+        req.session.userValues.successMessage = defaultMessage.successfulChange(changeProperty, changeVerb);
+
+        req.session.userValues.companyLogo.fileName = filename;
+        req.session.userValues.companyLogo.width = displayDimensions.width;
+        req.session.userValues.companyLogo.height = displayDimensions.height;
+
+        return res.redirect('/my-account');
+
+    } else {
+
+        // Delete the original upload file.
+        fs.unlinkSync(currentFilePath);
+
+        // Create and redirect the errors to changeCompanyName where they will be rendered and deleted from the session.
+        let companyLogoError = errorMessage.getCompanyLogoError(
+            wereReqFieldsValid,
+            wasCompanyLogoSubmitted,
+            isFileAnImage,
+            isFileTypeValid,
+            isFileSizeUnderLimit,
+            originalname,
+            size,
+            maxVendorLogoUploadFileSize
+            );
+
+        req.session.transfer = {};
+        req.session.transfer.companyLogoError = companyLogoError;
+
+        return res.redirect('/add-change-company-logo');
+
+    }
 
 });
 

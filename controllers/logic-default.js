@@ -215,14 +215,15 @@ exports.createServicesAttributesAndValues = function(defaultServices, cleanedQue
 exports.createSessionObject = function(projectStatus, redisClient, RedisStore) {
 
     let sessionObject = {
-        // maxAge: 24 hours
-        maxAge: 24 * 60 * 60 * 1000,
         name: process.env.SESSION_NAME,
         // Redis uses the touch method so this value should be set to false.  Probably fine for testing with default store too.
         resave: false,
         saveUninitialized: true,
         secret: process.env.SESSION_SECRET,
+        unset: 'destroy',
         cookie: {
+            // maxAge: 24 hours
+            maxAge: 24 * 60 * 60 * 1000,
             sameSite: 'lax',
             // secure: true requires internal https but when Nginx is configured as a reverse proxy it uses http by default to communicate with Node.js.  
             // Nginx does this because http is much less processor intensive.  All communication to the outside world still uses secure https.

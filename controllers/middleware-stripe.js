@@ -85,7 +85,12 @@ exports.webhookPremiumUpgrade = wrapAsync(async function(req, res) {
 
     const payload = req.body;
 
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
+    let endpointSecret;
+    if (projectStatus === 'production') {
+        endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET;
+    } else {
+        endpointSecret = process.env.STRIPE_WEBHOOK_SIGNING_SECRET_TEST;
+    }
 
     const sig = req.headers['stripe-signature'];
 

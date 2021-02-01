@@ -119,8 +119,21 @@ let companyPremiumProperties = {
         default: ''
     },
     companyLogo: {
-        type: String,
-        default: ''
+        fileName: {
+            type: String,
+            default: ''
+        },
+        width: {
+            type: String,
+            default: ''
+        },
+        height: {
+            type: String,
+            default: ''
+        },
+        listOfPreviousCompanyLogos: {
+            type: Array
+        }
     },
     companyWebsite: {
         type: String,

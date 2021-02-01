@@ -26,7 +26,7 @@ if (projectStatus === 'staging' || projectStatus === 'production') {
     var redis = require('redis');
     var redisClient = redis.createClient();
     var RedisStore = require('connect-redis')(session);
-    // app.set('trust proxy', 'loopback');
+    // app.set('trust proxy', 1);
 
     app.set('referenceToRedisClient', redisClient);
     
@@ -44,7 +44,6 @@ let sessionObject = logicDefault.createSessionObject(projectStatus, redisClient,
 app.use(session(sessionObject));
 
 let temporaryPlaceholder = false;
-
 if (temporaryPlaceholder === true) {
 
     app.get(['/', '/index'], function(req, res) {

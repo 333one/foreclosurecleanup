@@ -1,3 +1,7 @@
+const readChunk = require('read-chunk');
+const isJpg = require('is-jpg');
+const isPng = require('is-png');
+
 const phoneNormalizer = require('phone');
 const zxcvbn = require('zxcvbn');
 
@@ -216,6 +220,74 @@ exports.checkIfDeletePropertyCorrectlySet = function(reqBody) {
     }
 
     return true;
+
+}
+
+exports.checkIfVendorLogoFileIsImage = function(filename, vendorLogoUploadFolder) {
+
+    let linkToImage = `${ vendorLogoUploadFolder }${ filename }`;
+
+    let imageBufferJpg = readChunk.sync(linkToImage, 0, 3);
+    let imageBufferPng = readChunk.sync(linkToImage, 0, 8);
+
+    let isImageJpg = isJpg(imageBufferJpg);
+    let isImagePng = isPng(imageBufferPng);
+
+    if (isImageJpg === true || isImagePng === true) {
+
+        return true;
+
+    } else {
+
+        return false;
+
+    }
+
+}
+
+exports.checkIfVendorLogoFileSizeUnderLimit = function(size, maxVendorLogoUploadFileSize) {
+
+    let isFileSizeUnderLimit = size < maxVendorLogoUploadFileSize ? true : false;
+
+    return isFileSizeUnderLimit;
+
+}
+
+exports.checkIfVendorLogoMimeTypeValid = function(mimeType, vendorLogoValidMimeTypes) {
+
+    let isMimeTypeValid = vendorLogoValidMimeTypes.includes(mimeType);
+
+    return isMimeTypeValid;
+
+}
+
+exports.checkIfVendorLogoReqFieldsValid = function(reqBody, reqFile, addChangeCompanyLogo) {
+
+    let isNumberOfBodyKeysValid = Object.keys(reqBody).length === 1 ? true : false;
+    let isNumberOfFileKeysValid = Object.keys(reqFile).length >= 1 ? true : false;
+
+    // This checks to see if deleteProperty is in the request.
+    for (const key in reqBody) {
+        var isTextFieldNameValid = addChangeCompanyLogo.includes(key);
+    }
+
+    // This checks to see if the file was submitted is in the request.
+    let isImageFieldNameValid = addChangeCompanyLogo.includes(reqFile.fieldname);
+
+    if (
+        isNumberOfBodyKeysValid === true &&
+        isNumberOfFileKeysValid === true &&
+        isTextFieldNameValid === true &&
+        isImageFieldNameValid === true
+        ) {
+
+        return true;
+
+    } else {
+
+        return false;
+
+    }
 
 }
 

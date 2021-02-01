@@ -1,10 +1,8 @@
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const cryptoRandomString = require('crypto-random-string');
-const FileType = require('file-type');
 const normalizeUrl = require('normalize-url');
 const objectHash = require('object-hash');
-const readChunk = require('read-chunk');
 
 const communication = require('./communication');
 const emailMessage = require('../models/email-messages');
@@ -121,16 +119,6 @@ exports.assembleCompanyPropertiesUnfilled = function(isCompanyNameAdded, isCompa
 
 }
 
-exports.checkFileTypeAfterSubmission = function(fileToCheck) {
-
-    const buffer = readChunk.sync(fileToCheck, 0, 4100);
-
-    const fileType = FileType.fromBuffer(buffer);
-
-    return fileType;
-
-}
-
 exports.createRandomHash = function(stringSeed) {
 
     let salt = cryptoRandomString({ length: 16 });
@@ -242,6 +230,35 @@ exports.getCompanyServicesFromUserValues = function(formFields, userValues) {
     });
 
     return companyServiceProperties;
+
+}
+
+exports.getDisplayDimensions = (startWidth, startHeight) => {
+
+    let width, height;
+
+    if (startWidth === startHeight && startWidth <= 200) {
+
+        width = startWidth;
+        height = startHeight;
+
+    } else if (startWidth === startHeight && startWidth >= 200) {
+        
+        width = 200;
+        height = 200;
+
+    } else if (startWidth > startHeight) {
+
+        width = 200;
+        height = Math.round(startHeight/startWidth * 200);
+
+    } else {
+
+        width = Math.round(startWidth/startHeight * 200);
+        height = 200;
+    }
+
+    return { width, height };
 
 }
 

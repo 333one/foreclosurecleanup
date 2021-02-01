@@ -7,6 +7,7 @@
     <%- include('includes/head-boilerplate.ejs') %>
     <%- include('includes/log-in-out-rollover.ejs') %>
 
+    <!-- <script defer src="js/reload-if-back-forward.js"></script> -->
     <script defer src="js/message-x-close-button.js"></script>
     <script defer src="js/enable-success-cancel-bar.js"></script>
 
@@ -17,7 +18,11 @@
 
     <% if (areAccountUpgradesExtendsAvailable === true) { %>
         <script defer src="https://js.stripe.com/v3/"></script>
-        <script defer src="js/checkout.js"></script>
+        <% if (projectStatus === 'production') { %>
+            <script defer src="js/checkout.js"></script>
+        <% } else { %>
+            <script defer src="js/checkout-test.js"></script>
+        <% } %>
     <% } %>
 
 </head>
@@ -182,7 +187,11 @@
             <div class="myAccount__flexUnit">
                 <div>
                     <p class="myAccount__subHeadlineUpgrade">Company Logo Or Image:</p>
+                    <% if (isCompanyLogoAdded === true) { %>
+                    <div class="myAccount__vendorLogo"><img src="<%= companyLogoPath %><%= companyLogoMyAccountValue %>" width="<%= companyLogoWidth %>" height="<%= companyLogoHeight %>"></div>
+                    <% } else { %>
                     <p class="myAccount__bodyTextLargeFlexUpgrade"><%= companyLogoMyAccountValue %></p>
+                    <% } %>
                 </div>
                 <%- include('includes/my-account-add-change-button.ejs', { link: '/add-change-company-logo', isKeyAdded: isCompanyLogoAdded, isUpgradeProperty: true }); %>
             </div>

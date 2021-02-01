@@ -166,7 +166,7 @@
                                 <% if (value.companyWebsite !== '' ) { %>
                                     <a href="<%= value.companyWebsiteProcessed %>" rel="nofollow">
                                 <% } %>
-                                    <img src="images/generic-logo.png" width="200" height="200">
+                                    <img src="<%= companyLogoPath %><%= value.companyLogo.fileName %>" width="<%= value.companyLogo.width %>" height="<%= value.companyLogo.height %>">
                                 <% if (value.companyWebsite !== '' ) { %>
                                     </a>
                                 <% } %>

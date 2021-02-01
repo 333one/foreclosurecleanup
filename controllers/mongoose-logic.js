@@ -83,7 +83,9 @@ exports.createMongooseSelectObject = function() {
         companyStreetTwo: 1,
         companyZip: 1,
         companyDescription: 1,
-        companyLogo: 1,
+        'companyLogo.fileName': 1,
+        'companyLogo.width': 1,
+        'companyLogo.height': 1,
         companyWebsite: 1
     }
 
@@ -92,6 +94,22 @@ exports.createMongooseSelectObject = function() {
     }
 
     return selectObject;
+
+}
+
+exports.createMongooseSaveVendorImageObject = function(filename, displayDimensionsWidth, displayDimensionsHeight, reqSessionUserValuesCompanyLogo, wasCompanyLogoAdded) {
+
+    let mongooseObject = {
+        'companyLogo.fileName': filename,
+        'companyLogo.width': displayDimensionsWidth,
+        'companyLogo.height': displayDimensionsHeight
+    }   
+    
+    if (wasCompanyLogoAdded === false) {
+        mongooseObject.$push = { 'companyLogo.listOfPreviousCompanyLogos': reqSessionUserValuesCompanyLogo }
+    }
+
+    return mongooseObject;
 
 }
 

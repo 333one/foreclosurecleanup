@@ -13,6 +13,8 @@ exports.addChangeCompanyAddress = [
 
 exports.addChangeCompanyDescription = ['companyDescription', 'deleteProperty'];
 
+exports.addChangeCompanyLogo = ['companyLogo', 'deleteProperty'];
+
 exports.addChangeCompanyName = ['companyName', 'deleteProperty'];
 
 exports.addChangeCompanyPhone = ['companyPhone', 'deleteProperty'];

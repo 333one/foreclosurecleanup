@@ -6,8 +6,13 @@
     <%- include('includes/log-in-out-rollover.ejs') %>
 
     <script defer src="https://js.stripe.com/v3/"></script>
-    <script defer src="js/checkout.js"></script>
 
+<% if (projectStatus === 'production') { %>
+    <script defer src="js/checkout.js"></script>
+<% } else { %>
+    <script defer src="js/checkout-test.js"></script>
+<% } %>
+    
 </head>
 <body>
 

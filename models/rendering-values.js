@@ -15,6 +15,8 @@ exports.companyDescriptionField = {
     }
 }
 
+exports.companyLogoField = 'type=\"file\" accept=\".jpg,.jpeg,.png\"';
+
 exports.companyNameField = {
     minLength: 2,
     maxLength: 35,

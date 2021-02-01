@@ -554,6 +554,10 @@
 	padding: 0;
 }
 
+.myAccount__vendorLogo {
+	margin: var(--one) 0 0 0;
+}
+
 .myAccount__subHeadline,
 .myAccount__subHeadlineUpgrade,
 .myAccount__bodyTextSmall {
@@ -872,6 +876,7 @@
 	left: 0;
 	width: 100%;
 	opacity: 0;
+	cursor: pointer;
 }
 
 .imageUpload__selectButton,
@@ -1871,6 +1876,10 @@ li a:active {
 		margin-bottom: var(--one);
 	}
 
+	.myAccount__vendorLogo {
+		margin: var(--one) 0 var(--two);
+	}
+
 	.myAccount__errorBorder {
 		border-right: none;
 		border-left: none;
@@ -2052,6 +2061,10 @@ li a:active {
 	.myAccount__bodyTextSmallFlex,
 	.myAccount__bodyTextLargeFlexUpgrade {
 		margin-bottom: var(--one);
+	}
+
+	.myAccount__vendorLogo {
+		margin: var(--one) 0 var(--two);
 	}
 
 	.myAccount__errorBorder {

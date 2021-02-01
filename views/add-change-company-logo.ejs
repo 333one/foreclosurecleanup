@@ -8,6 +8,11 @@
 
     <script defer src="js/file-upload.js"></script>
 
+    <%# If there is an error start client at the image-form location. %>
+    <% if (typeof companyLogoError != "undefined") { %>
+        <script defer src="js/start-at-image-upload-error-message.js"></script>
+    <% } %>
+
 </head>
 <body>
 
@@ -22,107 +27,103 @@
             </div>
 
             <% if (addOrChangeProperty === "change") { %>
-            <div class="myAccount__defaultUnit">
-                <p class="myAccount__subHeadline">Current Company Logo:</p>
-                <img src="<%= companyLogo %>" width="200" height="200">
+            <div class="myAccount__defaultUnit -centerAlign">
+                <p class="myAccount__subHeadline">Current Company Logo</p>
+                <img src="<%= companyLogoPath %><%= companyLogoFileName %>" width="<%= companyLogoWidth %>" height="<%= companyLogoHeight %>">
             </div>
             <% } %>
 
             <div class="internalContainer__paddingTwo32Four">
 
-                <form action="/add-change-company-logo" method="POST">
+                <div class="input__unit -marginBottomTwo">
+                    <h2 class="heading__small">Company Logo:</h2>
+                    <p class="myAccount__bodyTextSmall -marginBottomTwo">Display your company's logo or an image that represents your company.</p>
+
+                    <h2 class="heading__small">Image Requirements:</h2>
+                    <ul class="unorderedListSmall -marginBottomTwo">
+                        <li>Please use an image in JPG or PNG format.</li>
+                        <li>Please use an image that is less than 2 megabytes.</li>
+                        <li>Animated images are not allowed.</li>
+                        <li>Images that are offensive, violent or pornographic are not allowed.</li>
+                        <li>Logos used in the <a href="/foreclosure-cleanup-vendor-list">National Vendors List</a> are displayed in a square that is 200 pixels wide by 200 pixels high.  For best results select an image that is 200 x 200 or square shaped.</li>
+                    </ul>
+
+                    <h2 class="heading__small">Upload Instructions:</h2>
+                    <ul class="unorderedListSmall">
+                        <div id="uploadInstructions">
+                            <li>Click the button that reads "Select Your Image" and browse your device to select your image.</li>
+                            <li>Once the image is displayed in the browser it is ready to be uploaded.</li>
+                            <li>If you are not happy with your image select a new image or click "Undo" to remove your current selection.</li>
+                            <li>Once you are happy with your image click the large button at the bottom that reads "Upload My image".</li>
+                        </div>
+                        <noscript>
+                            <li>Click the button below and browse your device to select your image.</li>
+                            <li>Once you have chosen your image click the large button at the bottom that reads "Upload My image".</li>
+                        </noscript>
+                        <li>That's it you're done!  You can always replace your image if you need to.</li>
+                    </ul>
+                </div>
+
+                <div id="image-form">
+                <form action="/add-change-company-logo" method="POST" enctype="multipart/form-data">
 
                     <input type="hidden" name="deleteProperty" value="false">
 
-                    <div class="input__unit -marginBottomTwo">
-                        <label for="companyLogo" class="input__label"><% if (addOrChangeProperty === "change") { %>Updated <% } %>Company Logo:</label>
-                        <p class="myAccount__bodyTextSmall -marginBottomTwo">Display your company's logo or an image that represents your company.</p>
+                    <div id="imageContainer" class="imageUpload__container
+                        <% if (typeof companyLogoError === "undefined") { %>
+                                -borderClear -marginBottomFour
+                        <% } else { %>
+                                -borderError
+                        <% } %>                        
+                    ">
 
-                        <h2 class="heading__small">Image Requirements:</h2>
-                        <ul class="unorderedListSmall -marginBottomTwo">
-                            <li>Please use an image in JPG, PNG or GIF format.</li>
-                            <li>Please use an image that is less than 2 megabytes.</li>
-                            <li>Animated images are not allowed.</li>
-                            <li>Images that are offensive, violent or pornographic are not allowed.</li>
-                            <li>Logos used in the <a href="/foreclosure-cleanup-vendor-list">National Vendors List</a> are displayed in a square that is 200 pixels wide by 200 pixels high.  For best results select an image that is 200 x 200 or square shaped.</li>
-                        </ul>
-
-
-                        <h2 class="heading__small">Upload Instructions:</h2>
-                        <ul class="unorderedListSmall">
-                            <div id="uploadInstructions">
-                                <li>Click the button that reads "Select Your Image" and browse your device to select your image.</li>
-                                <li>Once the image is displayed in the browser it is ready to be uploaded.</li>
-                                <li>If you are not happy with your image select a new image or click "Undo" to remove your current selection.</li>
-                                <li>Once you are happy with your image click the large button at the bottom that reads "Upload My image".</li>
+                        <noscript>
+                            <label for="<%= companyLogoName %>" class="imageUpload__selectLabel">Select Your Image</label>
+                            <div class="test__container ">
+                                <input <%- companyLogoField %> name="<%= companyLogoName %>" id="<%= companyLogoName %>" class="imageUpload__noScriptButton">
                             </div>
-                            <noscript>
-                                <li>Click the button below and browse your device to select your image.</li>
-                                <li>Once you have chosen your image click the large button at the bottom that reads "Upload My image".</li>
-                            </noscript>
-                            <li>That's it you're done!  You can always replace your image if you need to.</li>
-                        </ul>
+                        </noscript>
+
+                        <div id="imageInteriorContainer" class="imageUpload__interiorContainer">
+
+                            <div id="leftColumnExterior" class="imageUpload__leftColumnExterior">
+                                <div id="leftColumnInterior" class="imageUpload__leftColumnInterior">
+                                    <input <%- companyLogoField %> name="<%= companyLogoName %>" id="<%= companyLogoName %>" class="imageUpload__input">
+                                    <div class="imageUpload__iconContainer"><img src="images/icon-upload-image.svg" class="imageUpload__icon"></div>
+                                    <label for="<%= companyLogoName %>" id="imageSelect" class="imageUpload__selectButton">Select Your Image</label>
+                                </div>
+                            </div>
+                            <div id="rightColumn" class="imageUpload__rightColumn">
+                                <div class="imageUpload__imageContainer"><img src="" width="0" height="0" id="imageDisplay"></div>
+                                <div id="undoButton" class="imageUpload__undoButtonContainer">
+                                    <p class="imageUpload__undo">Undo</p>
+                                    <img src="images/x-red.svg" class="imageUpload__undoX">
+                                </div> 
+                            </div>
+
+                        </div>
+                    
                     </div>
 
-                    <form action="/add-change-company-logo" method="POST" enctype="multipart/form-data">
+                    <div id="imageError"
+                        <% if (typeof companyLogoError != "undefined") { %>
+                            class="input__error -marginBottomFour"
+                        <% } %> 
+                        ><%= companyLogoError %>
+                    </div>
 
-                        <div id="imageContainer" class="imageUpload__container
-                            <% if (typeof imageUploadError === "undefined") { %>
-                                    -borderClear -marginBottomFour
-                            <% } else { %>
-                                    -borderError
-                            <% } %>                        
-                        ">
+                    <%- include('includes/button-narrow-screen.ejs') %>
 
-                            <noscript>
-                                <label for="inputElement" class="imageUpload__selectLabel">Select Your Image</label>
-                                <div class="test__container ">
-                                    <input type="file" name="companyLogo" accept=".gif,.jpg,.jpeg,.png" class="imageUpload__noScriptButton">
-                                </div>
-                                
-                            </noscript>
+                </form>
 
-                            <div id="imageInteriorContainer" class="imageUpload__interiorContainer">
-
-                                <div id="leftColumnExterior" class="imageUpload__leftColumnExterior">
-                                    <div id="leftColumnInterior" class="imageUpload__leftColumnInterior">
-                                        <input type="file" name="companyLogo" accept=".gif,.jpg,.jpeg,.png" id="inputElement" class="imageUpload__input">
-                                        <div class="imageUpload__iconContainer"><img src="images/icon-upload-image.svg" class="imageUpload__icon"></div>
-                                        <label for="inputElement" id="imageSelect" class="imageUpload__selectButton">Select Your Image</label>
-                                    </div>
-                                </div>
-                                <div id="rightColumn" class="imageUpload__rightColumn">
-                                    <div class="imageUpload__imageContainer"><img src="" width="0" height="0" id="imageDisplay"></div>
-                                    <div id="undoButton" class="imageUpload__undoButtonContainer">
-                                        <p class="imageUpload__undo">Undo</p>
-                                        <img src="images/x-red.svg" class="imageUpload__undoX">
-                                    </div> 
-                                </div>
-
-                            </div>
-                        
-                        </div>
-
-                        <div id="imageError"
-                            <% if (typeof companyLogoError != "undefined") { %>
-                                class="input__error -marginBottomFour"><%= companyLogoError %>
-                            <% } %> 
-                            >
-                        </div>
-
-                        <%- include('includes/button-narrow-screen.ejs') %>
-
-                    </form>
-
-                    <% if (addOrChangeProperty === "change") { %>
-                    <form action="/add-change-company-logo" method="POST">
-                        <div class="-rightAlign">
-                            <button class="button__bodyTextMedium">Delete Your Company's Logo</button>
-                        </div>
-                        <input type="hidden" name="companyLogo" value="">
-                        <input type="hidden" name="deleteProperty" value="true">
-                    </form>
-                    <% } %>  
+                <% if (addOrChangeProperty === "change") { %>
+                <form action="/add-change-company-logo" method="POST" enctype="multipart/form-data">
+                    <div class="-rightAlign">
+                        <button class="button__bodyTextMedium">Delete Your Company's Logo</button>
+                    </div>
+                    <input type="hidden" name="deleteProperty" value="true">
+                </form>
+                <% } %>  
 
             </div>
 

@@ -1,4 +1,4 @@
-let stripePublicKey = 'pk_live_51HEOocGrZ0PJhhAlFPkh7ttIBO96cj6xCrhoroZIt7wgoxnqzcUCG7t8q4SckUSLkOyVbAp3zl5pQt5WZT0PRCzt00C4szHycL';
+let stripePublicKey = 'pk_test_51HEOocGrZ0PJhhAlNhkIzlORHG9nInW3q3eo9gxbQh83Wf3WLs81W6Suv8fhkZHqygdaJOZuMNgncaNZ4oO313Xd00jiTHDN8e';
 let stripe = Stripe(stripePublicKey);
 
 let checkoutButton = document.getElementById('checkout-button');

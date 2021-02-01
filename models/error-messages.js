@@ -1,79 +1,8 @@
+const defaultValue = require('./default-values');
 const regexpValue = require('./regexp-values');
 const renderValue = require('./rendering-values');
 
 let emailNotValid = 'The email you entered is not valid.';
-
-function changedNewPasswordDoesNotMeetRequirements(adjective) {
-
-    return `Your${ adjective } password was not strong enough, please try again.`;
-
-}
-
-function confirmationPasswordDoesNotMatch(adjective) {
-
-    return `Password confirmation did not match.  Please confirm your${ adjective } password again.`;
-
-}
-
-function confirmationPasswordNotFilled(adjective) {
-
-    return `Please confirm your${ adjective } password.`;
-
-}
-
-function familyFriendlyMessage(field) {
-
-    return `Your ${ field } must be family friendly.`;
-
-}
-
-function fieldNotFilled(fragment) {
-
-    return `Please enter your ${ fragment }.`;
-
-}
-
-function fieldTooLong(field, maxLength) {
-
-    return `Your ${ field } must be ${ maxLength } characters or less.`;
-
-}
-
-function fieldTooShort(field, maxLength) {
-
-    return `Your ${ field } must be ${ maxLength } characters or more.`;
-
-}
-
-function getCommonEmailError(
-    isEmailInsideMaxLength,
-    isEmailValidCharacters,
-    isEmailValid,
-    isEmailAvailableInUnverifiedUsers,
-    isEmailAvailableInUsers
-    ) {
-
-    if (isEmailInsideMaxLength === false) return fieldTooLong('email address', renderValue.emailField.maxLength);
-    
-    if (isEmailValidCharacters === false) return invalidCharacterMessage(regexpValue.messageEmail);
-
-    if (isEmailValid === false) return emailNotValid;
-
-    if (isEmailAvailableInUnverifiedUsers === false || isEmailAvailableInUsers === false) return 'We\'re sorry but the email you entered is already associated with a different account.  Please try a different email address.';
-
-}
-
-function invalidCharacterMessage(pattern) {
-
-    return `Please only use valid ${ pattern }.`;
-    
-}
-
-function valueNotValid(fragment) {
-
-    return `Please enter a valid ${ fragment }.`;
-
-}   
 
 exports.getChangedConfirmationPasswordError = function(isConfirmationPasswordFilled, doPasswordsMatch) {
     
@@ -170,6 +99,38 @@ exports.getCompanyDescriptionError = function(
     if (isCompanyDescriptionInsideMinLength === false) return fieldTooShort(possessiveField, renderValue.companyDescriptionField.minLength);
     if (isCompanyDescriptionInsideMaxLength === false) return fieldTooLong(possessiveField, renderValue.companyDescriptionField.maxLength);
     
+}
+
+exports.getCompanyLogoError = function(
+    wereReqFieldsValid,
+    wasCompanyLogoSubmitted,
+    isFileAnImage,
+    isFileTypeValid,
+    isFileSizeUnderLimit,
+    originalname,
+    size,
+    maxVendorLogoUploadFileSize
+    ) {
+
+    let owner = 'company'
+    let possessive = owner + '\'s';
+    let field = 'image';
+    let action = 'submit';
+
+    let possessiveField = `${ possessive } ${ field }`;
+
+    if (wereReqFieldsValid === false) return 'Please submit a valid image file.';
+
+    if (wasCompanyLogoSubmitted === false) return fieldNotFilled(possessiveField, action);
+
+    if (isFileAnImage === false || isFileTypeValid === false) return `Your file, ${ originalname } is not saved in a format we can accept.  Please upload an image in jpg or png format.`;
+    
+    let { bytesPerMB } = defaultValue;
+    let displaySize = (size / bytesPerMB).toFixed(2);
+    let displayMaxVendorLogoUploadFileSize = Math.round(maxVendorLogoUploadFileSize / bytesPerMB);
+
+    if (isFileSizeUnderLimit === false) return `Your image file, ${ originalname } is ${ displaySize } megabytes which is over the maximum limit of ${ displayMaxVendorLogoUploadFileSize } megabytes.  Please compress your image and try again or select a new image.`;
+
 }
 
 exports.getCompanyNameError = function(
@@ -410,3 +371,75 @@ exports.getPrivacyTermsError = function(isPrivacyTermsChecked) {
     if (isPrivacyTermsChecked === false) return 'Check the box if you have read and agree to our Privacy Policy and Terms Of Service.';
 
 }
+
+function changedNewPasswordDoesNotMeetRequirements(adjective) {
+
+    return `Your${ adjective } password was not strong enough, please try again.`;
+
+}
+
+function confirmationPasswordDoesNotMatch(adjective) {
+
+    return `Password confirmation did not match.  Please confirm your${ adjective } password again.`;
+
+}
+
+function confirmationPasswordNotFilled(adjective) {
+
+    return `Please confirm your${ adjective } password.`;
+
+}
+
+function familyFriendlyMessage(field) {
+
+    return `Your ${ field } must be family friendly.`;
+
+}
+
+function fieldNotFilled(fragment, action ='enter') {
+
+    return `Please ${ action } your ${ fragment }.`;
+
+}
+
+function fieldTooLong(field, maxLength) {
+
+    return `Your ${ field } must be ${ maxLength } characters or less.`;
+
+}
+
+function fieldTooShort(field, maxLength) {
+
+    return `Your ${ field } must be ${ maxLength } characters or more.`;
+
+}
+
+function getCommonEmailError(
+    isEmailInsideMaxLength,
+    isEmailValidCharacters,
+    isEmailValid,
+    isEmailAvailableInUnverifiedUsers,
+    isEmailAvailableInUsers
+    ) {
+
+    if (isEmailInsideMaxLength === false) return fieldTooLong('email address', renderValue.emailField.maxLength);
+    
+    if (isEmailValidCharacters === false) return invalidCharacterMessage(regexpValue.messageEmail);
+
+    if (isEmailValid === false) return emailNotValid;
+
+    if (isEmailAvailableInUnverifiedUsers === false || isEmailAvailableInUsers === false) return 'We\'re sorry but the email you entered is already associated with a different account.  Please try a different email address.';
+
+}
+
+function invalidCharacterMessage(pattern) {
+
+    return `Please only use valid ${ pattern }.`;
+    
+}
+
+function valueNotValid(fragment) {
+
+    return `Please enter a valid ${ fragment }.`;
+
+} 

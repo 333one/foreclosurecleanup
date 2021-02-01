@@ -1,14 +1,39 @@
 const bodyParser = require('body-parser');
-const express = require('express');
-const multer = require('multer');
-const upload = multer({dest: __dirname + '../uploads/images'});
+const cryptoRandomString = require('crypto-random-string');
 
-console.log(__dirname + '../uploads/images');
+const express = require('express');
+const router = express.Router();
+
+const path = require('path');
+
+// multer
+const multer = require('multer');
+const { vendorLogoUploadFolder } = require('../models/default-values');
+const storage = multer.diskStorage({
+    
+    destination: vendorLogoUploadFolder,
+    filename: function (req, file, cb) {
+
+        let newDate = new Date();
+
+        let todaysDate = newDate.getDate();
+        let todaysMonth = newDate.getMonth();
+        let todaysYear = newDate.getFullYear() - 2000;
+
+        let firstRandomString = cryptoRandomString({ length: 4, type: 'alphanumeric' });
+        let secondRandomString = cryptoRandomString({ length: 4, type: 'alphanumeric' });
+        let thirdRandomString = cryptoRandomString({ length: 4, type: 'alphanumeric' });
+
+        cb(null, firstRandomString + todaysDate + secondRandomString + todaysMonth + thirdRandomString + todaysYear + path.extname(file.originalname));
+
+    }
+
+});
+const defaultValue = require('../models/default-values');
+const upload = multer({ storage, limits: { fields: 1, fieldSize: 50, fileSize: defaultValue.maxVendorLogoUploadFileSizeCutoff } });
 
 const middlewareUserAccounts = require('./middleware-user-accounts');
 const { redirectIfNoUpgrade, redirectLogin, redirectMyAccount } = require('./middleware-user-accounts'); 
-
-const router = express.Router();
 
 const urlEncoded = bodyParser.urlencoded({ extended: true });
 
@@ -38,19 +63,19 @@ router.get('/password-reset-success', middlewareUserAccounts.passwordResetSucces
 router.get('/register', middlewareUserAccounts.register);
 router.get('/verified', redirectMyAccount, middlewareUserAccounts.verified);
 
-router.post('/add-change-company-address', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyAddress);
-router.post('/add-change-company-description', urlEncoded, redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.postAddChangeCompanyDescription);
-router.post('/add-change-company-logo', urlEncoded, redirectLogin, redirectIfNoUpgrade, upload.single('companyLogo'), middlewareUserAccounts.postAddChangeCompanyLogo);
-router.post('/add-change-company-name', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyName);
-router.post('/add-change-company-phone', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyPhone);
-router.post('/add-change-company-services', urlEncoded, redirectLogin, middlewareUserAccounts.postAddChangeCompanyServices);
-router.post('/add-change-company-website', urlEncoded, redirectLogin, redirectIfNoUpgrade, middlewareUserAccounts.postAddChangeCompanyWebsite);
-router.post('/change-email', urlEncoded, redirectLogin, middlewareUserAccounts.postChangeEmail);
-router.post('/change-password', urlEncoded, redirectLogin, middlewareUserAccounts.postChangePassword);
-router.post('/delete-your-account', urlEncoded, redirectLogin, middlewareUserAccounts.postDeleteYourAccount);
-router.post('/login', urlEncoded, redirectMyAccount, middlewareUserAccounts.postLogin);
+router.post('/add-change-company-address', redirectLogin, urlEncoded, middlewareUserAccounts.postAddChangeCompanyAddress);
+router.post('/add-change-company-description', redirectLogin, redirectIfNoUpgrade, urlEncoded, middlewareUserAccounts.postAddChangeCompanyDescription);
+router.post('/add-change-company-logo', redirectLogin, redirectIfNoUpgrade, upload.single('companyLogo'), middlewareUserAccounts.postAddChangeCompanyLogo);
+router.post('/add-change-company-name', redirectLogin, urlEncoded, middlewareUserAccounts.postAddChangeCompanyName);
+router.post('/add-change-company-phone', redirectLogin, urlEncoded, middlewareUserAccounts.postAddChangeCompanyPhone);
+router.post('/add-change-company-services', redirectLogin, urlEncoded, middlewareUserAccounts.postAddChangeCompanyServices);
+router.post('/add-change-company-website', redirectLogin, redirectIfNoUpgrade, urlEncoded, middlewareUserAccounts.postAddChangeCompanyWebsite);
+router.post('/change-email', redirectLogin, urlEncoded, middlewareUserAccounts.postChangeEmail);
+router.post('/change-password', redirectLogin, urlEncoded, middlewareUserAccounts.postChangePassword);
+router.post('/delete-your-account', redirectLogin, urlEncoded, middlewareUserAccounts.postDeleteYourAccount);
+router.post('/login', redirectMyAccount, urlEncoded, middlewareUserAccounts.postLogin);
 router.post('/password-reset', urlEncoded, middlewareUserAccounts.postPasswordReset);
 router.post('/password-reset-request', urlEncoded, middlewareUserAccounts.postPasswordResetRequest); 
-router.post('/register', urlEncoded, redirectMyAccount, middlewareUserAccounts.postRegister);
+router.post('/register', redirectMyAccount, urlEncoded, middlewareUserAccounts.postRegister);
 
 module.exports = router;
