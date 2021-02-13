@@ -26,7 +26,7 @@ if (projectStatus === 'staging' || projectStatus === 'production') {
     var redis = require('redis');
     var redisClient = redis.createClient();
     var RedisStore = require('connect-redis')(session);
-    // app.set('trust proxy', 1);
+    app.set('trust proxy', 'loopback');
 
     app.set('referenceToRedisClient', redisClient);
     

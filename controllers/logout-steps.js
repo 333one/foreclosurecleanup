@@ -9,8 +9,8 @@ exports.logoutUser = wrapAsync( async function(req, res, destination) {
     // clearCookie deletes cookie in the browser
     // session.destroy() deletes the session 
     // unset: 'destroy' is set in the cookie so .destroy() deletes the reference in the redis DB.
-    res.clearCookie(process.env.SESSION_NAME);
     req.session.destroy();
+    res.clearCookie(process.env.SESSION_NAME);
     
     return res.redirect(destination);
 

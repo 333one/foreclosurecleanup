@@ -224,18 +224,25 @@ exports.createSessionObject = function(projectStatus, redisClient, RedisStore) {
         cookie: {
             // maxAge: 24 hours
             maxAge: 24 * 60 * 60 * 1000,
-            sameSite: 'lax',
-            // secure: true requires internal https but when Nginx is configured as a reverse proxy it uses http by default to communicate with Node.js.  
-            // Nginx does this because http is much less processor intensive.  All communication to the outside world still uses secure https.
-            secure: false
+            // Without Lax the Stripe page doesn't work.
+            sameSite: 'lax'
         } 
+    }
+
+    if (projectStatus === 'development') {
+        sessionObject.cookie.secure = false;
     }
 
     // Use default store when testing on Windows.  On Linux turn on the Redis store.
     if (projectStatus === 'staged' || projectStatus === 'production') {
 
         sessionObject.store = new RedisStore({ client: redisClient });
-        // sessionObject.cookie.secure = true;
+        sessionObject.proxy = true;
+
+        // secure: true requires internal https but when Nginx is configured as a reverse proxy it uses http by default to communicate with Node.js.  
+        // Nginx does this because http is much less processor intensive.  All communication to the outside world still uses secure https.
+        sessionObject.cookie.secure = true;
+        // sessionObject.cookie.secure = false;
 
     }
 
