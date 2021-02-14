@@ -31,6 +31,14 @@
                     >REGISTER</a>
                 <% } %>
 
+					<a href="/news"
+					<% if (activeLink === 'news') { %> 
+						class="footer__nav__activeUnit"
+					<% } else { %>
+						class="footer__nav__unit"
+					<% } %>
+					>NEWS</a>
+
                     <a href="mailto:<%- contactEmail %>"
                     <% if (activeLink === 'contact') { %> 
                         class="footer__nav__activeUnit"

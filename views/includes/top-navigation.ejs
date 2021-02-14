@@ -27,5 +27,13 @@
                     >REGISTER</a>
                 <% } %>
 
+                <a href="/news"
+                <% if (activeLink === 'news') { %> 
+                    class="header__nav__activeUnit"
+                <% } else { %>
+                    class="header__nav__unit"
+                <% } %>
+                    >NEWS &amp; PHOTOS</a>
+
             </div>
         </nav>

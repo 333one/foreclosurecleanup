@@ -9,6 +9,7 @@ const urlEncoded = bodyParser.urlencoded({ extended: true });
 
 router.get(['/', '/index'], middlewareDefault.homePage);
 router.get('/foreclosure-cleanup-vendor-list', middlewareDefault.foreclosureCleanupVendorList);
+router.get('/news', middlewareDefault.news);
 router.get('/privacy-policy', middlewareDefault.privacyPolicy);
 router.get('/terms-of-service', middlewareDefault.termsOfService);
 

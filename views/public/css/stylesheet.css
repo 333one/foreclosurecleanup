@@ -130,7 +130,9 @@
 
 .header__rowOne__right {
 	display: flex;
+	justify-content: center;
 	align-items: center;
+	flex-wrap: wrap;
 }
 
 .header__rowOne__right__text {
@@ -217,8 +219,6 @@
 }
 
 .header__nav {
-	padding-top: var(--one);
-	padding-bottom: var(--one);
 	border-top-width: 0.25rem;
 	border-top-style: solid;
 	border-top-color: var(--grey48);
@@ -241,8 +241,7 @@
 
 .header__nav__unit,
 .header__nav__activeUnit {
-	margin: 0 var(--one);
-	padding: 0;
+	padding: var(--one);
 	font-size: var(--font15);
 }
 
@@ -385,7 +384,8 @@
 
 /* Home Page */
 
-.panel__container {
+.panel__container,
+.latest__interiorContainer {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
@@ -476,6 +476,40 @@
 .panel__text a:active {
 	color: var(--red);
 	text-decoration: underline;
+}
+
+.latest__container {
+	margin-top: var(--four);
+	margin-right: auto;
+	margin-left: auto;
+	padding-right: var(--px32);
+	padding-left: var(--px32);
+	width: var(--standardWidth);
+	max-width: 100%;
+}
+
+.latest__headline {
+	margin-bottom: var(--four);
+	font-size: var(--font2);
+	font-weight: 600;
+	border-bottom: 0.25rem solid var(--grey92);
+}
+
+.latest__unit {
+	display: flex;
+	flex-direction: column;
+	margin: var(--two) var(--px32);
+}
+
+.latest__image {
+	width: 400px;
+	max-width: 100%;
+	height: 300px;
+}
+
+.latest__text {
+	margin: var(--half) 0 0;
+	font-size: var(--font15);
 }
 
 /* Legal Pages */
@@ -1298,16 +1332,19 @@ select:-webkit-autofill:active {
 .font125 a:link,
 .font1 a:link,
 .font75 a:link,
+.latest__text a:link,
 .font25 a:visited,
 .font15 a:visited,
 .font125 a:visited,
 .font1 a:visited,
 .font75 a:visited,
+.latest__text a:visited,
 .font25 a:hover,
 .font15 a:hover,
 .font125 a:hover,
 .font1 a:hover,
 .font75 a:hover,
+.latest__text a:hover,
 .myAccount__bodyTextSmall a:link,
 .myAccount__bodyTextSmall a:visited,
 .myAccount__bodyTextSmall a:hover,
@@ -1331,6 +1368,7 @@ li a:hover {
 .font125 a:active,
 .font1 a:active,
 .font75 a:active,
+.latest__text a:active,
 .myAccount__bodyTextSmall a:active,
 .myAccount__deleteAccountUnit a:active,
 li a:active {
@@ -1995,6 +2033,16 @@ li a:active {
 	}
 
 	/* Header & Footer */
+
+	.header__nav__internal {
+		flex-direction: column;
+		padding-top: var(--one);
+	}
+
+	.header__nav__unit,
+	.header__nav__activeUnit {
+		padding: 0 var(--one) var(--one) var(--one);
+	}
 
 	.header__rowTwo__branding {
 		flex-direction: column;
