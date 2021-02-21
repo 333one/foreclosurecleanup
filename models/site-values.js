@@ -4,17 +4,12 @@ let projectStatus = 'development';
 
 let domain = 'foreclosurecleanup.org';
 let subDomainForStaging = 'testbed';
-let projectPortNumber =
-	projectStatus === 'development' || projectStatus === 'production'
-		? 8080
-		: 10001;
+let projectPortNumber = projectStatus === 'development' || projectStatus === 'production' ? 8080 : 10001;
 let organization = 'Foreclosure Cleanup.org';
 
 function host(projectStatus) {
-	if (projectStatus === 'development')
-		return `http://localhost:${projectPortNumber}`;
-	if (projectStatus === 'staging')
-		return `https://${subDomainForStaging}.${domain}`;
+	if (projectStatus === 'development') return `http://localhost:${projectPortNumber}`;
+	if (projectStatus === 'staging') return `https://${subDomainForStaging}.${domain}`;
 	if (projectStatus === 'production') return `https://www.${domain}`;
 }
 
@@ -22,9 +17,7 @@ exports.host = host(projectStatus);
 
 exports.organization = organization;
 
-exports.passwordResetRequestLink = `${host(
-	projectStatus
-)}/password-reset-request`;
+exports.passwordResetRequestLink = `${host(projectStatus)}/password-reset-request`;
 
 exports.port = projectPortNumber;
 
@@ -59,5 +52,6 @@ exports.noReplyEmail = {
 // Email
 
 exports.emailServer = `server.${domain}`;
+// exports.emailServer = 'smtp.gmail.com';
 
 exports.sendServerErrorsHere = 'thr333one@gmail.com';

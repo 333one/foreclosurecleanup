@@ -179,14 +179,14 @@ exports.homePage = wrapAsync(async function (req, res) {
 	res.render('index', { activeLink, contactEmail, loggedIn, projectStatus });
 });
 
-exports.news = wrapAsync(async function (req, res) {
+exports.newsAndPhotos = wrapAsync(async function (req, res) {
 	// For rendering.
-	let activeLink = 'news';
+	let activeLink = 'news-photos';
 	let contactEmail = siteValue.contactEmail.email;
 	let loggedIn = req.session.userValues ? true : false;
 	let { projectStatus } = siteValue;
 
-	res.render('news', { activeLink, contactEmail, loggedIn, projectStatus });
+	res.render('news-photos', { activeLink, contactEmail, loggedIn, projectStatus });
 });
 
 exports.pageNotFound = wrapAsync(async function (req, res) {
