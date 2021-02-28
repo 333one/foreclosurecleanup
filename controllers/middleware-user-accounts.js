@@ -1981,9 +1981,6 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function (req, res) {
 	let { companyWebsite, deleteProperty } = cleanedForm;
 	let { email } = req.session.userValues;
 
-	// lowercase all company websites
-	let companyWebsiteLowercase = companyWebsite.toLowerCase();
-
 	let changeProperty = 'website';
 	let changeVerb;
 
@@ -2008,23 +2005,23 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function (req, res) {
 	}
 
 	// If nothing changed redirect to my-account.
-	let isCompanyWebsiteFilled = companyWebsiteLowercase === '' ? false : true;
-	let isCompanyWebsiteUnchanged = companyWebsiteLowercase === req.session.userValues.companyWebsite ? true : false;
+	let isCompanyWebsiteFilled = companyWebsite === '' ? false : true;
+	let isCompanyWebsiteUnchanged = companyWebsite === req.session.userValues.companyWebsite ? true : false;
 	if (isCompanyWebsiteFilled === true && isCompanyWebsiteUnchanged === true) {
 		req.session.userValues.noChangeMessage = defaultMessage.noChange(changeProperty);
 		return res.redirect('/my-account');
 	}
 
-	let regExpCompanyWebsite = new RegExp(regExpValue.companyWebsiteLowercase);
-	let isCompanyWebsiteValidCharacters = regExpCompanyWebsite.test(companyWebsiteLowercase);
+	let regExpCompanyWebsite = new RegExp(regExpValue.companyWebsite);
+	let isCompanyWebsiteValidCharacters = regExpCompanyWebsite.test(companyWebsite);
 
-	let isCompanyWebsiteValid = validator.isURL(companyWebsiteLowercase);
+	let isCompanyWebsiteValid = validator.isURL(companyWebsite);
 
-	let isCompanyWebsiteInsideMinLength = companyWebsiteLowercase.length >= renderValue.companyWebsiteField.minLength ? true : false;
-	let isCompanyWebsiteInsideMaxLength = companyWebsiteLowercase.length <= renderValue.companyWebsiteField.maxLength ? true : false;
+	let isCompanyWebsiteInsideMinLength = companyWebsite.length >= renderValue.companyWebsiteField.minLength ? true : false;
+	let isCompanyWebsiteInsideMaxLength = companyWebsite.length <= renderValue.companyWebsiteField.maxLength ? true : false;
 
 	if (isCompanyWebsiteFilled === true && isCompanyWebsiteValidCharacters === true && isCompanyWebsiteValid === true && isCompanyWebsiteInsideMinLength === true && isCompanyWebsiteInsideMaxLength === true) {
-		let formattedURL = logicUserAccounts.formatURL(companyWebsiteLowercase);
+		let formattedURL = logicUserAccounts.formatURL(companyWebsite);
 
 		// A new or changed website save clears out any errors in the DB.  Any new errors will have to be created in testFormattedURLAndSave.
 		await User.updateOne(
@@ -2037,7 +2034,7 @@ exports.postAddChangeCompanyWebsite = wrapAsync(async function (req, res) {
 		);
 
 		// This tests if the website is active.  If it doesn't work it stores an error in the DB and sends the client an email.
-		// It runs asynchronously in the background so that it doesn't slow down the client.
+		// It runs asynchronously in the background so that it doesn't cause a delay for the client.
 		logicUserAccounts.testFormattedURLAndSave(formattedURL, email);
 
 		let wasCompanyWebsiteAdded = req.session.userValues.companyWebsite === '' ? true : false;
